@@ -1,4 +1,4 @@
- ![Picture1](./gaia_logo.png)
+![Picture1](./gaia_logo_white_v1.png)
 
 # G A I A
 
