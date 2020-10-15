@@ -10,6 +10,7 @@ This module defines the Surface object.
 
 from gaia.data import elemSymbol, covalRadii
 import numpy as np
+import json
 
 class Interface:
     def __init__(self,
@@ -68,46 +69,122 @@ class Interface:
             allAtoms=self.allAtoms
         )
         return myCopy
-    
+
     def get_allAtoms(self):
         return self.allAtoms.copy()
 
     def set_allAtoms(self, newAllAtoms):
+        newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
+        self.update()
+    
+    def wrap(self):
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.wrap()
+        self.set_allAtoms(tmpAtoms)
 
     def get_cell(self):
-        return self.cellParam
+        return self.cellParam.copy()
+
+    def get_positions(self):
+        return self.get_allAtoms().get_positions().copy()
+
+    def set_positions(self, newPos):
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.set_positions(newPos)
+        self.set_allAtoms(tmpAtoms)
+
+    def get_chemical_symbols(self):
+        return self.get_allAtoms().get_chemical_symbols().copy()
 
     def get_adsList(self):
-        return np.array(
+        if len(self.get_allAtoms()) == len(self.subAtoms):
+            return []
+        else:
+            return np.array(
                 [[self.allAtoms.get_atomic_numbers()[i], i]\
                 for i in list(range(len(self.allAtoms)))\
                 if i not in list(range(len(self.subAtoms)))]
             )
+    
+    def get_adsIndexList(self):
+        return list(self.get_adsList()[:,1])
 
-    def get_topLayer(self, depth = 1):
+    def get_topLayerList(self, depth = 1):
         allZ = self.allPos[:,2]
         return [a.index for a in self.allAtoms\
             if max(allZ) - allZ[a.index] <= depth]
 
+    def get_bufferList(self):
+        return self.bufferList.copy()
 
     def merge_adsorbate(self, adsAtoms):
         self.set_allAtoms(
             self.get_allAtoms().extend(adsAtoms)
         )
-        self.update()
+
+    def remove_adatom(self, adsIndexList=None):
+        oldAdsList = self.get_adsIndexList()
+        if adsIndexList is None:
+            adsIndexList = list(range(len(oldAdsList)))
+        if type(adsIndexList) is not list:
+            adsIndexList = [adsIndexList]
+        adsIndexList = [oldAdsList[i] for i in adsIndexList]
+        tmpAtoms = self.get_allAtoms()
+        print(len(tmpAtoms))        
+        del tmpAtoms[adsIndexList]
+        print(len(tmpAtoms))   
+        self.set_allAtoms(tmpAtoms)
+
+    def preopt_lj(self, fileBaseName='tmp',\
+        radius=0.75, stepsize=0.005, nsteps=200):
+        import ase.io as ai
+#        from ase.calculators.lj import LennardJones
+        from gaia.utils.lj import LennardJones
+        from ase.optimize.bfgs import BFGS
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.calc = LennardJones(rc = radius)
+        geomOpt = BFGS(
+            tmpAtoms,
+            maxstep=stepsize,
+            trajectory=fileBaseName+'.traj',
+            logfile=fileBaseName+'.log'
+        )
+        geomOpt.run(fmax = 1, steps = nsteps)
+        geomOpt = ai.read(fileBaseName+'.traj', index=':')
+        print('L-J pre-optimization converged in %i loops'%(len(geomOpt)))
+        tmpAtoms = geomOpt[-1]
+        self.set_allAtoms(tmpAtoms)
+
+
+
 
     def update(self):
         self.allPos  = self.allAtoms.get_positions()
         self.adsList = self.get_adsList()
+        self.allAtoms.set_cell(self.cellParam)
+        self.allAtoms.set_pbc(self.pbcParam)
+        self.allAtoms.set_constraint(self.constraints)
+        self.bufferList = [i for i in list(range(len(self.subAtoms)))\
+                           if i not in self.fixList]
+        
 
     def print_info(self):
         print(self.tags)
         print(self.allAtoms)
         print('Buffer region:\tZ = %.3f to %.3f'%\
             (self.zLim[0], self.zLim[1]))
-        print('Adsorbate:\t'+\
-            str([elemSymbol[i] for i in self.adsList[:,0]]))
+        if self.get_adsList() == []:
+            print('No adsorbates so far.')
+        else:    
+            print('Adsorbate:\t'+\
+                str([elemSymbol[i] for i in self.adsList[:,0]]))
+
+    def write(self, fileName):
+        import ase.io as ai
+        ai.write(fileName, self.get_allAtoms())
+
+
 
 
 

@@ -8,22 +8,33 @@ def BLDA(elem1, elem2, sigma = 0.1, scale = 1):
     From BLDA based on covalent radii of two atoms.
     '''
     if type(elem1) is str:
-        elem1, elem2 = atomNum(elem1), atomNum(elem2)
-    covalBL = (covalent_radii[elem1] + covalent_radii[elem2])
+        elem1, elem2 = atomNum[elem1], atomNum[elem2]
+    covalBl = (covalRadii[elem1] + covalRadii[elem2])
     return np.random.normal(covalBl, sigma) * scale
 
 def rand_direction():
     randVec = np.random.rand(3) - 0.5
     return randVec / np.sqrt(np.sum(randVec**2))
 
-def rand_point_3D(cell, xLim=[-1,999], yLim=[-1,999], zLim=[-1,999]):
+def is_withinPosLim(vec, xLim=None, yLim=None, zLim=None):
+    if xLim is None: xLim = [-999, 999]
+    if yLim is None: yLim = [-999, 999]
+    if zLim is None: zLim = [-999, 999]
     condition = False
-    while not condition:
+    if min(xLim) < vec[0] < max(xLim) and\
+       min(yLim) < vec[1] < max(yLim) and\
+       min(zLim) < vec[2] < max(zLim):
+        condition = True
+    return condition
+       
+def rand_point_3D(cell, xLim=None, yLim=None, zLim=None):
+    flag = False
+    while not flag:
         myRand = np.dot(np.random.rand(3), cell)
         if min(xLim) < myRand[0] < max(xLim) and\
            min(yLim) < myRand[1] < max(yLim) and\
            min(zLim) < myRand[2] < max(zLim):
-           condition = True
+           condition = is_withinPosLim(myRand, xLim, yLim, zLim)
     return myRand
 
 def get_bondpairs(atoms, scale=1.1):
@@ -53,14 +64,14 @@ def get_bondpairs(atoms, scale=1.1):
                           for a2, offset in zip(indices, offsets)])
     return bondpairs
 
-def chk_bondlength(atoms, threshold = 0.2):
+def chk_bondlength(atoms, radTol = 0.2):
     bondpairs = get_bondpairs(atoms, 0.85)
     flag = True
     for bp in bondpairs:
         bl = atoms.get_distance(bp[0],bp[1], mic=True)
         stdbl = covalRadii[atoms.get_atomic_numbers()[bp[0]]]+\
                 covalRadii[atoms.get_atomic_numbers()[bp[1]]]
-        if bl < stdbl * (1 - threshold):
+        if bl < stdbl * (1 - radTol):
             flag = False
             break
         else: continue

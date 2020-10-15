@@ -1,2 +1,2 @@
-# gagos
- Genetic algorithm global optimizer for surfaces
+# GAIA
+ Genetic Algorithm for Interfaces and Adsorption
