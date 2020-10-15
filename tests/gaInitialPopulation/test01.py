@@ -13,7 +13,7 @@ surf = Interface(
 
 surf.print_info()
 
-for i in range(50):
+for i in range(100):
     newsurf = build.grow_adatom(
         surf,
         'N N'.split(),
@@ -24,4 +24,5 @@ for i in range(50):
     dtbs = db.connect('tmp.db')
     dtbs.write(newsurf.get_allAtoms(), {'eV':(250.213)})
     #print(dtbs)
-    newsurf.write('out.json')
+#    newsurf.write('out.json')
+

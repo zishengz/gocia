@@ -7,7 +7,8 @@ import numpy as np
 def grow_adatom(
     interfc, addElemList,
     xLim=None, yLim=None,zLim=None,
-    bldaSigma=0.1, bldaScale=1,
+    bldaSigma=0.1, bldaScale=1, toler=0.5,
+    rattle=False, rattleStdev = 0.05,
     ljopt=False, ljstepsize=0.01, ljnsteps=250
     ):
     numAds = len(addElemList)
@@ -18,8 +19,12 @@ def grow_adatom(
         ind_curr = 0
         bufferList = interfc.get_bufferList()
         tmpInterfc = interfc.copy()
+        if rattle:
+            tmpInterfc.rattle(rattleStdev)
         while len(tmpInterfc) < len(interfc) + numAds:
             i = np.random.choice(bufferList)
+            if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
+                if np.random.rand() < 0.50: continue
             coord = [0,0,-1]
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
                 growVec = geom.rand_direction()
@@ -33,7 +38,7 @@ def grow_adatom(
             tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
             bufferList.append(len(tmpInterfc)-1)
             ind_curr += 1
-        if geom.chk_bondlength(tmpInterfc.get_allAtoms(), radTol=0.5):
+        if geom.chk_bondlength(tmpInterfc.get_allAtoms(), radTol=toler):
             badStructure = False
         n_attempts += 1
     print(' %i\tplacements| %i\ttabula rasa'%(n_place, n_attempts - 1))

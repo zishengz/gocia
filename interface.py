@@ -136,23 +136,49 @@ class Interface:
         print(len(tmpAtoms))   
         self.set_allAtoms(tmpAtoms)
 
+    def rattle(self, stdev = 0.1):
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.rattle(stdev = stdev)
+        self.set_allAtoms(tmpAtoms)
+
+
     def preopt_lj(self, fileBaseName='tmp',\
-        radius=0.75, stepsize=0.005, nsteps=200):
+        toler=0.2, stepsize=0.01, nsteps=1000):
         import ase.io as ai
 #        from ase.calculators.lj import LennardJones
         from gaia.utils.lj import LennardJones
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
-        tmpAtoms.calc = LennardJones(rc = radius)
+        tmpAtoms.calc = LennardJones(tolerAngs=toler, tolerMult=toler)
         geomOpt = BFGS(
             tmpAtoms,
             maxstep=stepsize,
             trajectory=fileBaseName+'.traj',
             logfile=fileBaseName+'.log'
         )
-        geomOpt.run(fmax = 1, steps = nsteps)
+        geomOpt.run(fmax = 0.01, steps = nsteps)
         geomOpt = ai.read(fileBaseName+'.traj', index=':')
         print('L-J pre-optimization converged in %i loops'%(len(geomOpt)))
+        tmpAtoms = geomOpt[-1]
+        self.set_allAtoms(tmpAtoms)
+
+    def preopt_hooke(self, fileBaseName='tmp',\
+        toler=0.2, stepsize=0.01, nsteps=1000):
+        import ase.io as ai
+#        from ase.calculators.lj import LennardJones
+        from gaia.utils.hooke import Hooke
+        from ase.optimize.bfgs import BFGS
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.calc = Hooke(tolerAngs=toler, tolerMult=toler)
+        geomOpt = BFGS(
+            tmpAtoms,
+            maxstep=stepsize,
+            trajectory=fileBaseName+'.traj',
+            logfile=fileBaseName+'.log'
+        )
+        geomOpt.run(fmax = 0.01, steps = nsteps)
+        geomOpt = ai.read(fileBaseName+'.traj', index=':')
+        print('Hooke pre-optimization converged in %i loops'%(len(geomOpt)))
         tmpAtoms = geomOpt[-1]
         self.set_allAtoms(tmpAtoms)
 
