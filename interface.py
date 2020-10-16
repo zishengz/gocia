@@ -35,8 +35,8 @@ class Interface:
             self.fixList    = self.constraints[0].get_indices()
             self.bufferList = [i for i in list(range(len(subAtoms)))\
                 if i not in self.fixList]
-            self.cellParam  = allAtoms.get_cell()
-            self.pbcParam   = allAtoms.get_pbc()            
+            self.cellParam  = subAtoms.get_cell()
+            self.pbcParam   = subAtoms.get_pbc()            
         
         if allAtoms is not None:
             self.allAtoms   = allAtoms
@@ -57,6 +57,9 @@ class Interface:
             self.tags = tags
         else:
             self.tags = str(self.allAtoms)
+
+        self.update()
+
 
     def __len__(self):
         return len(self.allAtoms)
@@ -187,10 +190,10 @@ class Interface:
 
     def update(self):
         self.allPos  = self.allAtoms.get_positions()
-        self.adsList = self.get_adsList()
         self.allAtoms.set_cell(self.cellParam)
         self.allAtoms.set_pbc(self.pbcParam)
         self.allAtoms.set_constraint(self.constraints)
+        self.adsList = self.get_adsList()
         self.bufferList = [i for i in list(range(len(self.subAtoms)))\
                            if i not in self.fixList]
         

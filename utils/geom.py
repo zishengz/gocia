@@ -79,7 +79,11 @@ def chk_bondlength(atoms, radTol = 0.2):
 
 def get_neighbors(atoms, ind, chkList=None, scale = 0.85):
     cutoffs = scale * covalRadii[atoms.numbers]
-    nl = NeighborList(cutoffs=cutoffs, self_interaction=False)
+    nl = NeighborList(
+        cutoffs=cutoffs,
+        self_interaction=False,
+        bothways=True,  # or only half the list
+        )
     nl.update(atoms)
     nl = nl.get_neighbors(ind)
     myNl = [[],[]]
@@ -88,5 +92,5 @@ def get_neighbors(atoms, ind, chkList=None, scale = 0.85):
             if nl[0][i] in chkList:
                 myNl[0].append(nl[0][i])
                 myNl[1].append(nl[1][i])
-    return nl
+    return myNl
 
