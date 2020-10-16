@@ -44,7 +44,7 @@ class Interface:
 
         if zLim is None:
             self.zLim       = [min(self.allPos[:,2][self.bufferList]) + 0.1,
-                    max(self.allPos[:,2][self.bufferList]) + 2]
+                    max(self.allPos[:,2][self.bufferList]) + 2.5]
 
         if adsList is None:
             self.adsList    = np.array(
