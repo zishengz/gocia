@@ -2,7 +2,7 @@
 
 # G O C I A
 
-**G**lobal **O**ptimizer for **C**lusters, **I**nterfaces, and **A**dsorption
+**G**lobal **O**ptimizer for **C**lusters, **I**nterfaces, and **A**dsorbates
 
 ```GOCIA``` is a global optimization toolkit and Python modules specialized for simulating supported clusters, restructured interfaces and adsorbate configurations.
 
