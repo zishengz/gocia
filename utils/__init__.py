@@ -1,4 +1,4 @@
-from gaia.data import elemSymbol, covalRadii
+from gacia.data import elemSymbol, covalRadii
 
 __all__ = [
 

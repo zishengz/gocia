@@ -1,6 +1,6 @@
 
 
-from gaia.utils import geom
+from gacia.utils import geom
 from ase import Atoms
 import numpy as np
 

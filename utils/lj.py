@@ -2,7 +2,7 @@ from __future__ import division
 
 import numpy as np
 
-from gaia.data import covalRadii
+from gacia.data import covalRadii
 from ase.neighborlist import NeighborList
 from ase.calculators.calculator import Calculator, all_changes
 from ase.calculators.calculator import PropertyNotImplementedError
