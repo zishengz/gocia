@@ -8,7 +8,7 @@
 This module defines the Surface object. 
 """
 
-from gacia.data import elemSymbol, covalRadii
+from gocia.data import elemSymbol, covalRadii
 import numpy as np
 import json
 
@@ -149,7 +149,7 @@ class Interface:
         toler=0.2, stepsize=0.01, nsteps=1000):
         import ase.io as ai
 #        from ase.calculators.lj import LennardJones
-        from gacia.utils.lj import LennardJones
+        from gocia.utils.lj import LennardJones
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
         tmpAtoms.calc = LennardJones(tolerAngs=toler, tolerMult=toler)
@@ -169,7 +169,7 @@ class Interface:
         toler=0.2, stepsize=0.01, nsteps=1000):
         import ase.io as ai
 #        from ase.calculators.lj import LennardJones
-        from gacia.utils.hooke import Hooke
+        from gocia.utils.hooke import Hooke
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
         tmpAtoms.calc = Hooke(tolerAngs=toler, tolerMult=toler)

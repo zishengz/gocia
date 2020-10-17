@@ -1,5 +1,5 @@
 import numpy as np
-from gacia.utils import geom
+from gocia.utils import geom
 
 def get_sortedAdsList(intfc, cutoff = 0.9):
     tmpAtoms = intfc.get_allAtoms()

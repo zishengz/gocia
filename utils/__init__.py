@@ -1,4 +1,4 @@
-from gacia.data import elemSymbol, covalRadii
+from gocia.data import elemSymbol, covalRadii
 
 __all__ = [
 

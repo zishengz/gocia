@@ -1,5 +1,5 @@
 
-from gacia.data import atomNum, covalRadii
+from gocia.data import atomNum, covalRadii
 from ase.neighborlist import NeighborList
 import numpy as np
 

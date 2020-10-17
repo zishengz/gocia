@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-from gacia.data.vdw import vdw_radii
+from gocia.data.vdw import vdw_radii
 
 __all__ = [
     'elemSymbol', 'atomNum', 'elemName', 'atomMass',
