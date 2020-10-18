@@ -33,7 +33,7 @@ class Hooke(Calculator):
         tolerMult = self.parameters.tolerMult        
         cutoff = self.parameters.cutoff
         if cutoff is None:
-            cutoff = 1.0
+            cutoff = 1.5
 
         if 'numbers' in system_changes:
             self.nl = NeighborList([cutoff / 2] * natoms,\
@@ -68,4 +68,3 @@ class Hooke(Calculator):
         self.results['energy'] = energy
         self.results['free_energy'] = energy
         self.results['forces'] = forces
-

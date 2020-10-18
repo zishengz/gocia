@@ -9,6 +9,7 @@ This module defines the Surface object.
 """
 
 from gocia.data import elemSymbol, covalRadii
+import ase.io as fio
 import numpy as np
 import json
 
@@ -30,16 +31,22 @@ class Interface:
         interface = None
 
         if subAtoms is not None:
-            self.subAtoms   =subAtoms
-            self.constraints= subAtoms.constraints
+            if type(subAtoms) is str:
+                self.subAtoms   = fio.read(subAtoms)
+            else:
+                self.subAtoms   =subAtoms
+            self.constraints= self.subAtoms.constraints
             self.fixList    = self.constraints[0].get_indices()
             self.bufferList = [i for i in list(range(len(subAtoms)))\
                 if i not in self.fixList]
-            self.cellParam  = subAtoms.get_cell()
-            self.pbcParam   = subAtoms.get_pbc()            
+            self.cellParam  = self.subAtoms.get_cell()
+            self.pbcParam   = self.subAtoms.get_pbc()            
         
         if allAtoms is not None:
-            self.allAtoms   = allAtoms
+            if type(allAtoms) is str:
+                self.allAtoms   = fio.read(allAtoms)
+            else:
+                self.allAtoms   = allAtoms
             self.allPos     = self.allAtoms.get_positions()
 
         if zLim is None:
@@ -147,7 +154,6 @@ class Interface:
 
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.01, nsteps=1000):
-        import ase.io as ai
 #        from ase.calculators.lj import LennardJones
         from gocia.utils.lj import LennardJones
         from ase.optimize.bfgs import BFGS
@@ -160,14 +166,13 @@ class Interface:
             logfile=fileBaseName+'.log'
         )
         geomOpt.run(fmax = 0.01, steps = nsteps)
-        geomOpt = ai.read(fileBaseName+'.traj', index=':')
+        geomOpt = fio.read(fileBaseName+'.traj', index=':')
         print('L-J pre-optimization converged in %i loops'%(len(geomOpt)))
         tmpAtoms = geomOpt[-1]
         self.set_allAtoms(tmpAtoms)
 
     def preopt_hooke(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.01, nsteps=1000):
-        import ase.io as ai
 #        from ase.calculators.lj import LennardJones
         from gocia.utils.hooke import Hooke
         from ase.optimize.bfgs import BFGS
@@ -180,7 +185,7 @@ class Interface:
             logfile=fileBaseName+'.log'
         )
         geomOpt.run(fmax = 0.01, steps = nsteps)
-        geomOpt = ai.read(fileBaseName+'.traj', index=':')
+        geomOpt = fio.read(fileBaseName+'.traj', index=':')
         print('Hooke pre-optimization converged in %i loops'%(len(geomOpt)))
         tmpAtoms = geomOpt[-1]
         self.set_allAtoms(tmpAtoms)
@@ -210,8 +215,7 @@ class Interface:
                 str([elemSymbol[i] for i in self.adsList[:,0]]))
 
     def write(self, fileName):
-        import ase.io as ai
-        ai.write(fileName, self.get_allAtoms())
+        fio.write(fileName, self.get_allAtoms())
 
 
 

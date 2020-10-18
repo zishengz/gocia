@@ -87,10 +87,50 @@ def get_neighbors(atoms, ind, chkList=None, scale = 0.85):
     nl.update(atoms)
     nl = nl.get_neighbors(ind)
     myNl = [[],[]]
-    if chkList is not None:
-        for i in range(len(nl[0])):
+    for i in range(len(nl[0])):
+        if chkList is not None:
             if nl[0][i] in chkList:
                 myNl[0].append(nl[0][i])
                 myNl[1].append(nl[1][i])
+        else:
+            myNl[0].append(nl[0][i])
+            myNl[1].append(nl[1][i])
     return myNl
 
+def get_coordStatus(atoms, scale=1.25):
+    """Returns an array of coordination numbers and an array of existing bonds determined by
+    distance and covalent radii.  By default a bond is defined as 120% of the combined radii
+    or less. This can be changed by setting 'covalent_percent' to a float representing a 
+    factor to multiple by (default = 1.2).
+    If 'exclude' is set to an array,  these atomic numbers with be unable to form bonds.
+    This only excludes them from being counted from other atoms,  the coordination
+    numbers for these atoms will still be calculated,  but will be unable to form
+    bonds to other excluded atomic numbers.
+    """
+
+    # Get all the distances
+    distances = np.divide(atoms.get_all_distances(mic=True), scale)
+    
+    # Atomic Numbers
+    numbers = atoms.numbers
+    # Coordination Numbers for each atom
+    cnList, blList, nbList = [], [], []
+    cr = np.take(covalRadii, numbers)
+    # Array of indices of bonded atoms.  len(bonded[x]) == cn[x]
+    indices = list(range(len(atoms)))
+    for i in indices:
+        neibInd = []
+        bondLen = []
+        for ii in indices:
+            # Skip if measuring the same atom
+            if i == ii:
+                continue
+            if (cr[i] + cr[ii]) >= distances[i,ii]:
+                neibInd.append(ii)
+                bondLen.append(distances[i,ii])
+        # Add this atoms bonds to the bonded list
+        nbList.append(neibInd)
+        blList.append(bondLen)
+    for i in nbList:
+        cnList.append(len(i))
+    return np.array(cnList), nbList, blList
