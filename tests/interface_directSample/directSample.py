@@ -3,8 +3,7 @@ import os, sys
 import ase.io as ai
 import ase.db as db
 from gocia.interface import Interface
-from gocia.utils import geom
-from gocia.ga import build
+from gocia.geom import build
 
 surfName = sys.argv[1]
 adsInp = sys.argv[2].split()

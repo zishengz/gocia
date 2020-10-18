@@ -155,7 +155,7 @@ class Interface:
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones
-        from gocia.utils.lj import LennardJones
+        from gocia.calc.lj import LennardJones
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
         tmpAtoms.calc = LennardJones(tolerAngs=toler, tolerMult=toler)
@@ -174,7 +174,7 @@ class Interface:
     def preopt_hooke(self, cutoff = 1.5,
         toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones
-        from gocia.utils.hooke import Hooke
+        from gocia.calc.hooke import Hooke
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
         tmpAtoms.calc = Hooke(

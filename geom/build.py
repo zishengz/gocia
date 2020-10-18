@@ -1,6 +1,6 @@
 
 
-from gocia.utils import geom
+from gocia import geom
 from ase import Atoms
 import numpy as np
 import random
