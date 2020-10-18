@@ -148,12 +148,12 @@ class Interface:
 
     def rattle(self, stdev = 0.1):
         tmpAtoms = self.get_allAtoms()
-        tmpAtoms.rattle(stdev = stdev)
+        tmpAtoms.rattle(stdev = stdev, seed=np.random.seed())
         self.set_allAtoms(tmpAtoms)
 
 
     def preopt_lj(self, fileBaseName='tmp',\
-        toler=0.2, stepsize=0.01, nsteps=1000):
+        toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones
         from gocia.utils.lj import LennardJones
         from ase.optimize.bfgs import BFGS
@@ -171,23 +171,26 @@ class Interface:
         tmpAtoms = geomOpt[-1]
         self.set_allAtoms(tmpAtoms)
 
-    def preopt_hooke(self, fileBaseName='tmp',\
-        toler=0.2, stepsize=0.01, nsteps=1000):
+    def preopt_hooke(self, cutoff = 1.5,
+        toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones
         from gocia.utils.hooke import Hooke
         from ase.optimize.bfgs import BFGS
         tmpAtoms = self.get_allAtoms()
-        tmpAtoms.calc = Hooke(tolerAngs=toler, tolerMult=toler)
+        tmpAtoms.calc = Hooke(
+            cutoff=cutoff,
+            tolerAngs=toler,
+            tolerMult=toler
+            )
         geomOpt = BFGS(
             tmpAtoms,
             maxstep=stepsize,
-            trajectory=fileBaseName+'.traj',
-            logfile=fileBaseName+'.log'
+            trajectory=None,
+            logfile=None
         )
         geomOpt.run(fmax = 0.01, steps = nsteps)
-        geomOpt = fio.read(fileBaseName+'.traj', index=':')
-        print('Hooke pre-optimization converged in %i loops'%(len(geomOpt)))
-        tmpAtoms = geomOpt[-1]
+#        print(tmpAtoms.get_potential_energy())
+#        print('Hooke pre-optimization converged in %i loops'%(len(geomOpt)))
         self.set_allAtoms(tmpAtoms)
 
 

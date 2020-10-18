@@ -14,7 +14,7 @@ class Hooke(Calculator):
                           'k': 1,
                           'tolerAngs': 0.2,
                           'tolerMult': 0.2,
-                          'cutoff': None
+                          'cutoff': 1.5,
                           }
     nolabel = True
 
@@ -32,10 +32,11 @@ class Hooke(Calculator):
         tolerAngs = self.parameters.tolerAngs
         tolerMult = self.parameters.tolerMult        
         cutoff = self.parameters.cutoff
-        if cutoff is None:
-            cutoff = 1.5
 
         if 'numbers' in system_changes:
+            # Want agregation?  cutoff > 2.00
+            # Want uniform?     cutoff < 1.50
+            # Directional?      cutoff < 1.25
             self.nl = NeighborList([cutoff / 2] * natoms,\
                       self_interaction=False)
 
