@@ -32,8 +32,8 @@ def clusterIsomer(
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
     print('-'*60)
-    print('%i isomers found from %s samples.\tEfficiency = %s'%\
-        (len(isoUniq), nStates, '{:.2%}'.format(len(isoUniq)/nStates)))
+    print('%i isomers found from %s samples.\tOversampling = %s'%\
+        (len(isoUniq), nStates, '{:.2%}'.format(nStates/len(isoUniq)-1)))
     sortedTraj = []
     for v in sorted(eneUniq):
         sortedTraj.append(trajAtoms[list(eneArray).index(v)])
