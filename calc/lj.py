@@ -10,7 +10,7 @@ from ase.calculators.calculator import PropertyNotImplementedError
 
 class LennardJones(Calculator):
     implemented_properties = ['energy', 'forces', 'stress']
-    default_parameters = {'epsilon': 0.1,
+    default_parameters = {'epsilon': 1,
                           'sigma': 1.0,
                           'tolerAngs': 0.2,
                           'tolerMult': 0.2,

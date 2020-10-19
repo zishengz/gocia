@@ -30,8 +30,8 @@ for i in range(nSample):
         zLim=surf.zLim
     )
     newsurf.preopt_hooke(
-        cutoff = 1.2,
-        toler = 0.1
+       cutoff = 1.2,
+       toler = 0.1
         )
     newsurf.write('tmp.db')
 os.system('mv %s %s'%('tmp.db', str(newsurf.get_allAtoms().symbols)+'.db'))

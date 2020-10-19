@@ -12,6 +12,10 @@ def BLDA(elem1, elem2, sigma = 0.1, scale = 1):
     covalBl = (covalRadii[elem1] + covalRadii[elem2])
     return np.random.normal(covalBl, sigma) * scale
 
+def RMSD(atoms1, atoms2):
+    r1, r2 = atoms1.get_positions(), atoms2.get_positions()
+    return np.sqrt(((r1 - r2)**2).sum() / len(r1))
+
 def rand_direction():
     randVec = np.random.rand(3) - 0.5
     return randVec / np.sqrt(np.sum(randVec**2))
