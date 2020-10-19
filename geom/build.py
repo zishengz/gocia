@@ -45,7 +45,7 @@ def grow_adatom(
                     tmpInterfc.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
                     )
-                coord = tmpInterfc.get_positions()[i] + growVec
+                coord = tmpInterfc.get_allPos()[i] + growVec
                 n_place += 1
             tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
             bufferList.append(len(tmpInterfc)-1)

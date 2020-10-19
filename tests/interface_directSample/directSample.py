@@ -5,6 +5,8 @@ import ase.db as db
 from gocia.interface import Interface
 from gocia.geom import build
 
+# $ python directSample.py GaN_4-l_vac-1.vasp 'N N N' 10
+# # Timing: 0.7767 s/structure
 surfName = sys.argv[1]
 adsInp = sys.argv[2].split()
 nSample = int(sys.argv[3])

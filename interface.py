@@ -83,6 +83,9 @@ class Interface:
     def get_allAtoms(self):
         return self.allAtoms.copy()
 
+    def get_subAtoms(self):
+        return self.subAtoms
+
     def set_allAtoms(self, newAllAtoms):
         newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
@@ -96,8 +99,11 @@ class Interface:
     def get_cell(self):
         return self.cellParam.copy()
 
-    def get_positions(self):
+    def get_allPos(self):
         return self.get_allAtoms().get_positions().copy()
+
+    def get_subPos(self):
+        return self.get_subAtoms().get_positions().copy()
 
     def set_positions(self, newPos):
         tmpAtoms = self.get_allAtoms()
@@ -118,7 +124,11 @@ class Interface:
             )
     
     def get_adsIndexList(self):
-        return list(self.get_adsList()[:,1])
+        tmpList = self.get_adsList()
+        if len(tmpList) == 0:
+            return []
+        else:
+            return list(tmpList[:,1])
 
     def get_topLayerList(self, depth = 1):
         allZ = self.allPos[:,2]

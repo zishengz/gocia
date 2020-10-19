@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 import matplotlib.path as mpath
 from matplotlib.patches import Ellipse, PathPatch
 
-# To enlarge the size of atoms
-covalRadii = covalRadii/2 + 0.5
 # Predefine some Linear Algebra operations
 univ = lambda x: x / np.linalg.norm(x)
 rotv = lambda u, a: np.dot(np.array([[np.cos(np.radians(a)), -np.sin(np.radians(a))],\
@@ -54,29 +52,41 @@ def getPseudoBonds(atoms, allnum, bdpair):
     return pbpair
 
 def plotAtom(anum, apos, scale=1,cmap=jmol_colors, \
-    colorparam=1, linwt=1.5):
+    colorparam=1, linwt=1.5, enlarge=False):
+    if enlarge:
+        plotRadii = scale * (0.5+covalRadii[anum]/2)
+    else:
+        plotRadii = scale * covalRadii[anum]
     shape = plt.Circle(
         apos[:2],
-        radius = scale * covalRadii[anum], 
+        radius = plotRadii, 
         fc=adjustColor(cmap[anum], colorparam),
         ec=adjustColor('k', colorparam),
         linewidth=linwt,
         )
     plt.gca().add_patch(shape)
 
-def plotCircShine(anum, apos, atomscale=1, shift=0.33, scale=0.25, trans=0.33):
+def plotCircShine(anum, apos, atomscale=1, shift=0.33, scale=0.25, trans=0.33, enlarge=False):
+    if enlarge:
+        plotRadii = scale * (0.5+covalRadii[anum]/2)
+    else:
+        plotRadii = scale * covalRadii[anum]
     shape = plt.Circle(
         apos[:2] + np.array([ -shift, shift])*covalRadii[anum],
-        radius = scale * covalRadii[anum], 
+        radius = plotRadii, 
         fc='w',
         alpha = trans,
         )
     plt.gca().add_patch(shape)
 
-def plotElliShine(anum, apos, atomscale=1, shift=0.4, scale=0.5, rot=-45, trans=0.33):
+def plotElliShine(anum, apos, atomscale=1, shift=0.4, scale=0.5, rot=-45, trans=0.33, enlarge=False):
+    if enlarge:
+        plotRadii = scale * (0.5+covalRadii[anum]/2)
+    else:
+        plotRadii = scale * covalRadii[anum]
     shape = Ellipse(
         apos[:2] + np.array([ -shift, shift])*covalRadii[anum]*atomscale,
-        width = 0.66 * atomscale * scale * covalRadii[anum], 
+        width = 0.66 * atomscale * plotRadii, 
         height = scale * atomscale * covalRadii[anum], 
         angle = rot,
         fc='w',
@@ -151,42 +161,22 @@ def plotCell(x1, x2, y1, y2, linc = 'k', linwt=1.5):
     cellLine = plt.Line2D([x2,x2], [y2, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
     cellLine = plt.Line2D([x2,x1], [y1, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
 
-def drawCPK(atoms, ascale=1):
-    atoms = make_supercell(atoms, [3,3,1])
-    print(atoms)
-    allnum = atoms.get_atomic_numbers()
-    allpos = atoms.get_positions()
-    plt.figure(figsize=(8,8))
-    for i in range(len(s)):
-        anum = allnum[i]
-        apos = allpos[i]
-        plotAtom(anum, apos, scale=ascale)
-        plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.5)
-    plt.axis('scaled')
-    plt.tight_layout()
-    plt.axis('off')
-    plt.show()
-
 def drawBSsurf(
-    atoms,
+    interfc,
     bdcutoff=0.85,
     ascale=0.4,
     brad=0.1,
     outName=None,
     zLim=None,
-    zBuffer = None,
     pseudoBond = False,
     hBond = False,
     ):
-    allpos = atoms.get_positions()
+    atoms = interfc.get_allAtoms()
     if zLim is None:
-        zLim = [(allpos[:,2].min() + allpos[:,2].max()) / 2,
-                allpos[:,2].max()]
-    if zBuffer is None:
-        zBuffer = [(allpos[:,2].min() + allpos[:,2].max()) / 2,
-                   (allpos[:,2].min() + allpos[:,2].max() * 3) / 4]
+        zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
+                interfc.get_allPos()[:,2].max()]
     atoms = atoms[[a.index for a in atoms \
-        if zLim[0] < allpos[a.index][2] <= zLim[1]]]
+        if zLim[0] < interfc.get_allPos()[a.index][2] <= zLim[1]]]
     ori_cell = convert_cell(atoms.get_cell())
     atoms = atoms*[3,3,1]
     atoms.set_pbc([0,0,0])
@@ -200,14 +190,24 @@ def drawBSsurf(
     allnum = atoms.get_atomic_numbers()
     allpos = atoms.get_positions()
     allz = allpos[:, 2]
-
+    # color gradient according to z
     # if max(allz) - min(allz) < zlim:
     #     allc=[1]*len(allz)
+
+    adsList = interfc.get_adsIndexList()
+    bufList = interfc.get_bufferList()
+    adsList = [i for i in range(len(atoms)) \
+        if atoms.get_positions()[i]-ori_cell[0]-ori_cell[1]\
+            in interfc.get_allPos()[adsList]]
+    bufList = [i for i in range(len(atoms)) \
+        if atoms.get_positions()[i]-ori_cell[0]-ori_cell[1]\
+            in interfc.get_allPos()[bufList]]
     allc = [
-		1 if i > zBuffer[1]           # Full color
-		else 1.33 if i > zBuffer[0]   # Shallow color
-		else 2.0 for i in allz
+		1 if i in adsList           # Full color
+		else 1.33 if i in bufList   # Shallow color
+		else 2.0 for i in range(len(atoms))
 	]
+
     bdpair = [[i[0], i[1]] for i in get_bondpairs(atoms, bdcutoff)]
     hbpair = []
     if hBond:
@@ -227,7 +227,7 @@ def drawBSsurf(
             atomscale=ascale, bdrad=brad, mode='low',\
             colorparam=allc[i], linwt=2.5-allc[i])
         plotAtom(anum, apos, scale=ascale,\
-            colorparam=allc[i], linwt=2.5-allc[i])
+            colorparam=allc[i], linwt=2.5-allc[i], enlarge=True)
         plotElliShine(anum, apos, atomscale=0.4, shift=0.45, scale=0.5)
         plotBondHalf(allnum, allpos, bdpair, i,\
             atomscale=ascale, bdrad=brad, mode='high',\
@@ -244,7 +244,64 @@ def drawBSsurf(
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
     if outName is not None:
-        plt.savefig(outName+'.png', dpi=100, \
+        plt.savefig(outName+'-bs.png', dpi=100, \
+            bbox_inches = "tight", transparent=True, pad_inches = 0)
+    else:
+        plt.show()
+    plt.close()
+
+def drawCPK(
+    interfc,
+    ascale=1,
+    outName=None,
+    zLim=None,
+    ):
+    atoms = interfc.get_allAtoms()
+    if zLim is None:
+        zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
+                interfc.get_allPos()[:,2].max()]
+    atoms = atoms[[a.index for a in atoms \
+        if zLim[0] < interfc.get_allPos()[a.index][2] <= zLim[1]]]
+    # atoms = atoms[[a.index for a in atoms \
+    #     if zLim[0] < allpos[a.index][2] <= zLim[1]]]
+    ori_cell = convert_cell(atoms.get_cell())
+    atoms_old = atoms.copy()
+    atoms = Atoms(sorted(atoms, key=lambda atm: atm.position[2]))
+    allnum = atoms.get_atomic_numbers()
+    allpos = atoms.get_positions()
+    adsList = interfc.get_adsIndexList()
+    bufList = interfc.get_bufferList()
+    adsList = [i for i in range(len(atoms)) \
+        if atoms.get_positions()[i] in interfc.get_allPos()[adsList]]
+    bufList = [i for i in range(len(atoms)) \
+        if atoms.get_positions()[i] in interfc.get_allPos()[bufList]]
+    allc = [
+		1 if i in adsList       # Full color
+		else 1.33 if i in bufList   # Shallow color
+		else 2.0 for i in range(len(atoms))
+	]
+    plotCell(
+        ori_cell[0][0] * 1,
+        ori_cell[0][0] * 2,
+        ori_cell[1][1] * 1,
+        ori_cell[1][1] * 2,
+        linwt=5)
+    for i in range(len(atoms)):
+        anum = allnum[i]
+        apos = allpos[i]
+        plotAtom(anum, apos, scale=ascale,\
+            colorparam=allc[i], linwt=2.5-allc[i])
+        plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.5)
+    plt.axis('scaled')
+    plt.xlim(ori_cell[0][0]*0, ori_cell[0][0]*1)
+    plt.ylim(ori_cell[1][1]*0, ori_cell[1][1]*1)
+    plt.tight_layout()
+    plt.axis('off')
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+    plt.margins(0,0)
+    if outName is not None:
+        plt.savefig(outName+'-cpk.png', dpi=100, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
     else:
         plt.show()
