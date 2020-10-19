@@ -91,11 +91,6 @@ class Interface:
         newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
         self.update()
-    
-    def wrap(self):
-        tmpAtoms = self.get_allAtoms()
-        tmpAtoms.wrap()
-        self.set_allAtoms(tmpAtoms)
 
     def get_cell(self):
         return self.cellParam.copy()
@@ -113,6 +108,12 @@ class Interface:
 
     def get_chemical_symbols(self):
         return self.get_allAtoms().get_chemical_symbols().copy()
+
+    def get_constraints(self):
+        return self.subAtoms.constraints
+
+    def get_fixList(self):
+        return self.subAtoms.constraints[0].index
 
     def get_adsList(self):
         if len(self.get_allAtoms()) == len(self.subAtoms):
@@ -138,6 +139,11 @@ class Interface:
 
     def get_bufferList(self):
         return self.bufferList.copy()
+
+    def wrap(self):
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.wrap()
+        self.set_allAtoms(tmpAtoms)
 
     def merge_adsorbate(self, adsAtoms):
         self.set_allAtoms(
