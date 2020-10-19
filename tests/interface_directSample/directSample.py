@@ -1,7 +1,7 @@
 
 import os, sys
 import ase.io as ai
-import ase.db as db
+from ase.db import connect
 from gocia.interface import Interface
 from gocia.geom import build
 
@@ -18,6 +18,7 @@ surf = Interface(
 )
 surf.print_info()
 
+myDB = connect('tmp.db', append=False)
 for i in range(nSample):
     print('Structure %i'%i,end='\t')
     newsurf = build.grow_adatom(
@@ -26,13 +27,13 @@ for i in range(nSample):
         toler=0.75,
         doShuffle=True,
         sameElemPenalty=0.5,
-        rattle=True, rattleStdev=0.25,
+        rattle=True, rattleStdev=0.1,
         zLim=surf.zLim
     )
     newsurf.preopt_hooke(
        cutoff = 1.2,
        toler = 0.1
         )
-    newsurf.write('tmp.db')
+    myDB.write(newsurf.get_allAtoms())
 os.system('mv %s %s'%('tmp.db', str(newsurf.get_allAtoms().symbols)+'.db'))
 
