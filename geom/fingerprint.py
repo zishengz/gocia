@@ -65,3 +65,9 @@ def coordinationFGPv1(atoms, scale=1.25):
         bl.max(),                       # 10: max of bond length
     ])
     return myFGP
+
+def calcFGP(atomsTraj, myfgp):
+    tmp = []
+    for a in atomsTraj:
+        tmp.append(myfgp(a))
+    return np.array(tmp)

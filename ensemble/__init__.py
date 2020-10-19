@@ -4,10 +4,9 @@ from ase.db import connect
 def clusterIsomer(
     trajAtoms,
     simMat,
-    eneArray,
-    magArray,
     outName='sort'
     ):
+    print(' * Detecting unique isomers...')
     nStates = len(simMat)
     isomerLabel = [-1]*nStates
     currIso, currInd = [], 0
@@ -27,6 +26,8 @@ def clusterIsomer(
         currInd += 1
 
         print('')
+    eneArray = [a.info['eV'] for a in trajAtoms]
+    magArray = [a.info['mag'] for a in trajAtoms]
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
