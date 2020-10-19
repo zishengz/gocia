@@ -174,9 +174,9 @@ def drawBSsurf(
     atoms = interfc.get_allAtoms()
     if zLim is None:
         zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
-                interfc.get_allPos()[:,2].max()]
+                interfc.get_pos()[:,2].max()]
     atoms = atoms[[a.index for a in atoms \
-        if zLim[0] < interfc.get_allPos()[a.index][2] <= zLim[1]]]
+        if zLim[0] < interfc.get_pos()[a.index][2] <= zLim[1]]]
     ori_cell = convert_cell(atoms.get_cell())
     atoms = atoms*[3,3,1]
     atoms.set_pbc([0,0,0])
@@ -194,14 +194,14 @@ def drawBSsurf(
     # if max(allz) - min(allz) < zlim:
     #     allc=[1]*len(allz)
 
-    adsList = interfc.get_adsIndexList()
-    bufList = interfc.get_bufferList()
+    adsList = interfc.get_adsList()
+    bufList = interfc.get_bufList()
     adsList = [i for i in range(len(atoms)) \
         if atoms.get_positions()[i]-ori_cell[0]-ori_cell[1]\
-            in interfc.get_allPos()[adsList]]
+            in interfc.get_pos()[adsList]]
     bufList = [i for i in range(len(atoms)) \
         if atoms.get_positions()[i]-ori_cell[0]-ori_cell[1]\
-            in interfc.get_allPos()[bufList]]
+            in interfc.get_pos()[bufList]]
     allc = [
 		1 if i in adsList           # Full color
 		else 1.33 if i in bufList   # Shallow color
@@ -259,9 +259,9 @@ def drawCPK(
     atoms = interfc.get_allAtoms()
     if zLim is None:
         zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
-                interfc.get_allPos()[:,2].max()]
+                interfc.get_pos()[:,2].max()]
     atoms = atoms[[a.index for a in atoms \
-        if zLim[0] < interfc.get_allPos()[a.index][2] <= zLim[1]]]
+        if zLim[0] < interfc.get_pos()[a.index][2] <= zLim[1]]]
     # atoms = atoms[[a.index for a in atoms \
     #     if zLim[0] < allpos[a.index][2] <= zLim[1]]]
     ori_cell = convert_cell(atoms.get_cell())
@@ -269,12 +269,12 @@ def drawCPK(
     atoms = Atoms(sorted(atoms, key=lambda atm: atm.position[2]))
     allnum = atoms.get_atomic_numbers()
     allpos = atoms.get_positions()
-    adsList = interfc.get_adsIndexList()
-    bufList = interfc.get_bufferList()
+    adsList = interfc.get_adsList()
+    bufList = interfc.get_bufList()
     adsList = [i for i in range(len(atoms)) \
-        if atoms.get_positions()[i] in interfc.get_allPos()[adsList]]
+        if atoms.get_positions()[i] in interfc.get_pos()[adsList]]
     bufList = [i for i in range(len(atoms)) \
-        if atoms.get_positions()[i] in interfc.get_allPos()[bufList]]
+        if atoms.get_positions()[i] in interfc.get_pos()[bufList]]
     allc = [
 		1 if i in adsList       # Full color
 		else 1.33 if i in bufList   # Shallow color

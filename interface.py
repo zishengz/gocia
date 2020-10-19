@@ -11,6 +11,8 @@ This module defines the Surface object.
 from gocia.data import elemSymbol, covalRadii
 from gocia import geom
 import ase.io as fio
+from ase.atoms import Atoms
+from ase.constraints import FixAtoms
 import numpy as np
 import json
 
@@ -19,55 +21,52 @@ class Interface:
                  tags=None,
                  allAtoms=None,
                  subAtoms=None,
-                 allPos=None,
-                 constraint=None,
                  fixList=None,
-                 bufferList=None,
+                 bufList=None,
+                 adsList=None,
                  cellParam=None,
                  pbcParam=None,
                  zLim=None,
-                 adsList=None
+                 info=None
                  ):
 
         interface = None
 
         if subAtoms is not None:
             if type(subAtoms) is str:
-                self.subAtoms   = fio.read(subAtoms)
+                self.subAtoms = fio.read(subAtoms)
             else:
-                self.subAtoms   =subAtoms
-            self.constraints= self.subAtoms.constraints
-            self.fixList    = self.constraints[0].get_indices()
-            self.bufferList = [i for i in list(range(len(subAtoms)))\
-                if i not in self.fixList]
-            self.cellParam  = self.subAtoms.get_cell()
-            self.pbcParam   = self.subAtoms.get_pbc()            
-        
+                self.subAtoms =subAtoms
+
         if allAtoms is not None:
             if type(allAtoms) is str:
                 self.allAtoms   = fio.read(allAtoms)
             else:
                 self.allAtoms   = allAtoms
-            self.allPos     = self.allAtoms.get_positions()
 
+        self.fixList    = self.subAtoms.constraints[0].get_indices()
+        self.bufList = [i for i in list(range(len(subAtoms)))\
+            if i not in self.fixList]
+        self.adsList    = [i for i in list(range(len(self.allAtoms)))\
+            if i not in list(range(len(self.subAtoms)))]
+
+        self.cellParam  = self.subAtoms.get_cell()
+        self.pbcParam   = self.subAtoms.get_pbc()            
+        
         if zLim is None:
-            self.zLim       = [min(self.allPos[:,2][self.bufferList]) + 0.1,
-                    max(self.allPos[:,2][self.bufferList]) + 2.5]
-
-        if adsList is None:
-            self.adsList    = np.array(
-                [[self.allAtoms.get_atomic_numbers()[i], i]\
-                for i in list(range(len(self.allAtoms)))\
-                if i not in list(range(len(self.subAtoms)))]
-            )
+            allPos = self.allAtoms.get_positions()
+            self.zLim = [min(allPos[:,2][self.bufList]) + 0.1,
+                    max(allPos[:,2][self.bufList]) + 2.5]
 
         if tags is not None:
             self.tags = tags
         else:
             self.tags = str(self.allAtoms)
 
-        self.update()
-
+        if info is not None:
+            self.info = info
+        else:
+            self.info={}
 
     def __len__(self):
         return len(self.allAtoms)
@@ -81,25 +80,99 @@ class Interface:
         )
         return myCopy
 
+    def update(self):
+        '''
+        Call after updating the allAtoms!
+        '''
+        self.bufList = [i for i in list(range(len(self.subAtoms)))\
+                        if i not in self.fixList]
+        self.adsList = []
+        if len(self.get_allAtoms()) != len(self.subAtoms):
+            self.adsList = [i for i in list(range(len(self.allAtoms)))\
+                            if i not in list(range(len(self.subAtoms)))]
+        self.fixList = self.subAtoms.constraints[0].get_indices()
+        self.allAtoms.set_constraint(FixAtoms(self.fixList))
+        self.allAtoms.set_cell(self.get_cell())
+        self.allAtoms.set_pbc(self.get_pbc())
+
+
+    def print_info(self):
+        print('#TAG: ', self.tags)
+        print(' |-Fixed atoms:    \t', self.get_fixAtoms().symbols)
+        print(' |-Buffer atoms:   \t', self.get_bufAtoms().symbols)
+        if self.get_adsList() == []:
+            print(' |-Adsorbates:    \t None')
+        else:    
+            print(' |-Adsorbates:    \t',self.get_adsAtoms().symbols)
+        print(' |-Buffer region:\t Z = %.3f to %.3f'%\
+            (self.zLim[0], self.zLim[1]))
+        print(self.info,'\n')
+        
+
+    def get_cell(self):
+        return self.cellParam.copy()
+
+    def get_pbc(self):
+        return self.pbcParam.copy()
+
+    def get_pos(self):
+        return self.get_allAtoms().get_positions().copy()
+
+    def get_subPos(self):
+        return self.get_subAtoms().get_positions().copy()
+
+    def get_fixList(self):
+        return self.fixList.copy()
+
+    def get_bufList(self):
+        return self.bufList.copy()
+
+    def get_adsList(self):
+        return self.adsList.copy()
+
+    def get_optList(self):
+        return self.bufList.copy() + self.adsList.copy()
+
     def get_allAtoms(self):
         return self.allAtoms.copy()
 
     def get_subAtoms(self):
-        return self.subAtoms
+        return self.subAtoms.copy()
+
+    def get_fixAtoms(self):
+        tmpAtoms = self.get_allAtoms()
+        del tmpAtoms[[a.index for a in tmpAtoms\
+            if a.index not in self.get_fixList()]]
+        return tmpAtoms
+
+    def get_bufAtoms(self):
+        tmpAtoms = self.get_allAtoms()
+        del tmpAtoms[[a.index for a in tmpAtoms\
+            if a.index not in self.get_bufList()]]
+        return tmpAtoms
+    
+    def get_adsAtoms(self):
+        tmpAtoms = self.get_allAtoms()
+        del tmpAtoms[[a.index for a in tmpAtoms\
+            if a.index not in self.get_adsList()]]
+        return tmpAtoms
+
+    def get_optAtoms(self):
+        tmpAtoms = self.get_allAtoms()
+        del tmpAtoms[[a.index for a in tmpAtoms\
+            if a.index not in self.get_adsList() and\
+               a.index not in self.get_bufList()]]
+        return tmpAtoms
 
     def set_allAtoms(self, newAllAtoms):
         newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
         self.update()
 
-    def get_cell(self):
-        return self.cellParam.copy()
-
-    def get_allPos(self):
-        return self.get_allAtoms().get_positions().copy()
-
-    def get_subPos(self):
-        return self.get_subAtoms().get_positions().copy()
+    def set_allPos(self, newAllPos):
+        tmpAtoms = self.get_allAtoms()
+        tmpAtoms.set_positions(newAllPos)
+        self.set_allAtoms(tmpAtoms)
 
     def set_positions(self, newPos):
         tmpAtoms = self.get_allAtoms()
@@ -112,33 +185,10 @@ class Interface:
     def get_constraints(self):
         return self.subAtoms.constraints
 
-    def get_fixList(self):
-        return self.subAtoms.constraints[0].index
-
-    def get_adsList(self):
-        if len(self.get_allAtoms()) == len(self.subAtoms):
-            return []
-        else:
-            return np.array(
-                [[self.allAtoms.get_atomic_numbers()[i], i]\
-                for i in list(range(len(self.allAtoms)))\
-                if i not in list(range(len(self.subAtoms)))]
-            )
-    
-    def get_adsIndexList(self):
-        tmpList = self.get_adsList()
-        if len(tmpList) == 0:
-            return []
-        else:
-            return list(tmpList[:,1])
-
     def get_topLayerList(self, depth = 1):
-        allZ = self.allPos[:,2]
+        allZ = self.get_pos[:,2]
         return [a.index for a in self.allAtoms\
             if max(allZ) - allZ[a.index] <= depth]
-
-    def get_bufferList(self):
-        return self.bufferList.copy()
 
     def wrap(self):
         tmpAtoms = self.get_allAtoms()
@@ -146,21 +196,18 @@ class Interface:
         self.set_allAtoms(tmpAtoms)
 
     def merge_adsorbate(self, adsAtoms):
-        self.set_allAtoms(
-            self.get_allAtoms().extend(adsAtoms)
-        )
-
-    def remove_adatom(self, adsIndexList=None):
-        oldAdsList = self.get_adsIndexList()
-        if adsIndexList is None:
-            adsIndexList = list(range(len(oldAdsList)))
-        if type(adsIndexList) is not list:
-            adsIndexList = [adsIndexList]
-        adsIndexList = [oldAdsList[i] for i in adsIndexList]
         tmpAtoms = self.get_allAtoms()
-        print(len(tmpAtoms))        
-        del tmpAtoms[adsIndexList]
-        print(len(tmpAtoms))   
+        tmpAtoms.extend(adsAtoms)
+        self.set_allAtoms(tmpAtoms)
+
+    def remove_adatom(self, rmList=None):
+        if rmList is None:
+            rmList = list(range(len(oldAdsList)))
+        if type(rmList) is not list:
+            rmList = [rmList]
+        adsList = [self.get_adsList()[i] for i in rmList]
+        tmpAtoms = self.get_allAtoms()  
+        del tmpAtoms[adsList]
         self.set_allAtoms(tmpAtoms)
 
     def rattle(self, stdev = 0.1):
@@ -205,30 +252,6 @@ class Interface:
         geomOpt.run(fmax = 0.01, steps = nsteps)
         print(' - Hookean pre-optimization: RMSD = %.3f Angstroms'%geom.RMSD(self.get_allAtoms(), tmpAtoms))
         self.set_allAtoms(tmpAtoms)
-
-
-
-
-    def update(self):
-        self.allPos  = self.allAtoms.get_positions()
-        self.allAtoms.set_cell(self.cellParam)
-        self.allAtoms.set_pbc(self.pbcParam)
-        self.allAtoms.set_constraint(self.constraints)
-        self.adsList = self.get_adsList()
-        self.bufferList = [i for i in list(range(len(self.subAtoms)))\
-                           if i not in self.fixList]
-        
-
-    def print_info(self):
-        print(self.tags)
-        print(self.allAtoms)
-        print('Buffer region:\tZ = %.3f to %.3f'%\
-            (self.zLim[0], self.zLim[1]))
-        if self.get_adsList() == []:
-            print('No adsorbates so far.')
-        else:    
-            print('Adsorbate:\t'+\
-                str([elemSymbol[i] for i in self.adsList[:,0]]))
 
     def write(self, fileName):
         fio.write(fileName, self.get_allAtoms())

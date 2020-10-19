@@ -23,12 +23,12 @@ def grow_adatom(
         if doShuffle:
             random.shuffle(addElemList)
         ind_curr = 0
-        bufferList = interfc.get_bufferList()
         tmpInterfc = interfc.copy()
         if rattle:
             tmpInterfc.rattle(rattleStdev)
-        while len(tmpInterfc) < len(interfc) + numAds:
-            i = np.random.choice(bufferList)
+        while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
+            optList = interfc.get_optList()
+            i = np.random.choice(optList)
             if cnCount:
                 cn = geom.get_coordStatus(
                     tmpInterfc.get_allAtoms(),
@@ -45,15 +45,14 @@ def grow_adatom(
                     tmpInterfc.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
                     )
-                coord = tmpInterfc.get_allPos()[i] + growVec
+                coord = tmpInterfc.get_pos()[i] + growVec
                 n_place += 1
             tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
-            bufferList.append(len(tmpInterfc)-1)
             ind_curr += 1
         if geom.chk_bondlength(tmpInterfc.get_allAtoms(), radTol=toler):
             badStructure = False
         n_attempts += 1
-    print(' %i\tplacements| %i\ttabula rasa'%(n_place, n_attempts - 1))
+    print('%i\tplacements| %i\ttabula rasa'%(n_place, n_attempts - 1))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc

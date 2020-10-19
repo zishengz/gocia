@@ -6,7 +6,7 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 def sortedAdsFGP(intfc, cutoff = 0.9):
     tmpAtoms = intfc.get_allAtoms()
     adsList = list(intfc.get_adsList()[:,1])
-    bufList = list(intfc.get_bufferList())
+    bufList = list(intfc.get_bufList())
     adsBl = []
     for ads in adsList:
         neib = geom.get_neighbors(
@@ -23,7 +23,7 @@ def sortedAdsFGP(intfc, cutoff = 0.9):
 def sortedBufFGP(intfc, cutoff = 0.9):
     tmpAtoms = intfc.get_allAtoms()
 #    adsList = list(intfc.get_adsList()[:,1])
-    bufList = list(intfc.get_bufferList())
+    bufList = list(intfc.get_bufList())
     bufBl = []
     for buf in bufList:
         neib = geom.get_neighbors(
