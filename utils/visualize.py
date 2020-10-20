@@ -248,7 +248,7 @@ def draw_BSsurf(
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
-    plt.title(title, fontsize=22)
+    plt.title(title, fontsize=22, fontweight='bold')
     if outName is not None:
         plt.savefig(outName+'-bs.png', dpi=100, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)

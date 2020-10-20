@@ -45,16 +45,24 @@ myImgList = natsorted([f for f in os.listdir() if baseName in f and 'png' in f a
 # histogram(eneList, baseName)
 myBigFig = natsorted([f for f in os.listdir() if baseName in f and 'png' in f and 'hist' in f])
 
-rp.gen_pdf_test2(
+# # rp.gen_pdf_test2(
+# #     projName='Global Optimization of Restructured %s'%baseName,
+# #     description=\
+# #         '\\begin{enumerate}\n'+\
+# #         '\\item From direct BLDA sampling with random rattling of 0.1 Angstrom and Hookean pre-optimization.\n'+\
+# #         '\\item The same-element probability penalty is set to 50\%, and desorbed N$_2$ structures are filtered out.\n'+\
+# #         '\\item Color code: Ga - light brown; N - blue.\n'+\
+# #         '\\item For clarity, the constrained atoms are drawn in white, and the buffer atoms are drawn in shallow color.\n'+\
+# #         '\\end{enumerate}',
+# #     imgList=myImgList,
+# #     bigFig=myBigFig
+# # )
+
+rp.gen_pdf_GlobOpt1(
     projName='Global Optimization of Restructured %s'%baseName,
-    description=\
-        '\\begin{enumerate}\n'+\
-        '\\item From direct BLDA sampling with random rattling of 0.1 Angstrom and Hookean pre-optimization.\n'+\
-        '\\item The same-element probability penalty is set to 50\%, and desorbed N$_2$ structures are filtered out.\n'+\
-        '\\item Color code: Ga - light brown; N - blue.\n'+\
-        '\\item For clarity, the constrained atoms are drawn in white, and the buffer atoms are drawn in shallow color.\n'+\
-        '\\end{enumerate}',
+    description='comment.tex',
     imgList=myImgList,
     bigFig=myBigFig
 )
+
 os.system('rm *%s*.png'%baseName)

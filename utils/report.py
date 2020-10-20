@@ -21,9 +21,10 @@ def get_rows(flatList, nCol):
 def tex_header(projName, author):
     tmp = '\\documentclass[12pt]{article}\n'
     tmp+= '\\usepackage{graphicx}\n'
-    tmp+= '\\usepackage[margin=0.2in]{geometry}\n'
+    tmp+= '\\usepackage[margin=0.5in]{geometry}\n'
     tmp+= '\\usepackage[section]{placeins}\n'
     tmp+= '\\usepackage{morefloats}\n'
+    tmp+= '\\usepackage[small]{titlesec}\n'
     tmp+= '\\title{%s}\n'%projName
     tmp+= '\\author{%s}\n'%author
     tmp+= '\\date{\\today}\n'
@@ -46,6 +47,9 @@ def tex_IMG_row(imgRow, nCol):
     tmp += '\\end{figure}\n'
     tmp += '\\FloatBarrier\n'
     return tmp
+
+def tex_section(sectionName):
+    return '\\section{%s}\n'%sectionName
 
 def tex_space():
     return '\\FloatBarrier\n'
@@ -103,3 +107,31 @@ def gen_pdf_test2(
     story+= tex_end()
     baseName = str2fileBaseName(projName)
     render_pdf(baseName, story, rmTemp)
+
+def gen_pdf_GlobOpt1(
+    projName = 'Calculation Result',
+    author = 'Zisheng Zhang',
+    description = '',
+    bigFig = None,
+    imgList = None,
+    nCol = 4,
+    rmTemp=True,
+    ):
+    if '.tex' in description:
+        description = open(description, 'r').read()
+    story = tex_header(projName, author)
+#    story+= '\\tableofcontents'
+    story+= '%s\n'%description
+    story+= tex_section('Frequency Histogram and Energy Diagram')
+    for i in bigFig:
+        story+= tex_IMG(i, 1.0)
+        story += tex_space()
+#    story+= tex_newPage()
+    story+= tex_section('Geometry, $E_{elec}$ and $\mu_B$ of Optimized Candidates')
+    imgRow = get_rows(imgList, nCol)
+    for r in imgRow:
+        story+= tex_IMG_row(r, nCol=nCol)
+    story+= tex_end()
+    baseName = str2fileBaseName(projName)
+    render_pdf(baseName, story, rmTemp)
+#    render_pdf(baseName, story, rmTemp) # if toc exists
