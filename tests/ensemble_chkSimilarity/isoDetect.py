@@ -30,6 +30,5 @@ mag = [img.info['mag'] for img in traj]
 # $ python test.py raw-N1.db
 # # Timing: 3.050 s
 bothPass = comp.compare_dual(traj, geomCutoff, enerCutoff)
-clusterIsomer(traj,bothPass)
-
+clusterIsomer(traj, bothPass, outName='sort-'+trajDBName.split('.')[0])
 

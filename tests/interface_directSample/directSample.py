@@ -16,7 +16,7 @@ surf = Interface(
     allAtoms = ai.read(surfName),
     subAtoms = ai.read(surfName)
 )
-surf.print_info()
+surf.print()
 
 myDB = connect('tmp.db', append=False)
 for i in range(nSample):

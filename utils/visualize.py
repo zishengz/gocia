@@ -11,8 +11,10 @@ from ase.build import make_supercell
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.rcParams["font.family"] = "Palatino Linotype"
 import matplotlib.path as mpath
 from matplotlib.patches import Ellipse, PathPatch
+from matplotlib.ticker import PercentFormatter
 
 # Predefine some Linear Algebra operations
 univ = lambda x: x / np.linalg.norm(x)
@@ -149,7 +151,7 @@ def plothHbond(allnum, allpos, hbpair, begnum, atomscale, \
                 [beg[0], end[0]],
                 [beg[1], end[1]],
                 lw=3,
-                ls='--',
+                ls=':',
                 alpha=0.75,
                 color='k',
                 )
@@ -161,7 +163,7 @@ def plotCell(x1, x2, y1, y2, linc = 'k', linwt=1.5):
     cellLine = plt.Line2D([x2,x2], [y2, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
     cellLine = plt.Line2D([x2,x1], [y1, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
 
-def drawBSsurf(
+def draw_BSsurf(
     interfc,
     bdcutoff=0.85,
     ascale=0.4,
@@ -170,7 +172,10 @@ def drawBSsurf(
     zLim=None,
     pseudoBond = False,
     hBond = False,
+    title = ''
     ):
+    print(' |- Drawing BS  pic of \t%s to\t%s'%\
+        (interfc.tags, outName+'-bs.png'))
     atoms = interfc.get_allAtoms()
     if zLim is None:
         zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
@@ -243,6 +248,7 @@ def drawBSsurf(
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
+    plt.title(title, fontsize=22)
     if outName is not None:
         plt.savefig(outName+'-bs.png', dpi=100, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
@@ -250,12 +256,15 @@ def drawBSsurf(
         plt.show()
     plt.close()
 
-def drawCPK(
+def draw_CPKsurf(
     interfc,
     ascale=1,
     outName=None,
     zLim=None,
+    title = ''
     ):
+    print(' |- Drawing CPK pic of \t%s to\t%s'%\
+        (interfc.tags, outName+'-cpk.png'))
     atoms = interfc.get_allAtoms()
     if zLim is None:
         zLim = [(interfc.get_subPos()[:,2].min() + interfc.get_subPos()[:,2].max()) / 2,
@@ -300,8 +309,9 @@ def drawCPK(
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
+    plt.title(title, fontsize=22, fontweight='bold')
     if outName is not None:
-        plt.savefig(outName+'-cpk.png', dpi=100, \
+        plt.savefig(outName+'-cpk.png', dpi=40, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
     else:
         plt.show()
@@ -327,6 +337,53 @@ def heatmap(matrix, baseName):
             rotation_mode="anchor")
     fig.tight_layout()
     plt.savefig(
-        '%s_heat.png'%(baseName),
-        dpi=200
+        '%s_heat.png'%(baseName), dpi=80,
+        transparent=True, pad_inches = 0
         )
+
+def histogram(eneArr, baseName):
+    ene = [e-min(eneArr) for e in eneArr]
+    for i in [e for e in ene if e > 10]:
+        ene.remove(i)
+    ene = np.array(ene)
+
+    num_bins = 20
+    fig, axs = plt.subplots(1, 2, tight_layout=True, gridspec_kw={'width_ratios': [1, 3]})
+    fig.set_size_inches(8,4)
+    n, bins, patches = axs[0].hist(ene, num_bins,density=1, edgecolor='grey',orientation='horizontal', alpha=0.8)
+    axs[0].plot(np.full_like(ene, -0.02), ene, '_k', markeredgewidth=0.5, markersize=5, alpha=1)
+    axs[0].axvline(x=0, linestyle='-', color='k', lw=1)
+
+    cm = plt.cm.get_cmap('RdYlBu_r')
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    #col = (n-n.min())/(n.max()-n.min())
+    col = (bins-bins.min())/(bins.max()-bins.min())
+    for c, p in zip(col, patches):
+        plt.setp(p, 'facecolor', cm(c))
+#    axs[0].xaxis.set_major_formatter(PercentFormatter(xmax=1))
+    axs[0].invert_xaxis()
+    axs[0].set_xlim(right=-0.04)
+
+    x, y = np.arange(0, len(ene)), sorted(ene)
+    axs[1].plot(x, y, 'o-', color='grey', lw=3, markersize=4, mec='black')
+    from scipy.interpolate import interp1d
+    # xnew = np.linspace(x.min(), x.max(), num=100*(x.max()-x.min()), endpoint=True)
+    # f = interp1d(x, y, kind='cubic')
+    # axs[1].plot(xnew, f(xnew), color='grey', lw=2.5)
+
+    axs[0].set_ylim([0,ene.max()])
+    axs[1].set_ylim([0,ene.max()])
+    axs[0].yaxis.set_ticks_position('right')
+    plt.setp(axs[0].get_yticklabels(), visible=False)
+
+    axs[0].set_ylabel('Energy Relative to Putative GM (eV)', fontweight='bold', fontsize=14)
+    axs[0].set_xlabel('Frequency', fontweight='bold', fontsize=14)
+    axs[1].set_xlabel('Numer of Optimized Candidates', fontweight='bold', fontsize=14)
+
+    #axs[0].invert_yaxis()
+    #plt.fill_between(x_d, density, alpha=0.5)
+
+    plt.savefig(
+        '%s_hist.png'%baseName, dpi=160,
+        transparent=False, pad_inches = 0
+    )

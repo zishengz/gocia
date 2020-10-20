@@ -18,7 +18,6 @@ import json
 
 class Interface:
     def __init__(self,
-                 tags=None,
                  allAtoms=None,
                  subAtoms=None,
                  fixList=None,
@@ -27,6 +26,7 @@ class Interface:
                  cellParam=None,
                  pbcParam=None,
                  zLim=None,
+                 tags=None,
                  info=None
                  ):
 
@@ -61,7 +61,7 @@ class Interface:
         if tags is not None:
             self.tags = tags
         else:
-            self.tags = str(self.allAtoms)
+            self.tags = self.get_formula()
 
         if info is not None:
             self.info = info
@@ -70,7 +70,7 @@ class Interface:
 
     def __len__(self):
         return len(self.allAtoms)
-    
+
     def copy(self):
         import copy
         myCopy = self.__class__(
@@ -95,19 +95,20 @@ class Interface:
         self.allAtoms.set_cell(self.get_cell())
         self.allAtoms.set_pbc(self.get_pbc())
 
-
-    def print_info(self):
+    def print(self):
         print('#TAG: ', self.tags)
-        print(' |-Fixed atoms:    \t', self.get_fixAtoms().symbols)
-        print(' |-Buffer atoms:   \t', self.get_bufAtoms().symbols)
+        print(' |-Fixed atoms:    ', self.get_fixAtoms().symbols)
+        print(' |-Buffer atoms:   ', self.get_bufAtoms().symbols)
         if self.get_adsList() == []:
-            print(' |-Adsorbates:    \t None')
+            print(' |-Adsorbates:     None')
         else:    
-            print(' |-Adsorbates:    \t',self.get_adsAtoms().symbols)
-        print(' |-Buffer region:\t Z = %.3f to %.3f'%\
+            print(' |-Adsorbates:     ',self.get_adsAtoms().symbols)
+        print(' |-Buffer region:   Z = %.3f to %.3f'%\
             (self.zLim[0], self.zLim[1]))
-        print(self.info,'\n')
+        print(' |-Info:           ', self.info)
         
+    def get_formula(self):
+        return self.allAtoms.get_chemical_formula()
 
     def get_cell(self):
         return self.cellParam.copy()
@@ -255,6 +256,14 @@ class Interface:
 
     def write(self, fileName):
         fio.write(fileName, self.get_allAtoms())
+
+    def draw(self, key='CPK', title=''):
+        from gocia.utils import visualize
+        if key == 'CPK':
+            visualize.draw_CPKsurf(self, outName=self.tags, title=title)
+        if key == 'BS':
+            visualize.draw_BSsurf(self, outName=self.tags, title=title, pseudoBond=True)
+
 
 
 

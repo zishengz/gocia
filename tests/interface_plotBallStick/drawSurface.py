@@ -3,7 +3,7 @@ import os, sys
 import ase.io as fio
 import ase.db as db
 from gocia.interface import Interface
-from gocia.utils import visualize
+import gocia.utils.report as rp
 
 # $ python plotCPK.py asym-4l.vasp Ga3N3.vasp
 # # Timing: 1.4265 s, ~10% faster than BS
@@ -16,7 +16,8 @@ surf = Interface(
     subAtoms = fio.read(subsName),
     allAtoms = fio.read(surfName),
     )
-visualize.drawCPK(
-    surf,
-    outName=baseName
-    )
+surf.info['eV'] = 0.1
+surf.print()
+
+surf.draw('CPK', title='%s, %.3f eV'%(surf.get_formula(), surf.info['eV']))
+surf.draw('BS', title='%s, %.3f eV'%(surf.get_formula(),surf.info['eV']))
