@@ -27,7 +27,8 @@ for i in range(nSample):
         toler=0.75,
         doShuffle=True,
         sameElemPenalty=0.5,
-        rattle=True, rattleStdev=0.1,
+        rattle=True, rattleStdev=0.2,
+		rattleZEnhance=True,
         zLim=surf.zLim
     )
     newsurf.preopt_hooke(

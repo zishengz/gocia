@@ -10,7 +10,7 @@ def grow_adatom(
     xLim=None, yLim=None,zLim=None,
     bldaSigma=0.1, bldaScale=1, toler=0.5,
     doShuffle=False,
-    rattle=False, rattleStdev = 0.05,
+    rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
     sameElemPenalty = 0,
     cnCount=False,cnToler = 0.5,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
@@ -25,7 +25,7 @@ def grow_adatom(
         ind_curr = 0
         tmpInterfc = interfc.copy()
         if rattle:
-            tmpInterfc.rattle(rattleStdev)
+            tmpInterfc.rattle(rattleStdev, zEnhance=rattleZEnhance)
         while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
             optList = interfc.get_optList()
             i = np.random.choice(optList)

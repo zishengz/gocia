@@ -211,12 +211,17 @@ class Interface:
         del tmpAtoms[adsList]
         self.set_allAtoms(tmpAtoms)
 
-    def rattle(self, stdev = 0.1):
+    def rattle(self, stdev = 0.1, zEnhance=False):
+        '''
+        enhances the atoms with higher position
+        '''
         tmpAtoms = self.get_allAtoms()
         pos = tmpAtoms.get_positions()
-        pos = pos + np.random.normal(scale=stdev, size=pos.shape)
-        self.set_positions(pos)
-
+        rattleVec = np.random.normal(scale=stdev, size=pos.shape)
+        if zEnhance:
+            zBuf = self.get_bufAtoms().get_positions()[:,2]
+            rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
+        self.set_positions(pos + rattleVec)
 
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):
