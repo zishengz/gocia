@@ -213,8 +213,9 @@ class Interface:
 
     def rattle(self, stdev = 0.1):
         tmpAtoms = self.get_allAtoms()
-        tmpAtoms.rattle(stdev = stdev, seed=np.random.seed())
-        self.set_allAtoms(tmpAtoms)
+        pos = tmpAtoms.get_positions()
+        pos = pos + np.random.normal(scale=stdev, size=pos.shape)
+        self.set_positions(pos)
 
 
     def preopt_lj(self, fileBaseName='tmp',\
