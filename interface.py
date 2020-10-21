@@ -13,6 +13,7 @@ from gocia import geom
 import ase.io as fio
 from ase.atoms import Atoms
 from ase.constraints import FixAtoms
+from ase.build.tools import sort
 import numpy as np
 import json
 
@@ -84,8 +85,10 @@ class Interface:
         '''
         Call after updating the allAtoms!
         '''
+        # Get buffer indices by removing fixed atoms from substrate
         self.bufList = [i for i in list(range(len(self.subAtoms)))\
                         if i not in self.fixList]
+        # Get adsorbate indices by removing subAtoms from the allAtoms
         self.adsList = []
         if len(self.get_allAtoms()) != len(self.subAtoms):
             self.adsList = [i for i in list(range(len(self.allAtoms)))\
@@ -94,6 +97,11 @@ class Interface:
         self.allAtoms.set_constraint(FixAtoms(self.fixList))
         self.allAtoms.set_cell(self.get_cell())
         self.allAtoms.set_pbc(self.get_pbc())
+
+    def sort(self):
+        ads = self.get_adsAtoms().copy()
+        ads = sort(ads)
+        self.set_adsAtoms(ads)
 
     def print(self):
         print('#TAG: ', self.tags)
@@ -198,10 +206,15 @@ class Interface:
         tmpAtoms.set_positions(newAllPos)
         self.set_allAtoms(tmpAtoms)
 
-    def set_positions(self, newPos):
-        tmpAtoms = self.get_allAtoms()
-        tmpAtoms.set_positions(newPos)
+    def set_adsAtoms(self, newAdsAtoms):
+        tmpAtoms = self.get_subAtoms()
+        tmpAtoms.extend(newAdsAtoms)
         self.set_allAtoms(tmpAtoms)
+
+    # def set_positions(self, newPos):
+    #     tmpAtoms = self.get_allAtoms()
+    #     tmpAtoms.set_positions(newPos)
+    #     self.set_allAtoms(tmpAtoms)
 
     def get_chemical_symbols(self):
         return self.get_allAtoms().get_chemical_symbols().copy()
@@ -244,7 +257,7 @@ class Interface:
         if zEnhance:
             zBuf = self.get_bufAtoms().get_positions()[:,2]
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
-        self.set_positions(pos + rattleVec)
+        self.set_allPos(pos + rattleVec)
 
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):

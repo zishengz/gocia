@@ -52,6 +52,7 @@ def grow_adatom(
         if geom.chk_bondlength(tmpInterfc.get_allAtoms(), radTol=toler):
             badStructure = False
         n_attempts += 1
+    tmpInterfc.sort()
     print('%i\tplacements| %i\ttabula rasa'%(n_place, n_attempts - 1))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
