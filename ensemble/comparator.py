@@ -19,7 +19,7 @@ def compare_geom(traj, cutoff=0.1,
     print('   |- Pairs passed: %i'%num_passed(geomDiff))
     return geomDiff
 
-def compare_ene(ene,cutoff=0.02):
+def compare_ene(ene,cutoff=0.1):
     '''
     return value of 1 means pass
     '''
@@ -46,7 +46,7 @@ def compare_posEig(traj, cutoff):
 def bothSim(simMat1, simMat2):
     return la.normalize_mat(simMat1 + simMat2)
 
-def compare_dual(traj, geomCutoff=0.9, enerCutoff=0.02,
+def compare_dual(traj, geomCutoff=0.1, enerCutoff=0.1,
                  myFGP=fgp.coordinationFGPv1):
     ene = [a.info['eV'] for a in traj]
     simGeom = compare_geom(traj, geomCutoff)

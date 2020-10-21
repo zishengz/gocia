@@ -18,14 +18,13 @@ traj = get_traj(rawDB.select())
 ene = [img.info['eV'] for img in traj]
 mag = [img.info['mag'] for img in traj]
 
-
-
-import gocia.utils.linalg as la
-# stepwise, with plot
-#allEigDist = comp.compare_posEig(traj, 0.1)
-geomSim = comp.compare_geom(traj, geomCutoff)
 eneDiff = comp.compare_ene(ene, enerCutoff)
-bothPass = comp.bothSim(geomSim, eneDiff)
+
+# geomSim = comp.compare_geom(traj, geomCutoff)
+# bothPass = comp.bothSim(geomSim, eneDiff)
+
+allEigDist = comp.compare_posEig(traj, 0.1)
+bothPass = comp.bothSim(allEigDist, eneDiff)
 
 # heatmap(allEigDist, 'disMat')
 # heatmap(geomSim, 'geom'+str(geomCutoff))
