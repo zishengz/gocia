@@ -26,8 +26,8 @@ for i in range(nSample):
         adsInp,
         toler=0.75,
         doShuffle=True,
-        sameElemPenalty=0.5,
-        rattle=True, rattleStdev=0.2,
+        cnCount=True,
+        rattle=True, rattleStdev=0.1,
 		rattleZEnhance=True,
         zLim=surf.zLim
     )

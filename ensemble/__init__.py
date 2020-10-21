@@ -32,7 +32,7 @@ def clusterIsomer(
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
     print('-'*76)
-    print('   %i isomers found from %s samples.\tOversampling = %s'%\
+    print('   %i\tisomers found from %s\tsamples. Oversampling = %s'%\
         (len(isoUniq), nStates, '{:.2%}'.format(nStates/len(isoUniq)-1)))
     sortedTraj = []
     for v in sorted(eneUniq):
