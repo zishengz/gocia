@@ -18,19 +18,24 @@ traj = get_traj(rawDB.select())
 ene = [img.info['eV'] for img in traj]
 mag = [img.info['mag'] for img in traj]
 
-eneDiff = comp.compare_ene(ene, enerCutoff)
-
+# eneDiff = comp.compare_ene(ene, enerCutoff)
 # geomSim = comp.compare_geom(traj, geomCutoff)
 # bothPass = comp.bothSim(geomSim, eneDiff)
-
-allEigDist = comp.compare_posEig(traj, 0.1)
-bothPass = comp.bothSim(allEigDist, eneDiff)
-
-# heatmap(allEigDist, 'disMat')
 # heatmap(geomSim, 'geom'+str(geomCutoff))
 # heatmap(eneDiff, 'ener'+str(enerCutoff))
 # heatmap(bothPass, 'both_G%sE%s'%\
 #     (str(geomCutoff), str(enerCutoff)))
+
+eneDiff = comp.compare_ene(ene, enerCutoff)
+allEigDist = comp.compare_posEig(traj, geomCutoff)
+bothPass = comp.bothSim(allEigDist, eneDiff)
+heatmap(allEigDist, 'disMat'+str(geomCutoff))
+heatmap(eneDiff, 'ener'+str(enerCutoff))
+heatmap(bothPass, 'both_G%sE%s'%\
+    (str(geomCutoff), str(enerCutoff)))
+
+
+
 
 #bothPass = comp.compare_dual(traj, geomCutoff, enerCutoff)
 clusterIsomer(traj, bothPass, outName='sort-'+trajDBName.split('.')[0])
