@@ -3,7 +3,7 @@ import numpy as np
 import ase.io as fio
 from gocia.interface import Interface
 
-def rand_cut_2d(atoms1, atoms2):
+def split_2d(atoms1, atoms2):
     '''
     Returns the center of the COMs of the parents
         and a random slope in x-y plane.
@@ -14,9 +14,9 @@ def rand_cut_2d(atoms1, atoms2):
     com_share = (com1 + com2)[:2]/2
     return com_share, direction
 
-def crossover_cnsSurf_2d(surf1, surf2):
+def crossover_snsSurf_2d(surf1, surf2):
     dist2lin = lambda p1, p2, p3: np.cross(p2-p1, p1-p3)/np.linalg.norm(p2-p1)
-    center, direction = rand_cut_2d(surf1.get_adsAtoms(), surf2.get_adsAtoms())
+    center, direction = split_2d(surf1.get_adsAtoms(), surf2.get_adsAtoms())
     matPos, patPos = surf1.get_pos(), surf2.get_pos()
     goodPos, badPos = [], []
     print(center, direction)
@@ -38,7 +38,7 @@ def crossover_cnsSurf_2d(surf1, surf2):
         badPos.append(tmpBad)
     print(sum([len(l) for l in goodPos]))
     print(sum([len(l) for l in badPos]))
-
+    
     return np.array([r[0] for r in goodPos])
 
 sub = fio.read(sys.argv[1])
@@ -51,7 +51,7 @@ surf2 = Interface(tags='surf 2', subAtoms=sub, allAtoms=s2)
 surf1.print()
 surf2.print()
 
-newPos = crossover_cnsSurf_2d(surf1, surf2)
+newPos = crossover_snsSurf_2d(surf1, surf2)
 newSurf = surf1.copy()
 newSurf.set_allPos(newPos)
 newSurf.write('new.vasp')
