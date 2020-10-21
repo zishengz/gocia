@@ -29,6 +29,7 @@ def is_withinPosLim(vec, xLim=None, yLim=None, zLim=None):
        min(yLim) < vec[1] < max(yLim) and\
        min(zLim) < vec[2] < max(zLim):
         condition = True
+#    print(vec, condition)
     return condition
        
 def rand_point_3D(cell, xLim=None, yLim=None, zLim=None):

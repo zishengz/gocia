@@ -15,7 +15,7 @@ surf = Interface(
     tags = surfName.split('.')[0]+' + '+sys.argv[2],
     allAtoms = ai.read(surfName),
     subAtoms = ai.read(surfName),
-    zLim=[10, 13]
+    zLim=[11, 14]
 )
 surf.print()
 
@@ -25,17 +25,18 @@ for i in range(nSample):
     newsurf = build.grow_adatom(
         surf,
         adsInp,
-        toler=0.75,
+        toler=0.25,
+        sampZEnhance=4.0,
         doShuffle=True,
         cnCount=True,
         rattle=True, rattleStdev=0.1,
 		rattleZEnhance=True,
         zLim=surf.zLim,
     )
-    newsurf.preopt_hooke(
-       cutoff = 1.2,
-       toler = 0.1
-        )
+    # newsurf.preopt_hooke(
+    #    cutoff = 1.25,
+    #    toler = 0.25
+    #     )
     myDB.write(newsurf.get_allAtoms())
 os.system('mv %s %s'%('tmp.db', str(newsurf.get_allAtoms().symbols)+'.db'))
 
