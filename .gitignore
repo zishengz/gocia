@@ -4,5 +4,6 @@
 *.png
 *.pdf
 *.tex
+*.xyz
 *.vasp
 dev*.md

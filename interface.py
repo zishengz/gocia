@@ -165,6 +165,29 @@ class Interface:
                a.index not in self.get_bufList()]]
         return tmpAtoms
 
+    def get_covalRadii(self):
+        return [covalRadii[i] for i in self.get_allAtoms().numbers]
+
+    def get_contactMat(self, scale=1.0):
+        '''
+        returns the standard covalent bondlength between all atoms
+        '''
+        cvRad = self.get_covalRadii()
+        contact = np.tile(cvRad, [len(cvRad), 1])
+        contact += contact.T
+        contact *= scale
+        np.fill_diagonal(contact, 0)
+        return contact
+
+    def get_allDistances(self):
+        return self.get_allAtoms().get_all_distances(mic=True)
+
+    def has_badContact(self, tolerance=0):
+        diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
+        return diff.min() < 0
+
+
+
     def set_allAtoms(self, newAllAtoms):
         newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
