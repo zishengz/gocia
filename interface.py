@@ -105,7 +105,7 @@ class Interface:
             print(' |-Adsorbates:     ',self.get_adsAtoms().symbols)
         print(' |-Buffer region:   Z = %.3f to %.3f'%\
             (self.zLim[0], self.zLim[1]))
-        print(' |-Info:           ', self.info)
+        print(' |-Info:           ', self.info, '\n')
         
     def get_formula(self):
         return self.allAtoms.get_chemical_formula()
