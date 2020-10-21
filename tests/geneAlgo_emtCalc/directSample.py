@@ -14,7 +14,8 @@ nSample = int(sys.argv[3])
 surf = Interface(
     tags = surfName.split('.')[0]+' + '+sys.argv[2],
     allAtoms = ai.read(surfName),
-    subAtoms = ai.read(surfName)
+    subAtoms = ai.read(surfName),
+    zLim=[10, 13]
 )
 surf.print()
 
@@ -29,7 +30,7 @@ for i in range(nSample):
         cnCount=True,
         rattle=True, rattleStdev=0.1,
 		rattleZEnhance=True,
-        zLim=[10, 13]
+        zLim=surf.zLim,
     )
     newsurf.preopt_hooke(
        cutoff = 1.2,
