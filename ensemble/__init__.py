@@ -26,8 +26,11 @@ def clusterIsomer(
         currInd += 1
 
         print('')
+    if 'mag' not in trajAtoms[0].info.keys():
+        magArray = [a.info['mag'] for a in trajAtoms]
+    else:
+        magArray = [0]*len(trajAtoms)
     eneArray = [a.info['eV'] for a in trajAtoms]
-    magArray = [a.info['mag'] for a in trajAtoms]
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
