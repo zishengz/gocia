@@ -58,6 +58,8 @@ class Interface:
             allPos = self.allAtoms.get_positions()
             self.zLim = [min(allPos[:,2][self.bufList]) + 0.1,
                     max(allPos[:,2][self.bufList]) + 2.5]
+        else:
+            self.zLim = zLim
 
         if tags is not None:
             self.tags = tags
