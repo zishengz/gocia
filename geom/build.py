@@ -33,19 +33,19 @@ def grow_adatom(
             if sampZEnhance is not None:
                 # sampAEnhance = 1 makes p(zmax) = p(zmin)*2
                 optZ = tmpInterfc.get_pos()[:,2][[i for i in optList]]
-                mult = 1 + (optZ - optZ.min())/(optZ.max() - optZ.min()) * sampZEnhance
-                weights *= mult
+                if optZ.max() - optZ.min() != 0:
+                    mult = 1 + (optZ - optZ.min())/(optZ.max() - optZ.min()) * sampZEnhance
+                    weights *= mult
             weights /= weights.sum()
             i = np.random.choice(optList, p=weights)
 #            print(tmpInterfc.get_pos()[:,2][i])
             # print(weights, i, optList)
 #            print(tmpInterfc.get_pos()[i])
             if cnCount:
-                cn = geom.get_coordStatus(
-                    tmpInterfc.get_allAtoms(),
-                    )[0]
-                cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
-                if np.random.rand() < cn * cnToler: continue
+                cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
+                if cn.max() - cn.min() != 0:
+                    cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
+                    if np.random.rand() < cn * cnToler: continue
             if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
                 if np.random.rand() < sameElemPenalty: continue
             coord = [0,0,-1000]
