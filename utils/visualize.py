@@ -319,7 +319,7 @@ def draw_CPKsurf(
     plt.margins(0,0)
     plt.title(title, fontsize='xx-large', fontweight='bold')
     if outName is not None:
-        plt.savefig(outName+'-cpk.png', dpi=40, \
+        plt.savefig(outName+'-cpk.png', dpi=100, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
     else:
         plt.show()

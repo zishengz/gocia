@@ -42,6 +42,7 @@ class Interface:
         if allAtoms is not None:
             if type(allAtoms) is str:
                 self.allAtoms   = fio.read(allAtoms)
+                self.allAtoms.wrap()
             else:
                 self.allAtoms   = allAtoms
 
