@@ -11,7 +11,13 @@ from ase.build import make_supercell
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-plt.rcParams["font.family"] = "Computer Modern"
+
+#plt.rcParams["font.serif"]="Computer Modern Roman"
+# plt.rcParams.update({                       
+#     "text.usetex": True,                    
+#     "font.family": "serif",                 
+#     "font.serif": ["Computer Modern Roman"],
+#     })                                      
 import matplotlib.path as mpath
 from matplotlib.patches import Ellipse, PathPatch
 from matplotlib.ticker import PercentFormatter
@@ -174,6 +180,7 @@ def draw_BSsurf(
     hBond = False,
     title = ''
     ):
+    plt.rcParams["font.family"] = "Dejavu Serif"    
     print(' |- Drawing BS  pic of \t%s to\t%s'%\
         (interfc.tags, outName+'-bs.png'))
     atoms = interfc.get_allAtoms()
@@ -248,7 +255,7 @@ def draw_BSsurf(
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
-    plt.title(title, fontsize=22, fontweight='bold')
+    plt.title(title, fontsize='xx-large', fontweight='bold')
     if outName is not None:
         plt.savefig(outName+'-bs.png', dpi=100, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
@@ -263,6 +270,7 @@ def draw_CPKsurf(
     zLim=None,
     title = ''
     ):
+    plt.rcParams["font.family"] = "Dejavu Serif"
     print(' |- Drawing CPK pic of \t%s to\t%s'%\
         (interfc.tags, outName+'-cpk.png'))
     atoms = interfc.get_allAtoms()
@@ -309,7 +317,7 @@ def draw_CPKsurf(
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
     plt.margins(0,0)
-    plt.title(title, fontsize=22, fontweight='bold')
+    plt.title(title, fontsize='xx-large', fontweight='bold')
     if outName is not None:
         plt.savefig(outName+'-cpk.png', dpi=40, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
@@ -318,9 +326,8 @@ def draw_CPKsurf(
     plt.close()
 
 def heatmap(matrix, baseName):
-    import matplotlib
+    plt.rcParams["font.family"] = "Dejavu Serif"
     from matplotlib import cm
-    import matplotlib.pyplot as plt
     dimension = len(matrix)
     fig, ax = plt.subplots()
     im = ax.imshow(matrix, cmap=cm.Blues)
@@ -342,6 +349,7 @@ def heatmap(matrix, baseName):
         )
 
 def histogram(eneArr, baseName):
+    plt.rcParams["font.family"] = "Dejavu Serif"
     ene = [e-min(eneArr) for e in eneArr]
     for i in [e for e in ene if e > 10]:
         ene.remove(i)
@@ -365,7 +373,8 @@ def histogram(eneArr, baseName):
     axs[0].set_xlim(right=-0.04)
 
     x, y = np.arange(0, len(ene)), sorted(ene)
-    axs[1].plot(x, y, 'o-', color='grey', lw=3, markersize=4, mec='black')
+    axs[1].plot(x, y, '-', color='grey', lw=2,alpha=0.5)
+    axs[1].plot(x, y, 'o', color='black', markersize=1  )
     from scipy.interpolate import interp1d
     # xnew = np.linspace(x.min(), x.max(), num=100*(x.max()-x.min()), endpoint=True)
     # f = interp1d(x, y, kind='cubic')
@@ -376,9 +385,10 @@ def histogram(eneArr, baseName):
     axs[0].yaxis.set_ticks_position('right')
     plt.setp(axs[0].get_yticklabels(), visible=False)
 
-    axs[0].set_ylabel('Energy Relative to Putative GM (eV)', fontweight='bold', fontsize=14)
-    axs[0].set_xlabel('Frequency', fontweight='bold', fontsize=14)
-    axs[1].set_xlabel('Numer of Optimized Candidates', fontweight='bold', fontsize=14)
+    axs[0].set_ylabel('Energy rel. to Putative GM (eV)', fontweight='bold', fontsize='large')
+    axs[0].set_xlabel('Frequency', fontweight='bold', fontsize='large')
+    axs[1].set_xlabel('Numer of Optimized Candidates',fontweight='bold', fontsize='large')
+    axs[1].set_xlim(left=0)
 
     #axs[0].invert_yaxis()
     #plt.fill_between(x_d, density, alpha=0.5)

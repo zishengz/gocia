@@ -22,7 +22,7 @@ for r in srtDB.select([('eV2GM','<', 5.0)]):
     surf.tags += '-%i'%r.id
     surf.draw(
         'BS',
-        title='#%i, E = %.3f eV, mag = %.2f'%\
+        title='#%i, E=%.3f eV, mag=%.2f'%\
             (r.id, r.eV2GM, r.mag),
     )
 
