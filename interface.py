@@ -256,9 +256,9 @@ class Interface:
         '''
         tmpAtoms = self.get_allAtoms()
         pos = tmpAtoms.get_positions()
+        zBuf = self.get_bufAtoms().get_positions()[:,2]
         rattleVec = np.random.normal(scale=stdev, size=pos.shape)
-        if zEnhance:
-            zBuf = self.get_bufAtoms().get_positions()[:,2]
+        if zEnhance and pos[:,2].max()-zBuf.min() != 0:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 

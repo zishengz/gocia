@@ -30,6 +30,19 @@ def grow_adatom(
         while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
             optList = tmpInterfc.get_optList()
             weights = np.ones(len(optList))
+            # Same-element penalty
+            # value of 0 has no effect on weighting
+            # set to >0 to avoid same elem sampling:
+            #       1 -> same 33%, diff 66%
+            #       3 -> same 25%, diff 75%
+            # set to -1 for pure cluster growth (naive implementation)
+            optElem = [tmpInterfc.get_chemical_symbols()[i] for i in optList]
+            mult = np.ones(len(optList)) +\
+                   np.array([sameElemPenalty if s != addElemList[ind_curr] else 0 for s in optElem])
+            if np.count_nonzero(mult) == 0:
+                mult = np.ones(len(optList))
+            weights *= mult
+            # Z-weighted sampling enhancement
             if sampZEnhance is not None:
                 # sampAEnhance = 1 makes p(zmax) = p(zmin)*2
                 optZ = tmpInterfc.get_pos()[:,2][[i for i in optList]]
@@ -38,16 +51,17 @@ def grow_adatom(
                     weights *= mult
             weights /= weights.sum()
             i = np.random.choice(optList, p=weights)
-#            print(tmpInterfc.get_pos()[:,2][i])
-            # print(weights, i, optList)
-#            print(tmpInterfc.get_pos()[i])
+            # Coordination-adapted sampling
             if cnCount:
                 cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
                 if cn.max() - cn.min() != 0:
                     cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
                     if np.random.rand() < cn * cnToler: continue
-            if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
-                if np.random.rand() < sameElemPenalty: continue
+#             if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
+#                 if np.random.rand() >  1/2 + sameElemPenalty: continue
+#             else:
+#                 if np.random.rand() <= 1/2 + sameElemPenalty: continue
+# #                if np.random.rand() < sameElemPenalty: continue
             coord = [0,0,-1000]
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
                 growVec = geom.rand_direction()
