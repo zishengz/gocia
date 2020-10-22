@@ -9,7 +9,7 @@ def opt_xtb_lbfgs(atoms):
     tmpAtoms = atoms.copy()
     tmpAtoms.calc = GFN0()
     geomOpt = LBFGS(tmpAtoms, maxstep=0.1,trajectory=None,logfile=None)
-    geomOpt.run(fmax=0.03, steps=1000)
+    geomOpt.run(fmax=0.05, steps=1000)
     return tmpAtoms
 
 
@@ -20,6 +20,6 @@ traj = get_traj(oldDB.select())
 newDB = connect('out-'+inpName, append=False)
 for i in range(len(traj)):
     print('Optimizing\t%i/%i'%(i+1, len(traj)))
-    opt = opt_emt_lbfgs(traj[i])
+    opt = opt_xtb_lbfgs(traj[i])
     newDB.write(opt, eV=opt.get_potential_energy(), mag=0)
 
