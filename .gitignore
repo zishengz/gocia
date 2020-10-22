@@ -1,7 +1,7 @@
 
 *.pyc
 *.db
-*.png
+#*.png
 *.pdf
 *.tex
 *.xyz
