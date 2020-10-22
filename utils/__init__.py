@@ -10,3 +10,7 @@ def conv_str2list(myString):
     else:
         delim = ' '
     return [eval(i) for i in tmp.split(delim)]
+
+def conv_formula2list(formulaStr):
+    from ase.formula import Formula
+    return list(Formula(formulaStr))
