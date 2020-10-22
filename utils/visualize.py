@@ -265,7 +265,7 @@ def draw_BSsurf(
 
 def draw_CPKsurf(
     interfc,
-    ascale=1,
+    ascale=0.9,
     outName=None,
     zLim=None,
     title = ''
@@ -348,10 +348,10 @@ def heatmap(matrix, baseName):
         transparent=True, pad_inches = 0
         )
 
-def histogram(eneArr, baseName):
+def histogram(eneArr, baseName, eneLim=10):
     plt.rcParams["font.family"] = "Dejavu Serif"
     ene = [e-min(eneArr) for e in eneArr]
-    for i in [e for e in ene if e > 10]:
+    for i in [e for e in ene if e > eneLim]:
         ene.remove(i)
     ene = np.array(ene)
 
