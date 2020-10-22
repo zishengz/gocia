@@ -11,7 +11,7 @@ from ase.build import make_supercell
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-plt.rcParams["font.family"] = "Palatino Linotype"
+plt.rcParams["font.family"] = "Computer Modern"
 import matplotlib.path as mpath
 from matplotlib.patches import Ellipse, PathPatch
 from matplotlib.ticker import PercentFormatter
