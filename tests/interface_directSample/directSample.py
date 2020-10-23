@@ -38,6 +38,6 @@ for i in range(nSample):
        cutoff = 1.2,
        toler = 0.1
         )
-    myDB.write(newsurf.get_allAtoms())
+    myDB.write(newsurf.get_allAtoms(), done=0)
 os.system('mv %s %s'%('tmp.db', str(newsurf.get_allAtoms().symbols)+'.db'))
 
