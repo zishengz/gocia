@@ -215,9 +215,9 @@ def draw_BSsurf(
         if atoms.get_positions()[i]-ori_cell[0]-ori_cell[1]\
             in interfc.get_pos()[bufList]]
     allc = [
-		1 if i in adsList           # Full color
-		else 1.33 if i in bufList   # Shallow color
-		else 2.0 for i in range(len(atoms))
+		1 if i in adsList       # Full color
+		else 1.1 if i in bufList   # Shallow color
+		else 1.5 for i in range(len(atoms))
 	]
 
     bdpair = [[i[0], i[1]] for i in get_bondpairs(atoms, bdcutoff)]
@@ -294,8 +294,8 @@ def draw_CPKsurf(
         if atoms.get_positions()[i] in interfc.get_pos()[bufList]]
     allc = [
 		1 if i in adsList       # Full color
-		else 1.33 if i in bufList   # Shallow color
-		else 2.0 for i in range(len(atoms))
+		else 1.1 if i in bufList   # Shallow color
+		else 1.5 for i in range(len(atoms))
 	]
     plotCell(
         ori_cell[0][0] * 1,
