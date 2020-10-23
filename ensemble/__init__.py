@@ -24,13 +24,18 @@ def clusterIsomer(
                 isomerLabel[i] = currInd
                 print(i, end=',')
         currInd += 1
-
         print('')
-    if 'mag' not in trajAtoms[0].info.keys():
+
+    # Handle the bad or other-format outputs
+    if 'mag' in trajAtoms[0].info.keys():
         magArray = [a.info['mag'] for a in trajAtoms]
     else:
         magArray = [0]*len(trajAtoms)
-    eneArray = [a.info['eV'] for a in trajAtoms]
+    if 'eV' in trajAtoms[0].info.keys():
+        eneArray = [a.info['eV'] for a in trajAtoms]
+    else:
+        eneArray = [a.get_potential_energy() for a in trajAtoms]
+
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
