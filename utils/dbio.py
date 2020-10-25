@@ -38,8 +38,8 @@ def calypso2db():
     print(' %i candidates writen to calypso-%s.db'%(len(eneData), get_projName()))
             
 def vasp2db(nameKey=''):
-	print(' --- Collecting vasp results ---')
-	vdirs = [d.split('/')[0] for d in os.popen('ls *%s*/OSZICAR'%nameKey).readlines()]
+    print(' --- Collecting vasp results ---')
+    vdirs = [d.split('/')[0] for d in os.popen('ls *%s*/OSZICAR'%nameKey).readlines()]
     count_fin = 0
     with connect('vasp-%s.db'%get_projName(), append=False) as myDb:
         for d in vdirs:
@@ -54,7 +54,7 @@ def vasp2db(nameKey=''):
 				eV=ene_eV,
 				mag=mag,
                 done=1,
-			)
+                )
             count_fin += 1
     print('\n %i candidates writen to vasp-%s.db'%(len(eneData), get_projName()))
 
