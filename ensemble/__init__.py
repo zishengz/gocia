@@ -46,14 +46,14 @@ def clusterIsomer(
     for v in sorted(eneUniq):
         sortedTraj.append(trajAtoms[list(eneArray).index(v)])
 
-    srtDB = connect('%s.db'%outName, append=False)
-    for i in range(len(sortedTraj)):
-        srtDB.write(
-            sortedTraj[i],
-            eV = sorted(eneUniq)[i],
-            mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
-            eV2GM = sorted(eneUniq)[i] - min(eneUniq)
-        )
+    with connect('%s.db'%outName, append=False) as srtDB:
+        for i in range(len(sortedTraj)):
+            srtDB.write(
+                sortedTraj[i],
+                eV = sorted(eneUniq)[i],
+                mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
+                eV2GM = sorted(eneUniq)[i] - min(eneUniq)
+            )
 
 def clusterIsomerAbs(
     trajAtoms, # Must containg energy information
@@ -101,6 +101,8 @@ def clusterIsomerAbs(
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
+    countUniq = [isomerLabel.count(i) for i in isoUniq]
+#    print(countUniq)
     print('-'*76)
     print('   %i\tisomers found from %s\tsamples. Oversampling = %s'%\
         (len(isoUniq), nStates, '{:.2%}'.format(nStates/len(isoUniq)-1)))
@@ -108,11 +110,12 @@ def clusterIsomerAbs(
     for v in sorted(eneUniq):
         sortedTraj.append(trajAtoms[list(eneArray).index(v)])
 
-    srtDB = connect('%s.db'%outName, append=False)
-    for i in range(len(sortedTraj)):
-        srtDB.write(
-            sortedTraj[i],
-            eV = sorted(eneUniq)[i],
-            mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
-            eV2GM = sorted(eneUniq)[i] - min(eneUniq)
-        )
+    with connect('%s.db'%outName, append=False) as srtDB:
+        for i in range(len(sortedTraj)):
+            srtDB.write(
+                sortedTraj[i],
+                eV = sorted(eneUniq)[i],
+                eV2GM = sorted(eneUniq)[i] - min(eneUniq),
+                mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
+                counts = countUniq[eneUniq.index(sorted(eneUniq)[i])],
+            )
