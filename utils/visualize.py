@@ -45,6 +45,8 @@ def adjustColorOld(color, amount=1):
     return colorsys.hls_to_rgb(c[0], max(0, min(1, amount * c[1])), c[2])
 
 def adjustColor(color, amount=0):
+    # Positive means lighter color
+    # Negative means darker color
     import matplotlib.colors as mc
     c = mc.to_rgb(color)
     newRGB = c
@@ -84,7 +86,7 @@ def plotAtom(anum, apos, scale=1,cmap=jmol_colors, \
         apos[:2],
         radius = plotRadii, 
         fc=adjustColor(cmap[anum], colorparam),
-        ec=adjustColor('k', colorparam),
+        ec=adjustColor('k', colorparam*0.5),
         linewidth=linwt,
         )
     plt.gca().add_patch(shape)
@@ -151,7 +153,7 @@ def plotBondHalf(allnum, allpos, bdpair, begnum, atomscale, bdrad,\
             patch = PathPatch(
                 path,
                 fc=adjustColor(cmap[allnum[a1]], colorparam),
-                ec=adjustColor('k'),
+                ec=adjustColor('k', colorparam*0.5),
                 linewidth = linwt,
                 )
             plt.gca().add_patch(patch)
@@ -232,7 +234,7 @@ def draw_BSsurf(
     allc = [
 		0 if i in adsList       # Full color
 		else 0.5 if i in bufList   # Shallow color
-		else 0.9 for i in range(len(atoms))
+		else 1.0 for i in range(len(atoms))
 	]
 
     bdpair = [[i[0], i[1]] for i in get_bondpairs(atoms, bdcutoff)]

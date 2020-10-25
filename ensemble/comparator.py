@@ -2,6 +2,36 @@ import gocia.utils.linalg as la
 import gocia.geom.fingerprint as fgp
 import numpy as np
 
+def srtDist_similar_zz(a1, a2, delta_rel=1e-4, d_max=0.1):
+    p1 = a1.get_all_distances(mic=True).flatten()
+    p2 = a2.get_all_distances(mic=True).flatten()
+    p1, p2 = np.sort(p1), np.sort(p2)
+    cum_diff = np.abs(p1 - p2)
+    total_cum_diff = cum_diff.sum() / 2 / (p1 + p2).sum()
+    max_diff = cum_diff.max()
+#    print(total_cum_diff, max_diff)
+    if total_cum_diff < delta_rel and max_diff < d_max:
+        return True
+    else:
+        return False
+
+def comp_srtDist_zz(a1, traj, delta_rel=1e-4, d_max=0.1):
+    simList = [0]*len(traj)
+    for i in range(len(traj)):
+        if srtDist_similar_zz(a1, traj[i], delta_rel=delta_rel, d_max=d_max):
+            simList[i] = 1
+    return simList
+
+def compAll_srtDist_zz(traj, delta_rel=1e-4, d_max=0.1):
+    simMat = []
+    for i in range(len(traj)):
+        print('checking isomer %i'%i)
+        simMat.append(comp_srtDist_zz(traj[i], traj, delta_rel=delta_rel, d_max=d_max))
+    return np.array(simMat)
+
+# Above can do one-by-one and one-by-many checks
+# Below functions only apply for a whole ensemble
+
 def num_passed(simMat):
     return (len(simMat[simMat==1]) - len(simMat))/2
 
