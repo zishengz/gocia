@@ -46,21 +46,18 @@ def adjustColorOld(color, amount=1):
 
 def adjustColor(color, amount=0):
     import matplotlib.colors as mc
-    try:
-        c = mc.cnames[color]
-    except:
-        c = color
-    newRGB = (0,0,0)
+    c = mc.to_rgb(color)
+    newRGB = c
     if amount > 0:
-        return (color[0]+(1-color[0])*amount,\
-                color[1]+(1-color[1])*amount,\
-                color[2]+(1-color[2])*amount)
+        return (c[0]+(1-c[0])*amount,\
+                c[1]+(1-c[1])*amount,\
+                c[2]+(1-c[2])*amount)
     elif amount < 0:
-        return (color[0]*(1-amount),\
-                color[1]*(1-amount),\
-                color[2]*(1-amount))
+        return (c[0]*(1-amount),\
+                c[1]*(1-amount),\
+                c[2]*(1-amount))
     else:
-        return color
+        return newRGB
 
 def getHBonds(atoms, allnum, bdpair):
     hbpair=[]
@@ -154,7 +151,7 @@ def plotBondHalf(allnum, allpos, bdpair, begnum, atomscale, bdrad,\
             patch = PathPatch(
                 path,
                 fc=adjustColor(cmap[allnum[a1]], colorparam),
-                ec=adjustColor('k', colorparam),
+                ec=adjustColor('k'),
                 linewidth = linwt,
                 )
             plt.gca().add_patch(patch)
