@@ -49,7 +49,7 @@ def vasp2db(nameKey=''):
             ene_eV = eval(info[4])
             s = ai.read(d+'/CONTCAR')
             s.wrap()
-			myDb.write(
+            myDb.write(
 				s,
 				eV=ene_eV,
 				mag=mag,
