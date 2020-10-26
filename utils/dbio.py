@@ -24,11 +24,12 @@ def get_projName():
     return os.getcwd().split('/')[-1]
 
 def calypso2db():
+    print(' --- Collecting CALYPSO results --- ')
     os.system('cd results;cak.py -n 9999 --vasp')
-    eneData = [eval(r[-1]) for r in open('results/Analysis_Output.dat').readlines().split()]
+    eneData = [eval(r.split()[-1]) for r in open('results/Analysis_Output.dat').readlines()[1:]]
     with connect('calypso-%s.db'%get_projName(), append=False) as myDb:
-        for i in len(eneData):
-            s = read('results/dir_origin/OCell_%i.vasp'%i+1)
+        for i in range(len(eneData)):
+            s = read('results/dir_origin/OCell_%i.vasp'%(i+1))
             s.wrap()
             myDb.write(
                 s,
@@ -38,7 +39,7 @@ def calypso2db():
     print(' %i candidates writen to calypso-%s.db'%(len(eneData), get_projName()))
             
 def vasp2db(nameKey=''):
-    print(' --- Collecting vasp results ---')
+    print(' --- Collecting VASP results ---')
     vdirs = [d.split('/')[0] for d in os.popen('ls *%s*/OSZICAR'%nameKey).readlines()]
     count_fin = 0
     with connect('vasp-%s.db'%get_projName(), append=False) as myDb:
@@ -47,7 +48,7 @@ def vasp2db(nameKey=''):
             info = open(d+'/OSZICAR', 'r').readlines()[-1].split()
             mag = eval(info[-1])
             ene_eV = eval(info[4])
-            s = ai.read(d+'/CONTCAR')
+            s = read(d+'/CONTCAR')
             s.wrap()
             myDb.write(
 				s,
@@ -56,7 +57,7 @@ def vasp2db(nameKey=''):
                 done=1,
                 )
             count_fin += 1
-    print('\n %i candidates writen to vasp-%s.db'%(len(eneData), get_projName()))
+    print('\n %i candidates writen to vasp-%s.db'%(count_fin, get_projName()))
 
 def db2vasp(dbName):
     traj = read(dbName, index=':')
