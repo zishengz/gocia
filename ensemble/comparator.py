@@ -3,6 +3,8 @@ import gocia.geom.fingerprint as fgp
 import numpy as np
 
 def srtDist_similar_zz(a1, a2, delta_rel=5e-4, d_max=0.5):
+    if len(a1) != len(a2):
+        return False
     p1 = a1.get_all_distances(mic=True).flatten()
     p2 = a2.get_all_distances(mic=True).flatten()
     p1, p2 = np.sort(p1), np.sort(p2)
