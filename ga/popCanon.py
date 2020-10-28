@@ -1,0 +1,87 @@
+
+import numpy as np
+from ase.db import connect
+from gocia.interface import Interface
+from gocia.ga import (
+                    get_eneFactor,
+                    get_matedFactor
+                    )
+from gocia.ga.crossover import crossover_snsSurf_2d
+from gocia.ensemble.comparator import srtDist_similar_zz
+from ase.io import read, write
+
+class PopulationCanonical:
+    def __init__(
+        self,
+        substrate = None,
+        gadb = None,
+        zLim = None,
+        compParam = None,
+        matingMethod = None,
+        ):
+        if gadb is not None:
+            self.gadb = connect(gadb)
+
+        if type(substrate) is str:
+            self.substrate = read(substrate)
+        else:
+            self.substrate = substrate
+
+        if zLim is not None:
+            self.zLim = zLim
+
+    def initializeDB(self):
+        for i in range(len(self.gadb)):
+            self.gadb.update(i+1, mated=0, alive=1)
+
+    def get_ID(self, condString):
+        tmp = []
+        for r in self.gadb.select(condString):
+            tmp.append(r.id)
+        return tmp
+
+    def get_valueOf(self, valueString, idList):
+        tmp = []
+        for i in idList:
+            tmp.append(
+                self.gadb.get(id=i)[valueString]
+            )
+        return tmp
+
+    def get_fitness(self, idList):
+        tmpList = self.get_valueOf('eV', idList)
+        f_ene = get_eneFactor(tmpList)
+        tmpList = self.get_valueOf('mated', idList)
+        f_mat = get_matedFactor(tmpList)
+        return f_ene * f_mat
+
+    def choose_parents(self):
+        aliveList = self.get_ID('alive=1')
+        fitList = self.get_fitness(aliveList)
+        weights = fitList / sum(fitList)
+        parents = np.random.choice(aliveList, size=2, replace=False, p=weights)
+        parents = [int(parents[0]), int(parents[1])]
+        for parent in parents:
+#            self.gadb.get(id=int(parent)).mated += 1
+            self.gadb.update(parent, mated=self.gadb.get(id=parent).mated+1)
+        return parents
+    
+    def gen_offspring(self, mutRate=0.3):
+        mater, pater = self.choose_parents()
+        a1 = self.gadb.get(id=mater).toatoms()
+        a2 = self.gadb.get(id=pater).toatoms()
+        surf1 = Interface(a1, self.substrate, zLim=self.zLim)
+        surf2 = Interface(a2, self.substrate, zLim=self.zLim)
+        kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.9)
+        if srtDist_similar_zz(a1, a2):
+            mutRate *= 2
+        if np.random.rand() < mutRate:
+            print('MUTATION!')
+            kid.rattleMut(stdev=0.2, mutRate=0.5, zEnhance=True)
+        return kid
+
+
+
+
+
+    
