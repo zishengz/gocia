@@ -59,8 +59,12 @@ class Hooke(Calculator):
                 covalRadii[self.atoms.get_atomic_numbers()[neighbors]]
             compress = covalBl - lenBond
             energy += k / 2 * ((compress)**2).sum()
+            # only repulsion
             compress[covalBl - lenBond < tolerAngs] = 0.0
             compress[lenBond / covalBl > 1 -tolerMult] = 0.0
+            # # also attraction
+            # compress[np.abs(covalBl - lenBond) < tolerAngs] = 0.0
+            # compress[np.abs(1 - lenBond / covalBl) < tolerMult] = 0.0
             f = k * (compress)[:, np.newaxis] * vecBond
             forces[a1] -= f.sum(axis=0)
             for a2, f2 in zip(neighbors, f):
