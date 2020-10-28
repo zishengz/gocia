@@ -28,7 +28,7 @@ def calypso2db():
     os.system('cd results;cak.py -n 9999 --vasp')
 #    eneData = [eval(r.split()[-1]) for r in open('results/Analysis_Output.dat').readlines()[1:]]
     eneData = [r.split()[-1] for r in open('results/Analysis_Output.dat').readlines()[1:]]
-    eneData = [0 if 'NULL' else eval(r) for r in eneData]
+    eneData = [0 if r=='NULL' else eval(r) for r in eneData]
     with connect('calypso-%s.db'%get_projName(), append=False) as myDb:
         for i in range(len(eneData)):
             s = read('results/dir_origin/OCell_%i.vasp'%(i+1))
