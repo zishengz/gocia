@@ -104,7 +104,7 @@ class PopulationCanonical:
 
     def add_vaspResult(self, vaspdir='.'):
         if 'OSZICAR' in os.listdir(vaspdir):
-            info = [l if 'F' in l for l in open('%s/OSZICAR'%vaspdir).readlines()]
+            info = [l for l in open('%s/OSZICAR'%vaspdir).readlines() if 'F' in l]
             if len(info) > 0:
                 info = info[-1].split()
                 mag = eval(info[-1])
