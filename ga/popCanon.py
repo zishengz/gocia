@@ -4,7 +4,8 @@ from ase.db import connect
 from gocia.interface import Interface
 from gocia.ga import (
                     get_eneFactor,
-                    get_matedFactor
+                    get_matedFactor,
+                    get_matedFactor2
                     )
 from gocia.ga.crossover import crossover_snsSurf_2d
 from gocia.ensemble.comparator import srtDist_similar_zz
@@ -15,6 +16,7 @@ class PopulationCanonical:
         self,
         substrate = None,
         gadb = None,
+        popSize = 20,
         zLim = None,
         compParam = None,
         matingMethod = None,
@@ -29,6 +31,11 @@ class PopulationCanonical:
 
         if zLim is not None:
             self.zLim = zLim
+
+        self.popSize = popSize
+
+        eneList = self.get_valueOf('eV', self.get_ID('done=1'))
+        self.Emin = min(eneList)
 
     def initializeDB(self):
         for i in range(len(self.gadb)):
@@ -48,6 +55,11 @@ class PopulationCanonical:
             )
         return tmp
 
+    def get_GMrow(self):
+        eneList = self.get_valueOf('eV', self.get_ID('done=1'))
+        self.Emin = min(eneList)
+        return self.gadb.get(eV=self.Emin)
+
     def get_fitness(self, idList):
         tmpList = self.get_valueOf('eV', idList)
         f_ene = get_eneFactor(tmpList)
@@ -61,24 +73,50 @@ class PopulationCanonical:
         weights = fitList / sum(fitList)
         parents = np.random.choice(aliveList, size=2, replace=False, p=weights)
         parents = [int(parents[0]), int(parents[1])]
-        for parent in parents:
-#            self.gadb.get(id=int(parent)).mated += 1
-            self.gadb.update(parent, mated=self.gadb.get(id=parent).mated+1)
         return parents
     
+    def natural_selection(self):
+        aliveList = self.get_ID('alive=1')
+        if len(aliveList) > self.popSize:
+            fitnessList = self.get_fitness(aliveList)
+            aliveList = [x for _,x in sorted(zip(fitnessList, aliveList))]
+            deadList = aliveList[:-20]
+            for d in deadList:
+                self.gadb.update(d, alive=0)
+
     def gen_offspring(self, mutRate=0.3):
-        mater, pater = self.choose_parents()
-        a1 = self.gadb.get(id=mater).toatoms()
-        a2 = self.gadb.get(id=pater).toatoms()
-        surf1 = Interface(a1, self.substrate, zLim=self.zLim)
-        surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-        kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.9)
+        kid = None
+        while kid is None:
+            mater, pater = self.choose_parents()
+            a1 = self.gadb.get(id=mater).toatoms()
+            a2 = self.gadb.get(id=pater).toatoms()
+            surf1 = Interface(a1, self.substrate, zLim=self.zLim)
+            surf2 = Interface(a2, self.substrate, zLim=self.zLim)
+            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.9)
         if srtDist_similar_zz(a1, a2):
             mutRate *= 2
         if np.random.rand() < mutRate:
             print('MUTATION!')
-            kid.rattleMut(stdev=0.2, mutRate=0.5, zEnhance=True)
+            kid.rattleMut()
+        self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
+        self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
+
+    def add_vaspResult(self, vaspdir='.'):
+        if 'OSZICAR' in os.listdir(vaspdir):
+            info = [l if 'F' in l for l in open('%s/OSZICAR'%vaspdir).readlines()]
+            if len(info) > 0:
+                info = info[-1].split()
+                mag = eval(info[-1])
+                ene_eV = eval(info[4])
+                s = read('%s/CONTCAR'%vaspdir)
+                self.gadb.write(
+                    s,
+                    mag     = mag,
+                    eV      = ene_eV,
+                    done    = 1,
+                    alive   = 1
+                )
 
 
 

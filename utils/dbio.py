@@ -47,7 +47,8 @@ def vasp2db(nameKey=''):
     with connect('vasp-%s.db'%get_projName(), append=False) as myDb:
         for d in vdirs:
             print('%s'%d, end='\t')
-            info = open(d+'/OSZICAR', 'r').readlines()[-1].split()
+#            info = open(d+'/OSZICAR', 'r').readlines()[-1].split()
+            info = [l if 'F' in l for l in open(d+'/OSZICAR', 'r').readlines()][-1].split()
             mag = eval(info[-1])
             ene_eV = eval(info[4])
             s = read(d+'/CONTCAR')

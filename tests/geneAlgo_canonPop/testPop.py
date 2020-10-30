@@ -7,6 +7,7 @@ pop = PopulationCanonical(gadb='rawInp.db', substrate='substrate.vasp', zLim=[7.
 pop.initializeDB()
 aliveList = pop.get_ID('alive=1')
 print(pop.get_valueOf('eV', aliveList))
+print(pop.get_GMrow().eV)
 
 with connect('gen1kid.db', append=False) as tmpDB:
     for i in range(20):

@@ -262,7 +262,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 0.5, mutRate = 0.5, zEnhance=False):
+    def rattleMut(self, stdev = 0.2, mutRate = 0.4, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''

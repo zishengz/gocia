@@ -67,6 +67,10 @@ def crossover_snsSurf_2d(surf1, surf2, tolerance=0.5):
         # print(sum([len(l) for l in badPos]))
         childSurf = splice_2d(surf1, badPos, goodPos, center, direction)
         isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
-    print(' Offspring is created at attempt #%i\t|Tolerance = %.3f'%\
-        (n_trial, tolerance))
+        if n_trial > 100:
+            isBADSTRUCTURE = False
+            childSurf = None
+    if childSurf is not None:
+        print(' Offspring is created at attempt #%i\t|Tolerance = %.3f'%\
+            (n_trial, tolerance))
     return childSurf
