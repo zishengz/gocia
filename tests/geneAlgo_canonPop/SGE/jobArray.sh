@@ -29,6 +29,7 @@ mkdir $WORKPATH
 cd $WORKPATH
 
 python -u ../getKid.py
+cp POSCAR inp.vasp
 mkpot pos
 cp ../KPOINTS .
 
@@ -39,7 +40,8 @@ do
     mpirun -n $nproc $VASPHOME/vasp_gam > out
     grep Elapse OUTCAR >> log
     grep F OSZICAR|tail -n $i >> log
-    cp CONTCAR $CURDIR/out-$i.vasp
+    cp CONTCAR out-$i.vasp
+    cp CONTCAR POSCAR
 done
 
 python -u ../addKid.py

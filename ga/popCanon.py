@@ -115,7 +115,7 @@ class PopulationCanonical:
                     s,
                     mag     = mag,
                     eV      = ene_eV,
-                    mated = 0,
+                    mated   = 0,
                     done    = 1,
                     alive   = 1
                 )
