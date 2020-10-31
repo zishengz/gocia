@@ -92,7 +92,7 @@ class PopulationCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.9)
+            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.8)
         if srtDist_similar_zz(a1, a2):
             mutRate *= 2
         if np.random.rand() < mutRate:
