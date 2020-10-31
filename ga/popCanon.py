@@ -80,7 +80,7 @@ class PopulationCanonical:
         if len(aliveList) > self.popSize:
             fitnessList = self.get_fitness(aliveList)
             aliveList = [x for _,x in sorted(zip(fitnessList, aliveList))]
-            deadList = aliveList[:-20]
+            deadList = aliveList[:-self.popSize]
             for d in deadList:
                 self.gadb.update(d, alive=0)
 
