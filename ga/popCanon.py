@@ -103,6 +103,7 @@ class PopulationCanonical:
         return kid
 
     def add_vaspResult(self, vaspdir='.'):
+        import os
         if 'OSZICAR' in os.listdir(vaspdir):
             info = [l for l in open('%s/OSZICAR'%vaspdir).readlines() if 'F' in l]
             if len(info) > 0:
