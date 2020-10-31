@@ -16,9 +16,24 @@ def RMSD(atoms1, atoms2):
     r1, r2 = atoms1.get_positions(), atoms2.get_positions()
     return np.sqrt(((r1 - r2)**2).sum() / len(r1))
 
-def rand_direction():
-    randVec = np.random.rand(3) - 0.5
+def rand_directionOld():
+    randVec = np.array([1, 1, 1])
+    while np.sqrt(np.sum(randVec**2)) >= 1:
+        randVec = 2 * (np.random.rand(3) - 0.5)
     return randVec / np.sqrt(np.sum(randVec**2))
+
+def rand_direction():
+    '''
+    Marsaglia method (https://mathworld.wolfram.com/SpherePointPicking.html)
+    '''
+    x1, x2 = 1, 1
+    while x1**2 + x2**2 >= 1:
+        x1, x2 = 2 * (np.random.rand(2) - 0.5)
+    return np.array([
+        2 * x1 * np.sqrt(1 - x1**2 - x2**2),
+        2 * x2 * np.sqrt(1 - x1**2 - x2**2),
+        1 - 2 * (x1**2 + x2**2)
+    ])
 
 def is_withinPosLim(vec, xLim=None, yLim=None, zLim=None):
     if xLim is None: xLim = [-999, 999]
