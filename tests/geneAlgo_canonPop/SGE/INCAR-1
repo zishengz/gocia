@@ -1,0 +1,22 @@
+SYSTEM = opt-1
+PREC   = LOW
+EDIFF  = 4e-3
+EDIFFG = -0.16
+IBRION = 2
+ISIF   = 0
+NSW    = 100
+NELM   = 200
+NELMIN = 2
+ISMEAR = 0
+SIGMA  = 0.05
+POTIM  = 0.5
+ISPIN  = 2
+IVDW   = 11
+LREAL  = A
+
+ALGO = F
+ISTART = 0
+
+NPAR   = 4
+GGA    = PE
+
