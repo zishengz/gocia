@@ -18,3 +18,7 @@ def get_matedFactor2(matedList):
         matedList = np.array(matedList)
     return np.power(0.5, matedList/4)
 
+def get_matedFactor3(matedList):
+    if type(matedList) is list:
+        matedList = np.array(matedList)
+    return 1 / np.power(1+matedList, 2/3)
