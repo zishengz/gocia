@@ -71,6 +71,6 @@ def crossover_snsSurf_2d(surf1, surf2, tolerance=0.5):
             isBADSTRUCTURE = False
             childSurf = None
     if childSurf is not None:
-        print(' Offspring is created at attempt #%i\t|Tolerance = %.3f'%\
+        print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))
     return childSurf

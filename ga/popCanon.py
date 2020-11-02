@@ -96,7 +96,7 @@ class PopulationCanonical:
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
             kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.8)
-        print('\nPARENTS: %i and %i'%(mater, pater))
+        print('PARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2):
             print(' |- TOO SIMILAR!')
             mutRate *= 2
