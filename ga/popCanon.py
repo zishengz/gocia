@@ -83,7 +83,7 @@ class PopulationCanonical:
             aliveList = [x for _,x in sorted(zip(fitnessList, aliveList))]
             deadList = aliveList[:-self.popSize]
             for d in deadList:
-                print(' REST IN PEACE, %i!'%d)
+                print('REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
     def gen_offspring(self, mutRate=0.3):
@@ -117,7 +117,7 @@ class PopulationCanonical:
                 ene_eV = eval(info[4])
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
-                print('A CHILD IS BORN with E = %.3f eV'%(ene_eV))
+                print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
                 self.gadb.write(
                     s,
                     mag     = mag,
