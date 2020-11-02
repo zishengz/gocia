@@ -83,10 +83,12 @@ class PopulationCanonical:
             aliveList = [x for _,x in sorted(zip(fitnessList, aliveList))]
             deadList = aliveList[:-self.popSize]
             for d in deadList:
+                print(' REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
     def gen_offspring(self, mutRate=0.3):
         kid = None
+        mater, pater = 0, 0
         while kid is None:
             mater, pater = self.choose_parents()
             a1 = self.gadb.get(id=mater).toatoms()
@@ -94,10 +96,12 @@ class PopulationCanonical:
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
             kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.8)
+        print('\nPARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2):
+            print(' |- TOO SIMILAR!')
             mutRate *= 2
         if np.random.rand() < mutRate:
-            print('MUTATION!')
+            print(' |- MUTATION!')
             kid.rattleMut()
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
@@ -113,6 +117,7 @@ class PopulationCanonical:
                 ene_eV = eval(info[4])
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
+                print('A CHILD IS BORN with E = %.3f eV'%(ene_eV))
                 self.gadb.write(
                     s,
                     mag     = mag,
