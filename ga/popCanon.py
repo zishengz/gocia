@@ -112,6 +112,7 @@ class PopulationCanonical:
                 mag = eval(info[-1])
                 ene_eV = eval(info[4])
                 s = read('%s/CONTCAR'%vaspdir)
+                s.wrap()
                 self.gadb.write(
                     s,
                     mag     = mag,
