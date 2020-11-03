@@ -65,7 +65,7 @@ class PopulationCanonical:
         tmpList = self.get_valueOf('eV', idList)
         f_ene = get_eneFactor(tmpList)
         tmpList = self.get_valueOf('mated', idList)
-        f_mat = get_matedFactor3(tmpList)
+        f_mat = get_matedFactor(tmpList)
         return f_ene * f_mat
 
     def choose_parents(self):
@@ -95,7 +95,7 @@ class PopulationCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.8)
+            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.75)
         print('PARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2):
             print(' |- TOO SIMILAR!')
