@@ -79,6 +79,8 @@ def grow_adatom(
             tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
             ind_curr += 1
         if tmpInterfc.has_badContact(tolerance = toler):
+            badStructure = True
+        else:
             badStructure = False
         n_attempts += 1
     tmpInterfc.sort()
