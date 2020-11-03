@@ -86,6 +86,19 @@ class PopulationCanonical:
                 print('REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
+    def is_uniqueInPop(self, atoms):
+        '''
+        Check similarity against the current population
+        '''
+        aliveList = self.get_ID('alive=1')
+        aliveList = [self.gadb.get(id=n).toatoms() for n in aliveList]
+        isUnique = True
+        for a in aliveList:
+            if srtDist_similar_zz(atoms, a):
+                isUnique = False
+                break
+        return isUnique
+
     def gen_offspring(self, mutRate=0.3):
         kid = None
         mater, pater = 0, 0
@@ -118,14 +131,25 @@ class PopulationCanonical:
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
                 print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
-                self.gadb.write(
-                    s,
-                    mag     = mag,
-                    eV      = ene_eV,
-                    mated   = 0,
-                    done    = 1,
-                    alive   = 1
-                )
+                if self.is_uniqueInPop(s):
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 1
+                    )
+                else:
+                    print(' |- it is a duplicate!')
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 0
+                    )
 
 
 
