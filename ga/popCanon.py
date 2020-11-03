@@ -99,7 +99,7 @@ class PopulationCanonical:
         print('PARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2):
             print(' |- TOO SIMILAR!')
-            mutRate *= 2
+            mutRate = 1
         if np.random.rand() < mutRate:
             print(' |- MUTATION!')
             kid.rattleMut()
