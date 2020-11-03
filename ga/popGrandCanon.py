@@ -8,11 +8,12 @@ from gocia.ga import (
                     get_matedFactor2,
                     get_matedFactor3
                     )
-from gocia.ga.crossover import crossover_snsSurf_2d
+from gocia.ga.crossover import crossover_snsSurf_2d_GC
 from gocia.ensemble.comparator import srtDist_similar_zz
 from ase.io import read, write
 
-class PopulationCanonical:
+# TODO GCGA population class
+class PopulationGrandCanonical:
     def __init__(
         self,
         substrate = None,
@@ -22,6 +23,9 @@ class PopulationCanonical:
         compParam = None,
         matingMethod = None,
         ):
+
+# TODO Chemical potential as input dict
+
         if gadb is not None:
             self.gadb = connect(gadb)
 
@@ -56,6 +60,8 @@ class PopulationCanonical:
             )
         return tmp
 
+# TODO grand potential calculator
+
     def get_GMrow(self):
         eneList = self.get_valueOf('eV', self.get_ID('done=1'))
         self.Emin = min(eneList)
@@ -86,6 +92,21 @@ class PopulationCanonical:
                 print('REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
+    def is_uniqueInPop(self, atoms):
+        '''
+        Check similarity against the current population
+        '''
+        aliveList = self.get_ID('alive=1')
+        aliveList = [self.gadb.get(id=n).toatoms() for n in aliveList]
+        isUnique = True
+        for a in aliveList:
+            if srtDist_similar_zz(atoms, a):
+                isUnique = False
+                break
+        return isUnique
+
+# TODO add and remove atoms 
+
     def gen_offspring(self, mutRate=0.3):
         kid = None
         mater, pater = 0, 0
@@ -95,11 +116,11 @@ class PopulationCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
         print('PARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2):
             print(' |- TOO SIMILAR!')
-            mutRate *= 2
+            mutRate = 1
         if np.random.rand() < mutRate:
             print(' |- MUTATION!')
             kid.rattleMut()
@@ -118,14 +139,25 @@ class PopulationCanonical:
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
                 print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
-                self.gadb.write(
-                    s,
-                    mag     = mag,
-                    eV      = ene_eV,
-                    mated   = 0,
-                    done    = 1,
-                    alive   = 1
-                )
+                if self.is_uniqueInPop(s):
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 1
+                    )
+                else:
+                    print(' |- it is a duplicate!')
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 0
+                    )
 
 
 

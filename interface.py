@@ -47,7 +47,7 @@ class Interface:
                 self.allAtoms   = allAtoms
 
         self.fixList    = self.subAtoms.constraints[0].get_indices()
-        self.bufList = [i for i in list(range(len(subAtoms)))\
+        self.bufList = [i for i in list(range(len(self.subAtoms)))\
             if i not in self.fixList]
         self.adsList    = [i for i in list(range(len(self.allAtoms)))\
             if i not in list(range(len(self.subAtoms)))]
@@ -130,6 +130,10 @@ class Interface:
     def get_pos(self):
         return self.get_allAtoms().get_positions().copy()
 
+    def get_fixBufPos(self):
+        return self.get_pos()[[i for i in list(range(len(self)))\
+                    if i not in self.get_adsList()]]
+
     def get_subPos(self):
         return self.get_subAtoms().get_positions().copy()
 
@@ -176,6 +180,12 @@ class Interface:
                a.index not in self.get_bufList()]]
         return tmpAtoms
 
+    def get_fixBufAtoms(self):
+        tmpAtoms = self.get_allAtoms()
+        del tmpAtoms[[a.index for a in tmpAtoms\
+            if a.index in self.get_adsList()]]
+        return tmpAtoms
+
     def get_covalRadii(self):
         return [covalRadii[i] for i in self.get_allAtoms().numbers]
 
@@ -197,8 +207,6 @@ class Interface:
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
         return diff.min() < 0
 
-
-
     def set_allAtoms(self, newAllAtoms):
         newAllAtoms.wrap()
         self.allAtoms = newAllAtoms
@@ -209,8 +217,14 @@ class Interface:
         tmpAtoms.set_positions(newAllPos)
         self.set_allAtoms(tmpAtoms)
 
-    def set_adsAtoms(self, newAdsAtoms):
+    def set_fixBufPos(self, newPos):
         tmpAtoms = self.get_subAtoms()
+        tmpAtoms.set_positions(newPos)
+        tmpAtoms.extend(self.get_adsAtoms())
+        self.set_allAtoms(tmpAtoms)
+
+    def set_adsAtoms(self, newAdsAtoms):
+        tmpAtoms = self.get_fixBufAtoms()
         tmpAtoms.extend(newAdsAtoms)
         self.set_allAtoms(tmpAtoms)
 
