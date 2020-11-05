@@ -32,6 +32,8 @@ class PopulationCanonical:
 
         if zLim is not None:
             self.zLim = zLim
+        if zLim is None:
+            self.zLim = Interface(self.substrate, self.substrate).zLim
 
         self.popSize = popSize
 
