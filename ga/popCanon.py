@@ -122,7 +122,8 @@ class PopulationCanonical:
 
     def add_vaspResult(self, vaspdir='.'):
         import os
-        if 'OSZICAR' in os.listdir(vaspdir):
+        cwdFiles = os.listdir(vaspdir)
+        if 'OSZICAR' in cwdFiles and 'BADSTRUCTURE' not in cwdFiles:
             info = [l for l in open('%s/OSZICAR'%vaspdir).readlines() if 'F' in l]
             if len(info) > 0:
                 info = info[-1].split()
@@ -151,6 +152,7 @@ class PopulationCanonical:
                         alive   = 0
                     )
 
+# TODO write a script of worker for GA on PBS
 
 
 
