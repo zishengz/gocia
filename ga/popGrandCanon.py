@@ -121,8 +121,6 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-# TODO add and remove atoms 
-
     def gen_offspring(self, mutRate=0.3):
         kid = None
         mater, pater = 0, 0
@@ -139,7 +137,10 @@ class PopulationGrandCanonical:
             mutRate = 1
         if np.random.rand() < mutRate:
             print(' |- MUTATION!')
-            kid.rattleMut()
+            mutType = np.random.choice([0,1,2], size=1)[0]
+            if mutType == 0: kid.rattleMut()
+            if mutType == 1: kid.growMut([l for l in self.chemPotDict])
+            if mutType == 2: kid.leachMut([l for l in self.chemPotDict])
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
