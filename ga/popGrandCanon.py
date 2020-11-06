@@ -42,9 +42,6 @@ class PopulationGrandCanonical:
 
         self.popSize = popSize
 
-        eneList = self.get_valueOf('eV', self.get_ID('done=1'))
-        self.Emin = min(eneList)
-
         if chemPotDict is not None:
             self.chemPotDict = chemPotDict
 
