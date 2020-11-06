@@ -43,6 +43,7 @@ class PopulationCanonical:
     def initializeDB(self):
         for i in range(len(self.gadb)):
             self.gadb.update(i+1, mated=0, alive=1)
+        self.natural_selection()
 
     def get_ID(self, condString):
         tmp = []
