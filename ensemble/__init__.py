@@ -58,8 +58,8 @@ def clusterIsomer(
 def clusterIsomerAbs(
     trajAtoms, # Must containg energy information
     eneToler = 0.05,
-    geomToler1=1e-4,
-    geomToler2=0.1,
+    geomToler1=5e-4,
+    geomToler2=0.5,
     outName='sort'
     ):
     import gocia.ensemble.comparator as comp
