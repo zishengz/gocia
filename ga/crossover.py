@@ -145,7 +145,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
         matDist = [dist2lin(center, center+direction, i) for i in matAds.get_positions()[:, :2]]
         patDist = [dist2lin(center, center+direction, i) for i in patAds.get_positions()[:, :2]]
         newAdsElem, newAdsPos = [], []
-        print(matDist, patDist)
+#        print(matDist, patDist)
         for i in range(len(matDist)):
             if matDist[i] <= 0:
                 newAdsElem.append(matAds.get_chemical_symbols()[i])
@@ -155,6 +155,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
                 newAdsElem.append(patAds.get_chemical_symbols()[i])
                 newAdsPos.append(patAds.get_positions()[i])
         newSurf.set_adsAtoms(Atoms(newAdsElem, newAdsPos))
+        newSurf.wrap()
         isBADSTRUCTURE = False
     return newSurf
 

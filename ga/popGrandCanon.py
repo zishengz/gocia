@@ -158,14 +158,15 @@ class PopulationGrandCanonical:
                 ene_eV = eval(info[4])
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
-                print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
+                grndPot = self.calc_grandPot(s, ene_eV)
+                print('\nA CHILD IS BORN with G = %.3f eV'%(grndPot))
 
                 if self.is_uniqueInPop(s):
                     self.gadb.write(
                         s,
                         mag     = mag,
                         eV      = ene_eV,
-                        grandPot=self.calc_grandPot(s, ene_eV),
+                        grandPot= grndPot,
                         mated   = 0,
                         done    = 1,
                         alive   = 1
@@ -176,7 +177,7 @@ class PopulationGrandCanonical:
                         s,
                         mag     = mag,
                         eV      = ene_eV,
-                        grandPot=self.calc_grandPot(s, ene_eV),
+                        grandPot= grndPot,
                         mated   = 0,
                         done    = 1,
                         alive   = 0
