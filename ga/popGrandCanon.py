@@ -83,7 +83,7 @@ class PopulationGrandCanonical:
     def get_GMrow(self):
         eneList = self.get_valueOf('grandPot', self.get_ID('done=1'))
         self.Emin = min(eneList)
-        return self.gadb.get(eV=self.Emin)
+        return self.gadb.get(grandPot=self.Emin)
 
     def get_fitness(self, idList):
         tmpList = self.get_valueOf('grandPot', idList)
