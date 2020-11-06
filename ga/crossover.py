@@ -156,7 +156,13 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
                 newAdsPos.append(patAds.get_positions()[i])
         newSurf.set_adsAtoms(Atoms(newAdsElem, newAdsPos))
         newSurf.wrap()
-        isBADSTRUCTURE = False
+        isBADSTRUCTURE = newSurf.has_badContact(tolerance=tolerance)
+        if n_trial > 100:
+            isBADSTRUCTURE = False
+            newSurf = None
+    if newSurf is not None:
+        print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
+            (n_trial, tolerance))
     return newSurf
 
 

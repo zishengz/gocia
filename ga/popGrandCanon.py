@@ -160,8 +160,10 @@ class PopulationGrandCanonical:
                 s.wrap()
                 grndPot = self.calc_grandPot(s, ene_eV)
                 print('\nA CHILD IS BORN with G = %.3f eV'%(grndPot))
-
+                
                 if self.is_uniqueInPop(s):
+                    if grndPot < self.get_GMrow()['grandPot']:
+                        print(' |- it is the new GM!')
                     self.gadb.write(
                         s,
                         mag     = mag,
