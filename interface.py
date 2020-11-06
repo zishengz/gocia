@@ -280,6 +280,7 @@ class Interface:
         '''
         enhances the atoms with higher position
         '''
+        print(' |- Rattle mutation!')
         tmpAtoms = self.get_allAtoms()
         pos = tmpAtoms.get_positions()
         zBuf = self.get_bufAtoms().get_positions()[:,2]
@@ -294,6 +295,7 @@ class Interface:
         self.set_allPos(pos + rattleVec)
 
     def leachMut(self, elemList):
+        print(' |- Leaching mutation!')
         tmpAds = self.get_adsAtoms()
         nads = len(tmpAds)
         while tmpAds == nads:
@@ -303,6 +305,7 @@ class Interface:
         self.set_adsAtoms(tmpAds)
 
     def growMut(self, elemList):
+        print(' |- Growth mutation!')
         from gocia.geom.build import grow_adatom
         tmpInterfc = self.copy()
         myElem = np.random.choice(elemList, size=1)[0]

@@ -142,6 +142,8 @@ class PopulationGrandCanonical:
             if mutType == 0: kid.rattleMut()
             if mutType == 1: kid.growMut([l for l in self.chemPotDict])
             if mutType == 2: kid.leachMut([l for l in self.chemPotDict])
+        if len(kid.get_adsList()) == 0:
+            kid.growMut([l for l in self.chemPotDict])
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
