@@ -50,6 +50,7 @@ def clusterIsomer(
         for i in range(len(sortedTraj)):
             srtDB.write(
                 sortedTraj[i],
+                done=1,
                 eV = sorted(eneUniq)[i],
                 mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
                 eV2GM = sorted(eneUniq)[i] - min(eneUniq)
@@ -114,6 +115,7 @@ def clusterIsomerAbs(
         for i in range(len(sortedTraj)):
             srtDB.write(
                 sortedTraj[i],
+                done=1,
                 eV = sorted(eneUniq)[i],
                 eV2GM = sorted(eneUniq)[i] - min(eneUniq),
                 mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
