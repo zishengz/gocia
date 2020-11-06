@@ -131,7 +131,9 @@ class PopulationGrandCanonical:
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
             kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
         print('PARENTS: %i and %i'%(mater, pater))
-        if srtDist_similar_zz(a1, a2):
+        if srtDist_similar_zz(a1, a2)\
+            or srtDist_similar_zz(a1, kid.get_allAtoms())\
+            or srtDist_similar_zz(a2, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
