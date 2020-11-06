@@ -20,6 +20,7 @@ class PopulationGrandCanonical:
         gadb = None,
         popSize = 20,
         zLim = None,
+        chemPotDict = None,
         compParam = None,
         matingMethod = None,
         ):
@@ -42,9 +43,26 @@ class PopulationGrandCanonical:
         eneList = self.get_valueOf('eV', self.get_ID('done=1'))
         self.Emin = min(eneList)
 
+        if chemPotDict is not None:
+            self.chemPotDict = chemPotDict
+
+    def calc_grandPot(self, atoms, dftene):
+#        myRow = self.gadb.get(id=myID)
+#        myPot = myRow['eV']
+        myPot = dftene
+        adsSymbol = Interface(atoms, self.substrate).\
+            get_adsAtoms().get_chemical_symbols()
+        for s in adsSymbol:
+            if s in self.chemPotDict:
+                myPot -= self.chemPotDict[s]
+        return myPot
+
     def initializeDB(self):
         for i in range(len(self.gadb)):
-            self.gadb.update(i+1, mated=0, alive=1)
+            r = self.gadb.get(id=i+1)
+            self.gadb.update(i+1, mated=0, alive=1,\
+                grandPot=self.calc_grandPot(r.toatoms(), r.eV))
+        self.natural_selection()
 
     def get_ID(self, condString):
         tmp = []
@@ -60,15 +78,13 @@ class PopulationGrandCanonical:
             )
         return tmp
 
-# TODO grand potential calculator
-
     def get_GMrow(self):
-        eneList = self.get_valueOf('eV', self.get_ID('done=1'))
+        eneList = self.get_valueOf('grandPot', self.get_ID('done=1'))
         self.Emin = min(eneList)
         return self.gadb.get(eV=self.Emin)
 
     def get_fitness(self, idList):
-        tmpList = self.get_valueOf('eV', idList)
+        tmpList = self.get_valueOf('grandPot', idList)
         f_ene = get_eneFactor(tmpList)
         tmpList = self.get_valueOf('mated', idList)
         f_mat = get_matedFactor(tmpList)
@@ -130,7 +146,8 @@ class PopulationGrandCanonical:
 
     def add_vaspResult(self, vaspdir='.'):
         import os
-        if 'OSZICAR' in os.listdir(vaspdir):
+        cwdFiles = os.listdir(vaspdir)
+        if 'OSZICAR' in cwdFiles and 'BADSTRUCTURE' not in cwdFiles:
             info = [l for l in open('%s/OSZICAR'%vaspdir).readlines() if 'F' in l]
             if len(info) > 0:
                 info = info[-1].split()
@@ -139,11 +156,13 @@ class PopulationGrandCanonical:
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
                 print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
+
                 if self.is_uniqueInPop(s):
                     self.gadb.write(
                         s,
                         mag     = mag,
                         eV      = ene_eV,
+                        grandPot=self.calc_grandPot(s, ene_eV),
                         mated   = 0,
                         done    = 1,
                         alive   = 1
@@ -154,6 +173,7 @@ class PopulationGrandCanonical:
                         s,
                         mag     = mag,
                         eV      = ene_eV,
+                        grandPot=self.calc_grandPot(s, ene_eV),
                         mated   = 0,
                         done    = 1,
                         alive   = 0

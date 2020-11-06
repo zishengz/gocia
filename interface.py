@@ -293,6 +293,26 @@ class Interface:
                 if pos[i][2] < min(self.zLim): pos[i][2] = min(self.zLim)
         self.set_allPos(pos + rattleVec)
 
+    def leachMut(self, elemList):
+        tmpAds = self.get_adsAtoms()
+        nads = len(tmpAds)
+        while tmpAds == nads:
+            myDel = np.random.choice(list(range(nads)),size=1)[0]
+            if tmpAds.get_chemical_symbols()[myDel] in elemList:
+                del tmpAds[myDel]
+        self.set_adsAtoms(tmpAds)
+
+    def growMut(self, elemList):
+        from gocia.geom.build import grow_adatom
+        tmpInterfc = self.copy()
+        myElem = np.random.choice(elemList, size=1)[0]
+        grow_adatom(
+            tmpInterfc,
+            myElem,
+            zLim = self.zLim,
+        )
+        self.set_allAtoms(tmpInterfc.get_allAtoms())
+
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones

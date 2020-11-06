@@ -154,7 +154,6 @@ class PopulationCanonical:
                         alive   = 0
                     )
 
-# TODO write a script of worker for GA on PBS
 
 
 

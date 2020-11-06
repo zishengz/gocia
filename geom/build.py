@@ -38,7 +38,7 @@ def grow_adatom(
             # set to -1 for pure cluster growth (naive implementation)
             optElem = [tmpInterfc.get_chemical_symbols()[i] for i in optList]
             mult = np.ones(len(optList)) +\
-                   np.array([sameElemPenalty if s != addElemList[ind_curr] else 0 for s in optElem])
+                np.array([sameElemPenalty if s != addElemList[ind_curr] else 0 for s in optElem])
             if np.count_nonzero(mult) == 0:
                 mult = np.ones(len(optList))
             weights *= mult
