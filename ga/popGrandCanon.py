@@ -121,7 +121,7 @@ class PopulationGrandCanonical:
         return isUnique
 
     def gen_offspring(self, mutRate=0.3):
-        kid = None
+        kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
             mater, pater = self.choose_parents()
@@ -130,6 +130,7 @@ class PopulationGrandCanonical:
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
             kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            parent = surf1.copy()
         print('PARENTS: %i and %i'%(mater, pater))
         if srtDist_similar_zz(a1, a2)\
             or srtDist_similar_zz(a1, kid.get_allAtoms())\
@@ -143,6 +144,7 @@ class PopulationGrandCanonical:
             if mutType == 1: kid.growMut([l for l in self.chemPotDict])
             if mutType == 2: kid.leachMut([l for l in self.chemPotDict])
         if len(kid.get_adsList()) == 0:
+            kid = parent.copy()
             kid.growMut([l for l in self.chemPotDict])
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
