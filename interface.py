@@ -309,7 +309,7 @@ class Interface:
         from gocia.geom.build import grow_adatom
         tmpInterfc = self.copy()
         myElem = np.random.choice(elemList, size=1)[0]
-        grow_adatom(
+        tmpInterfc = grow_adatom(
             tmpInterfc,
             myElem,
             zLim = self.zLim,
