@@ -146,6 +146,7 @@ class PopulationGrandCanonical:
         if len(kid.get_adsList()) == 0:
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
+            kid.rattleMut()
             kid.growMut([l for l in self.chemPotDict])
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
