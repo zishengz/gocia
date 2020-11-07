@@ -86,7 +86,7 @@ class PopulationGrandCanonical:
         tmpList = self.get_valueOf('grandPot', idList)
         f_ene = get_eneFactor(tmpList)
         tmpList = self.get_valueOf('mated', idList)
-        f_mat = get_matedFactor(tmpList)
+        f_mat = get_matedFactor3(tmpList)
         return f_ene * f_mat
 
     def choose_parents(self):
@@ -120,7 +120,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.3):
+    def gen_offspring(self, mutRate=0.45):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
