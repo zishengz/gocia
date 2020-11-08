@@ -140,7 +140,7 @@ def clusterIsomerAbs_GC(
         eneArray = [a.info['grandPot'] for a in trajAtoms]
     else:
         eneArray = [a.get_potential_energy() for a in trajAtoms]
-    rawEneArray = magArray = [a.info['eV'] for a in trajAtoms]
+    rawEneArray = [a.info['eV'] for a in trajAtoms]
 
     print(' * Detecting unique isomers...')
     nStates = len(trajAtoms)
