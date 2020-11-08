@@ -140,6 +140,7 @@ def clusterIsomerAbs_GC(
         eneArray = [a.info['grandPot'] for a in trajAtoms]
     else:
         eneArray = [a.get_potential_energy() for a in trajAtoms]
+    rawEneArray = magArray = [a.info['eV'] for a in trajAtoms]
 
     print(' * Detecting unique isomers...')
     nStates = len(trajAtoms)
@@ -168,6 +169,7 @@ def clusterIsomerAbs_GC(
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
+    rawUniq = [rawEneArray[i] for i in isoUniq]
     countUniq = [isomerLabel.count(i) for i in isoUniq]
 #    print(countUniq)
     print('-'*76)
@@ -182,8 +184,9 @@ def clusterIsomerAbs_GC(
             srtDB.write(
                 sortedTraj[i],
                 done=1,
-                eV = sorted(eneUniq)[i],
+                grandPot = sorted(eneUniq)[i],
                 eV2GM = sorted(eneUniq)[i] - min(eneUniq),
+                eV = rawUniq[eneUniq.index(sorted(eneUniq)[i])],
                 mag = magUniq[eneUniq.index(sorted(eneUniq)[i])],
                 counts = countUniq[eneUniq.index(sorted(eneUniq)[i])],
             )
