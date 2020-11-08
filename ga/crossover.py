@@ -18,7 +18,9 @@ def split_2d(atoms1, atoms2):
     '''
     com1 = atoms1.get_center_of_mass()
     com2 = atoms2.get_center_of_mass()
-    direction = 2*np.random.rand(2)-1
+    direction = np.array([1,1])
+    while sum(direction**2) >= 1:
+        direction = 2*np.random.rand(2)-1
     com_share = (com1 + com2)[:2]/2
     return com_share, direction
 
