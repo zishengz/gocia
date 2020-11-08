@@ -80,7 +80,10 @@ class PopulationGrandCanonical:
     def get_GMrow(self):
         eneList = self.get_valueOf('grandPot', self.get_ID('done=1'))
         self.Emin = min(eneList)
-        return self.gadb.get(grandPot=self.Emin)
+        row_min = None
+        for r in self.gadb.select(grandPot=self.Emin):
+            row_min = r
+        return row_min
 
     def get_fitness(self, idList):
         tmpList = self.get_valueOf('grandPot', idList)
@@ -143,7 +146,7 @@ class PopulationGrandCanonical:
             if mutType == 0: kid.rattleMut()
             if mutType == 1: kid.growMut([l for l in self.chemPotDict])
             if mutType == 2: kid.leachMut([l for l in self.chemPotDict])
-        if len(kid.get_adsList()) == 0:
+        if len(kid.get_adsList()) <= 1:
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
             kid.rattleMut()
