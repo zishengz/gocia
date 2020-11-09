@@ -387,9 +387,9 @@ def draw_CPKsurf(
     bufList = [i for i in range(len(atoms)) \
         if atoms.get_positions()[i] in interfc.get_pos()[bufList]]
     allc = [
-		1 if i in adsList       # Full color
-		else 1.1 if i in bufList   # Shallow color
-		else 1.5 for i in range(len(atoms))
+		0 if i in adsList       # Full color
+		else 0.5 if i in bufList   # Shallow color
+		else 1.0 for i in range(len(atoms))
 	]
     plotCell(
         ori_cell[0][0] * 1,
