@@ -276,7 +276,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 0.2, mutRate = 0.4, zEnhance=True):
+    def rattleMut(self, stdev = 0.25, mutRate = 0.5, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''
@@ -298,7 +298,7 @@ class Interface:
         print(' |- Leaching mutation!')
         tmpAds = self.get_adsAtoms()
         nads = len(tmpAds)
-        while tmpAds == nads:
+        while len(tmpAds) == nads:
             myDel = np.random.choice(list(range(nads)),size=1)[0]
             if tmpAds.get_chemical_symbols()[myDel] in elemList:
                 del tmpAds[myDel]
