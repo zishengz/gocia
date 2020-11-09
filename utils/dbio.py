@@ -40,12 +40,15 @@ def calypso2db():
             )
     print(' %i candidates writen to calypso-%s.db'%(len(eneData), get_projName()))
             
-def vasp2db(nameKey=''):
+def vasp2db(nameKey='', excludeBAD=False):
     print(' --- Collecting VASP results ---')
     vdirs = [d.split('/')[0] for d in os.popen('ls *%s*/OSZICAR'%nameKey).readlines()]
     count_fin = 0
     with connect('vasp-%s.db'%get_projName(), append=False) as myDb:
         for d in vdirs:
+            if excludeBAD:
+                if 'BADSTRUCTURE' in os.listdir(d):
+                    continue
             print('%s'%d, end='\t')
 #            info = open(d+'/OSZICAR', 'r').readlines()[-1].split()
             info = [l for l in open(d+'/OSZICAR', 'r').readlines() if 'F' in l ][-1].split()

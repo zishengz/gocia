@@ -123,7 +123,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.45):
+    def gen_offspring(self, mutRate=0.4):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
