@@ -34,12 +34,12 @@ def splice_2d(surf1, badPos, goodPos, center, direction):
             # Then there must be 2 in bad position list
             # We keep the one closer to splitline
             tmpDist = [dist2lin(center, center+direction, p[:2])\
-                       for p in badPos[i]]
+                for p in badPos[i]]
             childPos.append(badPos[i][tmpDist.index(min(tmpDist))])
         elif len(goodPos[i]) == 2:
             # We keep the one closer to splitline
             tmpDist = [dist2lin(center, center+direction, p[:2])\
-                       for p in goodPos[i]]
+                for p in goodPos[i]]
             childPos.append(goodPos[i][tmpDist.index(min(tmpDist))])
     tmpSurf.set_allPos(childPos)
     return tmpSurf
