@@ -295,20 +295,22 @@ class Interface:
         self.set_allPos(pos + rattleVec)
 
     def leachMut(self, elemList):
-        print(' |- Leaching mutation!')
+        print(' |- Leaching mutation:', end = '\t')
         tmpAds = self.get_adsAtoms()
         nads = len(tmpAds)
         while len(tmpAds) == nads:
             myDel = np.random.choice(list(range(nads)),size=1)[0]
             if tmpAds.get_chemical_symbols()[myDel] in elemList:
+                print(tmpAds.get_chemical_symbols()[myDel])
                 del tmpAds[myDel]
         self.set_adsAtoms(tmpAds)
 
     def growMut(self, elemList):
-        print(' |- Growth mutation!')
+        print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_adatom
         tmpInterfc = self.copy()
         myElem = np.random.choice(elemList, size=1)[0]
+        print(myElem)
         tmpInterfc = grow_adatom(
             tmpInterfc,
             myElem,
