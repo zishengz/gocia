@@ -12,7 +12,6 @@ from gocia.ga.crossover import crossover_snsSurf_2d_GC
 from gocia.ensemble.comparator import srtDist_similar_zz
 from ase.io import read, write
 
-# TODO GCGA population class
 class PopulationGrandCanonical:
     def __init__(
         self,
@@ -24,8 +23,6 @@ class PopulationGrandCanonical:
         compParam = None,
         matingMethod = None,
         ):
-
-# TODO Chemical potential as input dict
 
         if gadb is not None:
             self.gadb = connect(gadb)
@@ -123,7 +120,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.4):
+    def gen_offspring(self, mutRate=0.4, rattleOn=True, growOn=True, leachOn=True):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -143,9 +140,12 @@ class PopulationGrandCanonical:
         if np.random.rand() < mutRate:
 #            print(' |- MUTATION!')
             mutType = np.random.choice([0,1,2], size=1)[0]
-            if mutType == 0: kid.rattleMut()
-            if mutType == 1: kid.growMut([l for l in self.chemPotDict])
-            if mutType == 2: kid.leachMut([l for l in self.chemPotDict])
+            if mutType == 0 and rattleOn:
+                kid.rattleMut()
+            if mutType == 1 and growOn:
+                kid.growMut([l for l in self.chemPotDict])
+            if mutType == 2 and leachOn:
+                kid.leachMut([l for l in self.chemPotDict])
         if len(kid.get_adsList()) <= 1:
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()

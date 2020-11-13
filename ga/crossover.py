@@ -99,7 +99,6 @@ def splice_2d_GC(surf1, badPos, goodPos, center, direction):
     return tmpSurf
 
 def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
-    # TODO modulize the GC crossover
     matPos, patPos = surf1.get_fixBufPos(), surf2.get_fixBufPos()
     matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms()
     goodPos, badPos = [], []
