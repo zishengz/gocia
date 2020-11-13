@@ -118,6 +118,9 @@ class Interface:
             (self.zLim[0], self.zLim[1]))
         print(' |-Info:           ', self.info, '\n')
         
+    def get_atomic_numbers(self):
+        return self.allAtoms.get_atomic_numbers()
+
     def get_formula(self):
         return self.allAtoms.get_chemical_formula()
 
