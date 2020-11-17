@@ -104,15 +104,15 @@ def plotCircShine(anum, apos, atomscale=1, shift=0.33, scale=0.25, trans=0.33, e
         )
     plt.gca().add_patch(shape)
 
-def plotElliShine(anum, apos, atomscale=1, shift=0.4, scale=0.5, rot=-45, trans=0.33, enlarge=False):
+def plotElliShine(anum, apos, atomscale=1, shift=0.4, scale=0.667, rot=45, trans=0.25, enlarge=False):
     if enlarge:
         plotRadii = scale * (0.5+covalRadii[anum]/2)
     else:
-        plotRadii = scale * covalRadii[anum]
+        plotRadii = atomscale * covalRadii[anum]
     shape = Ellipse(
-        apos[:2] + np.array([ -shift, shift])*covalRadii[anum]*atomscale,
-        width = 0.66 * atomscale * plotRadii, 
-        height = scale * atomscale * covalRadii[anum], 
+        apos[:2] + np.array([ -shift, shift])*plotRadii,
+        width =  scale * plotRadii, 
+        height = scale/2 * plotRadii, 
         angle = rot,
         fc='w',
         alpha = trans,
@@ -180,88 +180,15 @@ def plothHbond(allnum, allpos, hbpair, begnum, atomscale, \
                 )
             plt.gca().add_line(dtline)
 
-def plotCell(x1, x2, y1, y2, linc = 'k', linwt=1.5):
-    cellLine = plt.Line2D([x1,x1], [y1, y2], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
-    cellLine = plt.Line2D([x1,x2], [y2, y2], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
-    cellLine = plt.Line2D([x2,x2], [y2, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
-    cellLine = plt.Line2D([x2,x1], [y1, y1], lw=linwt, color=linc, alpha=0.5); plt.gca().add_line(cellLine)
-
-def draw_BSatoms(
-    atoms,
-    bdcutoff=0.85,
-    ascale=0.4,
-    brad=0.1,
-    outName=None,
-    zLim=None,
-    pseudoBond = False,
-    hBond = False,
-    title = ''
-    ):
-    plt.rcParams["font.family"] = "Dejavu Serif"    
-    ori_cell = convert_cell(atoms.get_cell())
-    atoms = atoms*[3,3,1]
-    atoms.set_pbc([0,0,0])
-    atoms = Atoms(sorted(atoms, key=lambda atm: atm.position[2]))
-    allpos = atoms.get_positions()
-    del atoms[[a.index for a in atoms \
-        if (ori_cell[0][0] - 2 > allpos[a.index][0]\
-		or  allpos[a.index][0] > ori_cell[0][0]*2 + 2)\
-        or (ori_cell[1][1] - 2 > allpos[a.index][1]\
-		or  allpos[a.index][1] > ori_cell[1][1]*2 + 2)]]
-    allnum = atoms.get_atomic_numbers()
-    allpos = atoms.get_positions()
-    allz = allpos[:, 2]
-    # color gradient according to z
-    # if max(allz) - min(allz) < zlim:
-    #     allc=[1]*len(allz)
-    allc = [
-            0 if i > max(zLim) \
-                else 0.5 if i > min(zLim) \
-                        else 1 for i in allz
-        ]
-
-    bdpair = [[i[0], i[1]] for i in get_bondpairs(atoms, bdcutoff)]
-    hbpair = []
-    if hBond:
-        hbpair=getHBonds(atoms, allnum, bdpair)
-    if pseudoBond:
-        hbpair=getPseudoBonds(atoms, allnum, bdpair)
-    plotCell(
-        ori_cell[0][0] * 1,
-        ori_cell[0][0] * 2,
-        ori_cell[1][1] * 1,
-        ori_cell[1][1] * 2,
-        linwt=5)
-    for i in range(len(atoms)):
-        anum = allnum[i]
-        apos = allpos[i]
-        plotBondHalf(allnum, allpos, bdpair, i,\
-            atomscale=ascale, bdrad=brad, mode='low',\
-            colorparam=allc[i], linwt=2.5-allc[i])
-        plotAtom(anum, apos, scale=ascale,\
-            colorparam=allc[i], linwt=2.5-allc[i], enlarge=True)
-        plotElliShine(anum, apos, atomscale=0.4, shift=0.45, scale=0.5)
-        plotBondHalf(allnum, allpos, bdpair, i,\
-            atomscale=ascale, bdrad=brad, mode='high',\
-            colorparam=allc[i], linwt=2.5-allc[i])
-        plothHbond(allnum, allpos, hbpair, i,\
-            atomscale=ascale)
-#    plotCell(ori_cell[0][0], ori_cell[0][0]*2, ori_cell[1][1], ori_cell[1][1]*2)
-    plt.axis('scaled')
-    plt.xlim(ori_cell[0][0]*1, ori_cell[0][0]*2)
-    plt.ylim(ori_cell[1][1]*1, ori_cell[1][1]*2)
-    plt.tight_layout()
-    plt.axis('off')
-    plt.gca().xaxis.set_major_locator(plt.NullLocator())
-    plt.gca().yaxis.set_major_locator(plt.NullLocator())
-    plt.margins(0,0)
-    plt.title(title, fontsize='xx-large', fontweight='bold')
-    if outName is not None:
-        plt.savefig(outName+'-bs.png', dpi=100, \
-            bbox_inches = "tight", transparent=True, pad_inches = 0)
-    else:
-        plt.show()
-    plt.close()
+def plotCell(p1, p2, p3, p4, linc = 'k', linwt=1):
+    cellLine = plt.Line2D([p1[0], p2[0]], [[p1[1], p2[1]]], lw=linwt, color=linc, alpha=0.5)
+    plt.gca().add_line(cellLine)
+    cellLine = plt.Line2D([p2[0], p3[0]], [[p2[1], p3[1]]], lw=linwt, color=linc, alpha=0.5)
+    plt.gca().add_line(cellLine)
+    cellLine = plt.Line2D([p3[0], p4[0]], [[p3[1], p4[1]]], lw=linwt, color=linc, alpha=0.5)
+    plt.gca().add_line(cellLine)
+    cellLine = plt.Line2D([p4[0], p1[0]], [[p4[1], p1[1]]], lw=linwt, color=linc, alpha=0.5)
+    plt.gca().add_line(cellLine)
 
 def draw_BSsurf(
     interfc,
@@ -284,15 +211,14 @@ def draw_BSsurf(
     atoms = atoms[[a.index for a in atoms \
         if zLim[0] < interfc.get_pos()[a.index][2] <= zLim[1]]]
     ori_cell = convert_cell(atoms.get_cell())
-    atoms = atoms*[3,3,1]
+    atoms.set_positions(atoms.get_positions() + (ori_cell[0]+ori_cell[1])/2)
+    atoms.wrap()
+    atoms = atoms*[2,2,1]
+    atoms.set_positions(atoms.get_positions() - (ori_cell[0]+ori_cell[1])/2)
     atoms.set_pbc([0,0,0])
     atoms = Atoms(sorted(atoms, key=lambda atm: atm.position[2]))
     allpos = atoms.get_positions()
-    del atoms[[a.index for a in atoms \
-        if (ori_cell[0][0] - 2 > allpos[a.index][0]\
-		or  allpos[a.index][0] > ori_cell[0][0]*2 + 2)\
-        or (ori_cell[1][1] - 2 > allpos[a.index][1]\
-		or  allpos[a.index][1] > ori_cell[1][1]*2 + 2)]]
+
     allnum = atoms.get_atomic_numbers()
     allpos = atoms.get_positions()
     allz = allpos[:, 2]
@@ -321,29 +247,28 @@ def draw_BSsurf(
     if pseudoBond:
         hbpair=getPseudoBonds(atoms, allnum, bdpair)
     plotCell(
-        ori_cell[0][0] * 1,
-        ori_cell[0][0] * 2,
-        ori_cell[1][1] * 1,
-        ori_cell[1][1] * 2,
+        ori_cell[0] * 0 + ori_cell[1] * 0,
+        ori_cell[0] * 1 + ori_cell[1] * 0,
+        ori_cell[0] * 1 + ori_cell[1] * 1,
+        ori_cell[0] * 0 + ori_cell[1] * 1,
         linwt=5)
     for i in range(len(atoms)):
         anum = allnum[i]
         apos = allpos[i]
         plotBondHalf(allnum, allpos, bdpair, i,\
             atomscale=ascale, bdrad=brad, mode='low',\
-            colorparam=allc[i], linwt=2.5-allc[i])
+            colorparam=allc[i], linwt=1.5-allc[i]/2)
         plotAtom(anum, apos, scale=ascale,\
-            colorparam=allc[i], linwt=2.5-allc[i], enlarge=True)
-        plotElliShine(anum, apos, atomscale=0.4, shift=0.45, scale=0.5)
+            colorparam=allc[i], linwt=1.5-allc[i]/2, enlarge=True)
+        plotElliShine(anum, apos, atomscale=ascale, shift=0.3, scale=0.5, enlarge=True)
         plotBondHalf(allnum, allpos, bdpair, i,\
             atomscale=ascale, bdrad=brad, mode='high',\
-            colorparam=allc[i], linwt=2.5-allc[i])
+            colorparam=allc[i], linwt=1.5-allc[i]/2)
         plothHbond(allnum, allpos, hbpair, i,\
             atomscale=ascale)
-#    plotCell(ori_cell[0][0], ori_cell[0][0]*2, ori_cell[1][1], ori_cell[1][1]*2)
     plt.axis('scaled')
-    plt.xlim(ori_cell[0][0]*1, ori_cell[0][0]*2)
-    plt.ylim(ori_cell[1][1]*1, ori_cell[1][1]*2)
+    plt.xlim(min(ori_cell[0][0], ori_cell[1][0]), max(ori_cell[0][0], ori_cell[1][0]))
+    plt.ylim(min(ori_cell[0][1], ori_cell[1][1]), max(ori_cell[0][1], ori_cell[1][1]))
     plt.tight_layout()
     plt.axis('off')
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
@@ -359,7 +284,7 @@ def draw_BSsurf(
 
 def draw_CPKsurf(
     interfc,
-    ascale=0.9,
+    ascale=1.0,
     outName=None,
     zLim=None,
     title = ''
@@ -392,20 +317,20 @@ def draw_CPKsurf(
 		else 1.0 for i in range(len(atoms))
 	]
     plotCell(
-        ori_cell[0][0] * 1,
-        ori_cell[0][0] * 2,
-        ori_cell[1][1] * 1,
-        ori_cell[1][1] * 2,
+        ori_cell[0] * 0 + ori_cell[1] * 0,
+        ori_cell[0] * 1 + ori_cell[1] * 0,
+        ori_cell[0] * 1 + ori_cell[1] * 1,
+        ori_cell[0] * 0 + ori_cell[1] * 1,
         linwt=5)
     for i in range(len(atoms)):
         anum = allnum[i]
         apos = allpos[i]
         plotAtom(anum, apos, scale=ascale,\
-            colorparam=allc[i], linwt=2.5-allc[i])
-        plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.5)
+            colorparam=allc[i], linwt=1.5-allc[i]/2)
+        plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.667)
     plt.axis('scaled')
-    plt.xlim(ori_cell[0][0]*0, ori_cell[0][0]*1)
-    plt.ylim(ori_cell[1][1]*0, ori_cell[1][1]*1)
+    plt.xlim(min(ori_cell[0][0], ori_cell[1][0]), max(ori_cell[0][0], ori_cell[1][0]))
+    plt.ylim(min(ori_cell[0][1], ori_cell[1][1]), max(ori_cell[0][1], ori_cell[1][1]))
     plt.tight_layout()
     plt.axis('off')
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
