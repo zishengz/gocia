@@ -88,3 +88,5 @@ def grow_adatom(
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
+
+# TODO Adsorption site finder

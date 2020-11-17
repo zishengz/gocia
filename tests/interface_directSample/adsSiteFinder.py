@@ -48,6 +48,11 @@ def get_extended_atoms(atoms):
         -atoms.get_cell()[0]/1-atoms.get_cell()[1]/1)
     return tmpAtoms
 
+# TODO DUPLICATE CHECK
+# TODO ADD ATOP
+# TODO ADD HOLLOW
+# TODO ADD BRIDGE
+
 surf = Interface(
     allAtoms='calcSlab.vasp',
     subAtoms='sub-calcSlab.vasp'
@@ -55,14 +60,15 @@ surf = Interface(
 
 surf.print()
 
-surf = read('calcSlab.vasp')
+surf = read('out-Cu111.vasp')
 #surf = read('WBsurf2.vasp')
 
-print(get_surf_byZ(surf, [9.5, 10.5]))
-#print(get_surf_grid(surf, 10))
+#print(get_surf_byZ(surf, [9.5, 10.5]))
+#print(get_surf_grid(surf, 20))
 
-surfList = get_surf_byZ(surf, [26, 28])
-surfList = get_surf_grid(surf, 10)
+surfList = get_surf_byZ(surf, [16, 18])
+#surfList = get_surf_grid(surf, 20)
+print(surfList)
 del surf[[i for i in range(len(surf)) if i not in surfList]]
 surf_ext = get_extended_atoms(surf)
 #surf_ext = surf
@@ -105,9 +111,9 @@ plt.legend(loc='lower left')
 plt.savefig('ads.png',  bbox_inches = "tight", transparent=True)
 
 ads_coord = np.array([[0, 0, 0], [0, 0, 1.17]])
-surf.extend(Atoms('CO', ads_coord + hollow[114] + np.array([0,0,1.5])))
-surf.extend(Atoms('CO', ads_coord + bridge[51] + np.array([0,0,1.5])))
-surf.extend(Atoms('CO', ads_coord + atop[4] + np.array([0,0,1.5])))
+#surf.extend(Atoms('CO', ads_coord + hollow[0] + np.array([0,0,1.5])))
+#surf.extend(Atoms('CO', ads_coord + bridge[0] + np.array([0,0,1.5])))
+#surf.extend(Atoms('CO', ads_coord + atop[0] + np.array([0,0,1.5])))
 surf.wrap()
 write('surf.png', surf)
 write('surf.vasp', surf)

@@ -192,7 +192,7 @@ class PopulationGrandCanonical:
                         alive   = 0
                     )
 
-
+# TODO convergence: 
 
 
 
