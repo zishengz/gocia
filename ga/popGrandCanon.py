@@ -23,7 +23,6 @@ class PopulationGrandCanonical:
         compParam = None,
         matingMethod = None,
         convergeCrit = None,
-        GMage = 0,
         ):
 
         if gadb is not None:
@@ -40,10 +39,9 @@ class PopulationGrandCanonical:
             self.zLim = Interface(self.substrate, self.substrate).zLim
 
         self.popSize = popSize
-        self.GMage = GMage
 
         if convergeCrit is None:
-            self.convergeCrit = 10*self.popSize
+            self.convergeCrit = 5 * self.popSize
         else:
             self.convergeCrit = convergeCrit
 
@@ -51,7 +49,7 @@ class PopulationGrandCanonical:
             self.chemPotDict = chemPotDict
 
     def is_converged():
-        return self.GMage > self.convergeCrit
+        return len(self) - self.get_GMrow().id > self.convergeCrit
 
     def calc_grandPot(self, atoms, dftene):
 #        myRow = self.gadb.get(id=myID)
@@ -70,7 +68,6 @@ class PopulationGrandCanonical:
             self.gadb.update(i+1, mated=0, alive=1,\
                 grandPot=self.calc_grandPot(r.toatoms(), r.eV))
         self.natural_selection()
-        self.GMage = 0
 
     def get_ID(self, condString):
         tmp = []
@@ -153,6 +150,7 @@ class PopulationGrandCanonical:
 #            print(' |- MUTATION!')
             mutType = np.random.choice([0,1,2], size=1)[0]
             if mutType == 0 and rattleOn:
+                kid.transMut()
                 kid.rattleMut()
             if mutType == 1 and growOn:
                 kid.growMut([l for l in self.chemPotDict])
@@ -183,7 +181,6 @@ class PopulationGrandCanonical:
                 if self.is_uniqueInPop(s):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
-                        self.GMage = 0
                     self.gadb.write(
                         s,
                         mag     = mag,
@@ -193,7 +190,6 @@ class PopulationGrandCanonical:
                         done    = 1,
                         alive   = 1
                     )
-                    self.GMage += 1
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
@@ -207,7 +203,8 @@ class PopulationGrandCanonical:
                     )
 
 # TODO convergence: TEST
-
+# TODO XTB interface
+# TODO CP2K interface
 
 
     
