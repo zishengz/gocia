@@ -22,6 +22,8 @@ class PopulationGrandCanonical:
         chemPotDict = None,
         compParam = None,
         matingMethod = None,
+        convergeCrit = None,
+        GMage = 0,
         ):
 
         if gadb is not None:
@@ -38,9 +40,18 @@ class PopulationGrandCanonical:
             self.zLim = Interface(self.substrate, self.substrate).zLim
 
         self.popSize = popSize
+        self.GMage = GMage
+
+        if convergeCrit is None:
+            self.convergeCrit = 10*self.popSize
+        else:
+            self.convergeCrit = convergeCrit
 
         if chemPotDict is not None:
             self.chemPotDict = chemPotDict
+
+    def is_converged():
+        return self.GMage > self.convergeCrit
 
     def calc_grandPot(self, atoms, dftene):
 #        myRow = self.gadb.get(id=myID)
@@ -59,6 +70,7 @@ class PopulationGrandCanonical:
             self.gadb.update(i+1, mated=0, alive=1,\
                 grandPot=self.calc_grandPot(r.toatoms(), r.eV))
         self.natural_selection()
+        self.GMage = 0
 
     def get_ID(self, condString):
         tmp = []
@@ -171,6 +183,7 @@ class PopulationGrandCanonical:
                 if self.is_uniqueInPop(s):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
+                        self.GMage = 0
                     self.gadb.write(
                         s,
                         mag     = mag,
@@ -180,6 +193,7 @@ class PopulationGrandCanonical:
                         done    = 1,
                         alive   = 1
                     )
+                    self.GMage += 1
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
@@ -192,7 +206,7 @@ class PopulationGrandCanonical:
                         alive   = 0
                     )
 
-# TODO convergence: 
+# TODO convergence: TEST
 
 
 
