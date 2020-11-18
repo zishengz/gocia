@@ -48,7 +48,7 @@ class PopulationGrandCanonical:
         if chemPotDict is not None:
             self.chemPotDict = chemPotDict
 
-    def is_converged():
+    def is_converged(self):
         return len(self) - self.get_GMrow().id > self.convergeCrit
 
     def calc_grandPot(self, atoms, dftene):

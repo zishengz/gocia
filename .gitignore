@@ -1,7 +1,10 @@
 
 *.pyc
 *.db
-#*.png
+*.png
+null
+*.ini
+*.pov
 *.pdf
 *.tex
 *.xyz

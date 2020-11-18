@@ -301,6 +301,7 @@ class Interface:
         tmpAds = self.get_adsAtoms()
         myAxis = np.random.choice([0,1],size=1)[0]
         vecPeriod = np.random.choice([-2, -3, 2, 3],size=1)[0]
+        print(' |- Translation mutation! axis=%i, periodicity=%i'%(myAxis, vecPeriod))
         tmpAds.set_positions(tmpAds.get_positions()+tmpAds.get_cell()[myAxis]/vecPeriod)
         tmpAds.wrap()
         self.set_adsAtoms(tmpAds)
