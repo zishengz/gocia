@@ -279,7 +279,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 0.5, mutRate = 0.5, zEnhance=True):
+    def rattleMut(self, stdev = 1.0, mutRate = 0.5, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''
@@ -300,7 +300,7 @@ class Interface:
     def transMut(self):
         tmpAds = self.get_adsAtoms()
         myAxis = np.random.choice([0,1],size=1)[0]
-        vecPeriod = np.random.choice([-2, -3, 2, 3],size=1)[0]
+        vecPeriod = np.random.choice([-1, -2, -3, 1,  2, 3],size=1)[0]
         print(' |- Translation mutation! axis=%i, periodicity=%i'%(myAxis, vecPeriod))
         tmpAds.set_positions(tmpAds.get_positions()+tmpAds.get_cell()[myAxis]/vecPeriod)
         tmpAds.wrap()
