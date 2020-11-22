@@ -21,6 +21,7 @@ class PopulationCanonical:
         zLim = None,
         compParam = None,
         matingMethod = None,
+        convergeCrit = None,
         ):
         if gadb is not None:
             self.gadb = connect(gadb)
