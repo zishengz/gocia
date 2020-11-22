@@ -37,8 +37,25 @@ class PopulationCanonical:
 
         self.popSize = popSize
 
-        eneList = self.get_valueOf('eV', self.get_ID('done=1'))
-        self.Emin = min(eneList)
+        if convergeCrit is None:
+            self.convergeCrit = 5 * self.popSize
+        else:
+            self.convergeCrit = convergeCrit
+
+        if chemPotDict is not None:
+            self.chemPotDict = chemPotDict
+
+        self.iniSize = len(self)
+
+    def __len__(self):
+        return len(self.gadb)
+
+    def is_converged(self):
+        gmid = self.get_GMrow().id
+        if gmid < self.iniSize:
+            return False
+        else:
+            return len(self) - gmid > self.convergeCrit
 
     def initializeDB(self):
         for i in range(len(self.gadb)):
@@ -102,7 +119,7 @@ class PopulationCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.3):
+    def gen_offspring(self, mutRate=0.4):
         kid = None
         mater, pater = 0, 0
         while kid is None:
@@ -120,6 +137,7 @@ class PopulationCanonical:
             mutRate = 1
         if np.random.rand() < mutRate:
             print(' |- MUTATION!')
+            kid.transMut()
             kid.rattleMut()
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
@@ -136,8 +154,10 @@ class PopulationCanonical:
                 ene_eV = eval(info[4])
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
-                print('\nA CHILD IS BORN with E = %.3f eV'%(ene_eV))
+                print('\nA CHILD IS BORN with G = %.3f eV'%(ene_eV))
                 if self.is_uniqueInPop(s):
+                    if ene_eV < self.get_GMrow()['ene_eV']:
+                        print(' |- it is the new GM!')
                     self.gadb.write(
                         s,
                         mag     = mag,
