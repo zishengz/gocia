@@ -17,7 +17,7 @@ def srtDist_similar_zz(a1, a2, delta_rel=5e-4, d_max=0.25):
     else:
         return False
 
-def comp_srtDist_zz(a1, traj, delta_rel=8e-4, d_max=0.4):
+def comp_srtDist_zz(a1, traj, delta_rel=1e-3, d_max=0.5):
     simList = [0]*len(traj)
     for i in range(len(traj)):
         if srtDist_similar_zz(a1, traj[i], delta_rel=delta_rel, d_max=d_max):

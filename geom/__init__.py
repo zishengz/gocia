@@ -154,3 +154,10 @@ def get_coordStatus(atoms, scale=1.25):
     for i in nbList:
         cnList.append(len(i))
     return np.array(cnList), nbList, blList
+
+def cart2frac(cartPos, cell):
+    cell_inv = np.linalg.inv(cell)
+    return np.dot(cartPos, cell_inv)
+
+def frac2cart(fracPos, cell):
+    return np.dot(fracPos, cell)

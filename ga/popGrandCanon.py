@@ -138,7 +138,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.4, rattleOn=True, growOn=True, leachOn=True):
+    def gen_offspring(self, mutRate=0.4, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -156,15 +156,17 @@ class PopulationGrandCanonical:
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
-#            print(' |- MUTATION!')
-            mutType = np.random.choice([0,1,2], size=1)[0]
+            mutType = np.random.choice([0,1,2,3,4], size=1)[0]
             if mutType == 0 and rattleOn:
-                kid.transMut()
                 kid.rattleMut()
             if mutType == 1 and growOn:
                 kid.growMut([l for l in self.chemPotDict])
             if mutType == 2 and leachOn:
                 kid.leachMut([l for l in self.chemPotDict])
+            if mutType == 3 and permuteOn:
+                kid.permuteMut()
+            if mutType == 4 and transOn:
+                kid.transMut()
         if len(kid.get_adsList()) <= 1:
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
