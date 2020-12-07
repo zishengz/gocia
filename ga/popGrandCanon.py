@@ -196,8 +196,8 @@ class PopulationGrandCanonical:
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
                 grndPot = self.calc_grandPot(s, ene_eV)
-                print('\nA CHILD IS BORN with G = %.3f eV'%(grndPot))
                 myLabel = open('label', 'r').read()
+                print('\nA CHILD IS BORN with G = %.3f eV\t[%s]'%(grndPot, myLabel))
                 if self.is_uniqueInPop(s):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
