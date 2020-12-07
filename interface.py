@@ -314,6 +314,7 @@ class Interface:
 #        adsCom = np.random.rand(3)
         myAxis = np.random.choice([0,1],size=1)[0]
         myBase = np.random.choice([0,1],size=1)[0]
+        print(' |- Permutation mutation!')
         tmpAdsHalf = tmpAds.copy()
         tmpAdsFrac = geom.cart2frac(tmpAdsHalf.get_positions(), myCell)
         if myBase == 0:
