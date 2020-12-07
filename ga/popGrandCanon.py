@@ -75,7 +75,7 @@ class PopulationGrandCanonical:
         for i in range(len(self.gadb)):
             r = self.gadb.get(id=i+1)
             self.gadb.update(i+1, mated=0, alive=1,\
-                grandPot=self.calc_grandPot(r.toatoms(), r.eV))
+                grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
         self.natural_selection()
 
     def get_ID(self, condString):
@@ -150,6 +150,7 @@ class PopulationGrandCanonical:
             kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
             parent = surf1.copy()
         print('PARENTS: %i and %i'%(mater, pater))
+        myMutate = ''
         if srtDist_similar_zz(a1, a2)\
             or srtDist_similar_zz(a1, kid.get_allAtoms())\
             or srtDist_similar_zz(a2, kid.get_allAtoms()):
@@ -158,20 +159,27 @@ class PopulationGrandCanonical:
         if np.random.rand() < mutRate:
             mutType = np.random.choice([0,1,2,3,4], size=1)[0]
             if mutType == 0 and rattleOn:
+                myMutate = 'rattle'
                 kid.rattleMut()
             if mutType == 1 and growOn:
+                myMutate = 'grow'
                 kid.growMut([l for l in self.chemPotDict])
             if mutType == 2 and leachOn:
+                myMutate = 'leach'
                 kid.leachMut([l for l in self.chemPotDict])
             if mutType == 3 and permuteOn:
+                myMutate = 'permute'
                 kid.permuteMut()
             if mutType == 4 and transOn:
+                myMutate = 'translate'
                 kid.transMut()
         if len(kid.get_adsList()) <= 1:
+            myMutate = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
             kid.rattleMut()
             kid.growMut([l for l in self.chemPotDict])
+        open('label', 'w').write('%i %i %s'%(mater, pater, myMutate))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
@@ -189,6 +197,7 @@ class PopulationGrandCanonical:
                 s.wrap()
                 grndPot = self.calc_grandPot(s, ene_eV)
                 print('\nA CHILD IS BORN with G = %.3f eV'%(grndPot))
+                myLabel = open('label', 'r').read()
                 if self.is_uniqueInPop(s):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
@@ -199,7 +208,8 @@ class PopulationGrandCanonical:
                         grandPot= grndPot,
                         mated   = 0,
                         done    = 1,
-                        alive   = 1
+                        alive   = 1,
+                        label = myLabel
                     )
                 else:
                     print(' |- it is a duplicate!')
@@ -210,7 +220,8 @@ class PopulationGrandCanonical:
                         grandPot= grndPot,
                         mated   = 0,
                         done    = 1,
-                        alive   = 0
+                        alive   = 0,
+                        label = myLabel
                     )
 
 # TODO convergence: TEST
