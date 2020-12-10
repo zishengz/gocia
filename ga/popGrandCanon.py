@@ -138,7 +138,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.4, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -187,7 +187,9 @@ class PopulationGrandCanonical:
     def add_vaspResult(self, vaspdir='.'):
         import os
         cwdFiles = os.listdir(vaspdir)
-        if 'OSZICAR' in cwdFiles and 'BADSTRUCTURE' not in cwdFiles:
+        if 'OSZICAR' in cwdFiles\
+            and 'BADSTRUCTURE' not in cwdFiles\
+            and 'ERROR' not in open('%s/OSZICAR'%vaspdir).read():
             info = [l for l in open('%s/OSZICAR'%vaspdir).readlines() if 'F' in l]
             if len(info) > 0:
                 info = info[-1].split()
