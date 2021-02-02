@@ -367,7 +367,7 @@ def heatmap(matrix, baseName):
         transparent=True, pad_inches = 0
         )
 
-def histogram(eneArr, baseName, eneLim=10):
+def histogram(eneArr, baseName, eneLim=2.5):
     plt.rcParams["font.family"] = "Dejavu Serif"
     ene = [e-min(eneArr) for e in eneArr]
     for i in [e for e in ene if e > eneLim]:
