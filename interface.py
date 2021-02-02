@@ -80,7 +80,8 @@ class Interface:
         myCopy = self.__class__(
             tags=self.tags,
             subAtoms=self.subAtoms,
-            allAtoms=self.allAtoms
+            allAtoms=self.allAtoms,
+            zLim=self.zLim
         )
         return myCopy
 
