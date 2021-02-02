@@ -89,4 +89,45 @@ def grow_adatom(
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
 
+def boxSample_adatom(
+    interfc, addElemList,
+    xyzLims,
+    toler_BLmax = 0,
+    toler_BLmin = -0.2,
+    toler_CNmax = 4,
+    toler_CNmin = 1,
+    doShuffle=False,
+    rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
+    ljopt=False, ljstepsize=0.01, ljnsteps=400
+):
+    numAds = len(addElemList)
+    n_attempts = 0
+    if doShuffle:
+        random.shuffle(addElemList)
+    ind_curr = 0
+    tmpInterfc = interfc.copy()
+    if rattle:
+        tmpInterfc.rattle(rattleStdev, zEnhance=rattleZEnhance)
+    while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
+        n_attempts += 1
+        optList = tmpInterfc.get_optList()
+        newAdsCoord = geom.rand_point_box(xyzLims)
+        testInterfc = tmpInterfc.copy()
+        testInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [newAdsCoord]))
+        myContact = testInterfc.get_contactMat()[-1][:-1]
+        myDist = testInterfc.get_allDistances()[-1][:-1]
+        bondDiff = myDist - myContact # actual distance - ideal covalent BL
+        myBond = bondDiff[bondDiff > toler_BLmin]
+        myBond = myBond[myBond < toler_BLmax]
+        if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
+            tmpInterfc = testInterfc
+            ind_curr += 1
+    print('%i\tplacements'%(n_attempts))
+    if ljopt:
+        tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
+    return tmpInterfc
+
+            
+
+
 # TODO Adsorption site finder

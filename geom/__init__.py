@@ -48,14 +48,17 @@ def is_withinPosLim(vec, xLim=None, yLim=None, zLim=None):
     return condition
        
 def rand_point_3D(cell, xLim=None, yLim=None, zLim=None):
+    # for occasions where cell counts
     flag = False
     while not flag:
         myRand = np.dot(np.random.rand(3), cell)
-        if min(xLim) < myRand[0] < max(xLim) and\
-           min(yLim) < myRand[1] < max(yLim) and\
-           min(zLim) < myRand[2] < max(zLim):
-           condition = is_withinPosLim(myRand, xLim, yLim, zLim)
+        flag = is_withinPosLim(myRand, xLim, yLim, zLim)
     return myRand
+
+def rand_point_box(xyzLims):
+    # mathematically sampling in a box
+    tmpRand = np.random.rand(3)
+    return tmpRand * (xyzLims[:,1]-xyzLims[:,0]) + xyzLims[:,0]
 
 def get_bondpairs(atoms, scale=1.1):
     """Get all pairs of bonding atoms
