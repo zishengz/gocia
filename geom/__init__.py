@@ -87,6 +87,23 @@ def get_bondpairs(atoms, scale=1.1):
                           for a2, offset in zip(indices, offsets)])
     return bondpairs
 
+def get_bondVec(atoms, bondpair):
+    bv = atoms.get_positions()[bondpair[1]] - \
+        atoms.get_positions()[bondpair[0]]
+    offset = np.dot(bondpair[2], atoms.get_cell(complete=True))
+    return bv + offset
+
+
+def get_coordList(index, bondpairs):
+    tmp = []
+    for bp in bondpairs:
+        if index in [bp[0], bp[1]]:
+            if index == bp[0]:
+                tmp.append(bp[1])
+            else:
+                tmp.append(bp[0])
+    return tmp
+
 def chk_bondlength(atoms, radTol = 0.2):
     bondpairs = get_bondpairs(atoms, 0.85)
     flag = True
