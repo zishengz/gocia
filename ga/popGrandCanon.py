@@ -19,6 +19,7 @@ class PopulationGrandCanonical:
         gadb = None,
         popSize = 20,
         zLim = None,
+        subsPot = 0
         chemPotDict = None,
         compParam = None,
         matingMethod = None,
@@ -45,6 +46,8 @@ class PopulationGrandCanonical:
         else:
             self.convergeCrit = convergeCrit
 
+        self.subsPot = subsPot
+
         if chemPotDict is not None:
             self.chemPotDict = chemPotDict
 
@@ -63,7 +66,7 @@ class PopulationGrandCanonical:
     def calc_grandPot(self, atoms, dftene):
 #        myRow = self.gadb.get(id=myID)
 #        myPot = myRow['eV']
-        myPot = dftene
+        myPot = dftene - self.subsPot
         adsSymbol = Interface(atoms, self.substrate).\
             get_adsAtoms().get_chemical_symbols()
         for s in adsSymbol:
