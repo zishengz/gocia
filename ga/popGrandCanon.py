@@ -19,7 +19,7 @@ class PopulationGrandCanonical:
         gadb = None,
         popSize = 20,
         zLim = None,
-        subsPot = 0
+        subsPot = 0,
         chemPotDict = None,
         compParam = None,
         matingMethod = None,
