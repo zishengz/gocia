@@ -298,10 +298,11 @@ class Interface:
                 if pos[i][2] < min(self.zLim): pos[i][2] = min(self.zLim)
         self.set_allPos(pos + rattleVec)
 
-    def transMut(self):
+    def transMut(self, transVec=[[-2,2],[-2,2]]):
         tmpAds = self.get_adsAtoms()
         myAxis = np.random.choice([0,1],size=1)[0]
-        vecPeriod = np.random.choice([-2, -3, 2, 3],size=1)[0]
+        #example of the translational vector: [[-3, 3],[-2, 2]]
+        vecPeriod = np.random.choice(transVec[myAxis],size=1)[0]
         print(' |- Translation mutation! axis=%i, periodicity=%i'%(myAxis, vecPeriod))
         tmpAds.set_positions(tmpAds.get_positions()+tmpAds.get_cell()[myAxis]/vecPeriod)
         tmpAds.wrap()

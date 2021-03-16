@@ -138,7 +138,7 @@ class PopulationGrandCanonical:
                 break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True, transVec=[[-2,2],[-2,2]]):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -172,7 +172,7 @@ class PopulationGrandCanonical:
                 kid.permuteMut()
             if mutType == 4 and transOn:
                 myMutate = 'translate'
-                kid.transMut()
+                kid.transMut(transVec=transVec)
         if len(kid.get_adsList()) <= 1:
             myMutate = 'init'
             print(' |- Bare substrate, BAD!')
