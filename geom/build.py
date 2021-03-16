@@ -2,6 +2,7 @@
 
 from gocia import geom
 from ase import Atoms
+from ase.io.pov import get_bondpairs
 import numpy as np
 import random
 
@@ -96,6 +97,7 @@ def boxSample_adatom(
     toler_BLmin = -0.2,
     toler_CNmax = 4,
     toler_CNmin = 1,
+    bondRejList = None,
     doShuffle=False,
     rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
@@ -120,8 +122,18 @@ def boxSample_adatom(
         myBond = bondDiff[bondDiff > toler_BLmin]
         myBond = myBond[myBond < toler_BLmax]
         if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
-            tmpInterfc = testInterfc
-            ind_curr += 1
+            goodStruc = True
+            if bondRejList is not None:
+                mySymb = testInterfc.get_chemical_symbols()
+                myBPs = get_bondpairs(testInterfc.get_allAtoms(),0.85)
+                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+                for rj in bondRejList:
+                    if rj in myBPs or [rj[1], rj[0]] in myBPs:
+                        goodStruc = False
+                        break
+            if goodStruc:
+                tmpInterfc = testInterfc
+                ind_curr += 1
     print('%i\tplacements'%(n_attempts))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
