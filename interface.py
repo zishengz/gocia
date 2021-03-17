@@ -280,7 +280,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 0.4, mutRate = 0.5, zEnhance=False):
+    def rattleMut(self, stdev = 1, mutRate = 0.5, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''
@@ -291,7 +291,7 @@ class Interface:
         rattleVec = np.random.normal(scale=stdev, size=pos.shape)
         if zEnhance and pos[:,2].max()-zBuf.min() != 0:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
-        for i in self.get_bufAtoms():
+        for i in self.get_bufList():
             if np.random.rand() < mutRate:
                 pos[i] += rattleVec[i] * 0.5
                 if pos[i][2] > max(zBuf): pos[i][2] = max(zBuf)
