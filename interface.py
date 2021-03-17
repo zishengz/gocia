@@ -244,7 +244,7 @@ class Interface:
         return self.subAtoms.constraints
 
     def get_topLayerList(self, depth = 1):
-        allZ = self.get_pos[:,2]
+        allZ = self.get_pos()[:,2]
         return [a.index for a in self.allAtoms\
             if max(allZ) - allZ[a.index] <= depth]
 
@@ -260,7 +260,7 @@ class Interface:
 
     def remove_adatom(self, rmList=None):
         if rmList is None:
-            rmList = list(range(len(oldAdsList)))
+            rmList = list(range(len(self.get_adsList())))
         if type(rmList) is not list:
             rmList = [rmList]
         adsList = [self.get_adsList()[i] for i in rmList]
@@ -280,7 +280,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 1, mutRate = 0.5, zEnhance=True):
+    def rattleMut(self, stdev = 0.2, mutRate = 0.25, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''
