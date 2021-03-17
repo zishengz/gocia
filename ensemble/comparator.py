@@ -2,7 +2,7 @@ import gocia.utils.linalg as la
 import gocia.geom.fingerprint as fgp
 import numpy as np
 
-def srtDist_similar_zz(a1, a2, delta_rel=1e-3, d_max=0.5):
+def srtDist_similar_zz(a1, a2, delta_rel=8e-4, d_max=0.4):
     if len(a1) != len(a2):
         return False
     p1 = a1.get_all_distances(mic=True).flatten()
@@ -17,14 +17,14 @@ def srtDist_similar_zz(a1, a2, delta_rel=1e-3, d_max=0.5):
     else:
         return False
 
-def comp_srtDist_zz(a1, traj, delta_rel=1e-3, d_max=0.5):
+def comp_srtDist_zz(a1, traj, delta_rel=8e-4, d_max=0.4):
     simList = [0]*len(traj)
     for i in range(len(traj)):
         if srtDist_similar_zz(a1, traj[i], delta_rel=delta_rel, d_max=d_max):
             simList[i] = 1
     return simList
 
-def compAll_srtDist_zz(traj, delta_rel=5e-4, d_max=0.25):
+def compAll_srtDist_zz(traj, delta_rel=8e-4, d_max=0.4):
     simMat = []
     for i in range(len(traj)):
         print('checking isomer %i'%i)
