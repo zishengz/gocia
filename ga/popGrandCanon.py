@@ -128,17 +128,20 @@ class PopulationGrandCanonical:
                 print('REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
-    def is_uniqueInPop(self, atoms):
+    def is_uniqueInPop(self, atoms, grandPot):
         '''
         Check similarity against the current population
         '''
+        eneCut = 0.05
         aliveList = self.get_ID('alive=1')
-        aliveList = [self.gadb.get(id=n).toatoms() for n in aliveList]
+        grandPotList = self.get_valueOf('grandPot', aliveList)
         isUnique = True
-        for a in aliveList:
+        for ii in range(len(aliveList)):
+            a = self.gadb.get(id=aliveList[ii]).toatoms()
             if srtDist_similar_zz(atoms, a):
-                isUnique = False
-                break
+                if -eneCut < grandPotList[ii] - grandPot < eneCut:
+                    isUnique = False
+                    break
         return isUnique
 
     def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True, transVec=[[-2,2],[-2,2]]):
@@ -203,7 +206,7 @@ class PopulationGrandCanonical:
                 grndPot = self.calc_grandPot(s, ene_eV)
                 myLabel = open('label', 'r').read()
                 print('\nA CHILD IS BORN with G = %.3f eV\t[%s]'%(grndPot, myLabel))
-                if self.is_uniqueInPop(s):
+                if self.is_uniqueInPop(s, grndPot):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
                     self.gadb.write(
