@@ -99,6 +99,7 @@ def boxSample_adatom(
     toler_CNmin = 1,
     bondRejList = None,
     doShuffle=False,
+    constrainTop=False,
     rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
 ):
@@ -131,6 +132,12 @@ def boxSample_adatom(
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
                         goodStruc = False
                         break
+            if constrainTop:
+                pos = testInterfc.get_pos()
+                for i in testInterfc.get_bufList():
+                    if np.linalg.norm(newAdsCoord - pos[i]) < 2:
+                        if pos[i][2] > newAdsCoord[2]:
+                            goodStruc = False
             if goodStruc:
                 tmpInterfc = testInterfc
                 ind_curr += 1
