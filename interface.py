@@ -229,7 +229,10 @@ class Interface:
 
     def set_adsAtoms(self, newAdsAtoms):
         tmpAtoms = self.get_fixBufAtoms()
-        tmpAtoms.extend(sort(newAdsAtoms))
+        tmpAdsAtoms = newAdsAtoms.copy()
+        if len(newAdsAtoms) > 0:
+            tmpAdsAtoms = sort(newAdsAtoms)
+        tmpAtoms.extend(tmpAdsAtoms)
         self.set_allAtoms(tmpAtoms)
 
     # def set_positions(self, newPos):
