@@ -360,6 +360,21 @@ class Interface:
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
+    def growMut_box(self, elemList, xyzLims, bondRejList = None, constrainTop=False):
+        print(' |- Growth mutation:', end = '\t')
+        from gocia.geom.build import boxSample_adatom
+        tmpInterfc = self.copy()
+        myElem = np.random.choice(elemList, size=1)[0]
+        print(myElem)
+        tmpInterfc = boxSample_adatom(
+            tmpInterfc,
+            myElem,
+            xyzLims=xyzLims,
+            bondRejList=bondRejList,
+            constrainTop=constrainTop
+        )
+        self.set_allAtoms(tmpInterfc.get_allAtoms())
+
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):
 #        from ase.calculators.lj import LennardJones

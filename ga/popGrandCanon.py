@@ -190,6 +190,52 @@ class PopulationGrandCanonical:
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
 
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList = None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn = True, transOn = True, transVec=[[-2,2],[-2,2]]):
+        kid, parent = None, None
+        mater, pater = 0, 0
+        while kid is None:
+            mater, pater = self.choose_parents()
+            a1 = self.gadb.get(id=mater).toatoms()
+            a2 = self.gadb.get(id=pater).toatoms()
+            surf1 = Interface(a1, self.substrate, zLim=self.zLim)
+            surf2 = Interface(a2, self.substrate, zLim=self.zLim)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            parent = surf1.copy()
+        print('PARENTS: %i and %i'%(mater, pater))
+        myMutate = ''
+        if srtDist_similar_zz(a1, a2)\
+            or srtDist_similar_zz(a1, kid.get_allAtoms())\
+            or srtDist_similar_zz(a2, kid.get_allAtoms()):
+            print(' |- TOO SIMILAR!')
+            mutRate = 1
+        if np.random.rand() < mutRate:
+            mutType = np.random.choice([0,1,2,3,4], size=1)[0]
+            if mutType == 0 and rattleOn:
+                myMutate = 'rattle'
+                kid.rattleMut()
+            if mutType == 1 and growOn:
+                myMutate = 'grow'
+                kid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims, bondRejList=bondRejList, constrainTop=constrainTop)
+            if mutType == 2 and leachOn:
+                myMutate = 'leach'
+                kid.leachMut([l for l in self.chemPotDict])
+            if mutType == 3 and permuteOn:
+                myMutate = 'permute'
+                kid.permuteMut()
+            if mutType == 4 and transOn:
+                myMutate = 'translate'
+                kid.transMut(transVec=transVec)
+        if len(kid.get_adsList()) <= 1:
+            myMutate = 'init'
+            print(' |- Bare substrate, BAD!')
+            kid = parent.copy()
+            kid.rattleMut()
+            kid.growMut([l for l in self.chemPotDict])
+        open('label', 'w').write('%i %i %s'%(mater, pater, myMutate))
+        self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
+        self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
+        return kid
+
     def add_vaspResult(self, vaspdir='.'):
         import os
         cwdFiles = os.listdir(vaspdir)

@@ -98,7 +98,7 @@ def boxSample_adatom(
     toler_CNmax = 4,
     toler_CNmin = 1,
     bondRejList = None,
-    doShuffle=False,
+    doShuffle=True,
     constrainTop=False,
     rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
