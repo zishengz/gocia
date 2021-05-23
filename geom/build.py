@@ -141,6 +141,7 @@ def boxSample_adatom(
             if goodStruc:
                 tmpInterfc = testInterfc
                 ind_curr += 1
+    tmpInterfc.sort()
     print('%i\tplacements'%(n_attempts))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
