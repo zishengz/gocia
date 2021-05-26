@@ -89,7 +89,7 @@ class PopulationGrandCanonical:
         self.natural_selection()
         gm=self.get_GMrow()
         with open('gmid', 'w') as f:
-            f.write(self.get_GMrow().id)
+            f.write(str(self.get_GMrow().id))
 
 
     def get_ID(self, condString):
@@ -277,7 +277,7 @@ class PopulationGrandCanonical:
                         label = myLabel
                     )
                     with open('gmid', 'w') as f:
-                        f.write(len(self))
+                        f.write(str(len(self)))
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
