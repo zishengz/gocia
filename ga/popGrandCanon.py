@@ -88,7 +88,7 @@ class PopulationGrandCanonical:
                 grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
         self.natural_selection()
         gm=self.get_GMrow()
-        with open('gmid') as f:
+        with open('gmid', 'w') as f:
             f.write(self.get_GMrow().id)
 
 
@@ -276,7 +276,7 @@ class PopulationGrandCanonical:
                         alive   = 1,
                         label = myLabel
                     )
-                    with open('gminfo') as f:
+                    with open('gmid', 'w') as f:
                         f.write(len(self))
                 else:
                     print(' |- it is a duplicate!')
