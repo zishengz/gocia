@@ -265,6 +265,8 @@ class PopulationGrandCanonical:
                         alive   = 1,
                         label = myLabel
                     )
+                    with open('gminfo') as f:
+                        f.write(s.get_chemical_formula(), grndPot)
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
