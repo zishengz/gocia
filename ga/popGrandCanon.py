@@ -63,6 +63,13 @@ class PopulationGrandCanonical:
         else:
             return len(self) - gmid > self.convergeCrit
 
+    def is_converged2(self):
+        gmid = eval(open('gmid').read())
+        if gmid < self.iniSize:
+            return False
+        else:
+            return len(self) - gmid > self.convergeCrit
+
     def calc_grandPot(self, atoms, dftene):
 #        myRow = self.gadb.get(id=myID)
 #        myPot = myRow['eV']
