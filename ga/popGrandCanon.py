@@ -80,6 +80,10 @@ class PopulationGrandCanonical:
             self.gadb.update(i+1, mated=0, alive=1,\
                 grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
         self.natural_selection()
+        gm=self.get_GMrow()
+        with open('gminfo') as f:
+            f.write(gm['eV'], gm['grandPot'])
+
 
     def get_ID(self, condString):
         tmp = []
@@ -266,7 +270,7 @@ class PopulationGrandCanonical:
                         label = myLabel
                     )
                     with open('gminfo') as f:
-                        f.write(s.get_chemical_formula(), grndPot)
+                        f.write(ene_eV, grndPot)
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
