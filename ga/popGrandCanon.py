@@ -266,6 +266,8 @@ class PopulationGrandCanonical:
                 if self.is_uniqueInPop(s, grndPot):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
+                        with open('gmid', 'w') as f:
+                            f.write(str(len(self)))
                     self.gadb.write(
                         s,
                         mag     = mag,
@@ -276,8 +278,6 @@ class PopulationGrandCanonical:
                         alive   = 1,
                         label = myLabel
                     )
-                    with open('gmid', 'w') as f:
-                        f.write(str(len(self)))
                 else:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
