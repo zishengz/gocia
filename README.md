@@ -11,7 +11,6 @@ Copyright © 2020 Zisheng Zhang
 ## Requirements
 
 - Python 3.6 or later
-- NumPy
-- SciPy
-- ASE
+- ASE and its dependencies
+- Natsort and LATEX (pdf report generation)
 
