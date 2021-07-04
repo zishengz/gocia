@@ -2,7 +2,7 @@ import gocia.utils.linalg as la
 import gocia.geom.fingerprint as fgp
 import numpy as np
 
-def srtDist_similar_zz(a1, a2, delta_rel=8e-4, d_max=0.4):
+def srtDist_similar_zz(a1, a2, delta_rel=6e-4, d_max=0.3):
     if len(a1) != len(a2):
         return False
     p1 = a1.get_all_distances(mic=True).flatten()
