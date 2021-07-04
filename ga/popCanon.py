@@ -104,17 +104,20 @@ class PopulationCanonical:
                 print('REST IN PEACE, %i!'%d)
                 self.gadb.update(d, alive=0)
 
-    def is_uniqueInPop(self, atoms):
+    def is_uniqueInPop(self, atoms, ene):
         '''
         Check similarity against the current population
         '''
+        eneCut = 0.05
         aliveList = self.get_ID('alive=1')
-        aliveList = [self.gadb.get(id=n).toatoms() for n in aliveList]
+        eneList = self.get_valueOf('eV', aliveList)
         isUnique = True
-        for a in aliveList:
+        for ii in range(len(aliveList)):
+            a = self.gadb.get(id=aliveList[ii]).toatoms()
             if srtDist_similar_zz(atoms, a):
-                isUnique = False
-                break
+                if -eneCut < eneList[ii] - ene < eneCut:
+                    isUnique = False
+                    break
         return isUnique
 
     def gen_offspring(self, mutRate=0.4):
@@ -154,7 +157,7 @@ class PopulationCanonical:
                 s.wrap()
                 print('\nA CHILD IS BORN with G = %.3f eV'%(ene_eV))
                 if self.is_uniqueInPop(s):
-                    if ene_eV < self.get_GMrow()['ene_eV']:
+                    if ene_eV < self.get_GMrow()['eV']:
                         print(' |- it is the new GM!')
                     self.gadb.write(
                         s,
@@ -175,7 +178,7 @@ class PopulationCanonical:
                         alive   = 0
                     )
 
-def add_lmpResult(self, lmpdir='.'):
+    def add_lmpResult(self, lmpdir='.'):
         import os
         import gocia.utils.lammps as lmp
         cwdFiles = os.listdir(lmpdir)
@@ -187,8 +190,8 @@ def add_lmpResult(self, lmpdir='.'):
                 s = lmp.get_last_frame(lmpdir+'/traj.xyz', lmpdir+'/inp.vasp')
                 s.wrap()
                 print('\nA CHILD IS BORN with G = %.3f eV'%(ene_eV))
-                if self.is_uniqueInPop(s):
-                    if ene_eV < self.get_GMrow()['ene_eV']:
+                if self.is_uniqueInPop(s, ene_eV):
+                    if ene_eV < self.get_GMrow()['eV']:
                         print(' |- it is the new GM!')
                     self.gadb.write(
                         s,
