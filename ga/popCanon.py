@@ -43,9 +43,6 @@ class PopulationCanonical:
         else:
             self.convergeCrit = convergeCrit
 
-        if chemPotDict is not None:
-            self.chemPotDict = chemPotDict
-
         self.iniSize = len(self)
 
     def __len__(self):
@@ -178,6 +175,39 @@ class PopulationCanonical:
                         alive   = 0
                     )
 
+def add_lmpResult(self, lmpdir='.'):
+        import os
+        import gocia.utils.lammps as lmp
+        cwdFiles = os.listdir(lmpdir)
+        if 'lmp.out' in cwdFiles and 'BADSTRUCTURE' not in cwdFiles:
+            if 'Final' in open(lmpdir+'/lmp.out').read():
+                info = ''
+                mag = 0
+                ene_eV = lmp.get_ene(lmpdir+'/lmp.out')
+                s = lmp.get_last_frame(lmpdir+'/traj.xyz', lmpdir+'/inp.vasp')
+                s.wrap()
+                print('\nA CHILD IS BORN with G = %.3f eV'%(ene_eV))
+                if self.is_uniqueInPop(s):
+                    if ene_eV < self.get_GMrow()['ene_eV']:
+                        print(' |- it is the new GM!')
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 1
+                    )
+                else:
+                    print(' |- it is a duplicate!')
+                    self.gadb.write(
+                        s,
+                        mag     = mag,
+                        eV      = ene_eV,
+                        mated   = 0,
+                        done    = 1,
+                        alive   = 0
+                    )
 
 
 

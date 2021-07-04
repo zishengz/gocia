@@ -65,6 +65,33 @@ def vasp2db(nameKey='', excludeBAD=False):
             count_fin += 1
     print('\n %i candidates writen to vasp-%s.db'%(count_fin, get_projName()))
 
+def lmp2db(nameKey='', excludeBAD=False):
+    import gocia.utils.lammps as lmp
+    print(' --- Collecting LAMMPS results ---')
+    vdirs = [d.split('/')[0] for d in os.popen('ls *%s*/lmp.out'%nameKey).readlines()]
+    count_fin = 0
+    with connect('lmp-%s.db'%get_projName(), append=False) as myDb:
+        for d in vdirs:
+            if excludeBAD:
+                if 'BADSTRUCTURE' in os.listdir(d):
+                    continue
+            if 'Final' not in open(d+'/lmp.out').read():
+                continue
+            print('%s'%d, end='\t')
+            info = ''
+            mag = 0
+            ene_eV = lmp.get_ene(d+'/lmp.out')
+            s = lmp.get_last_frame(d+'/traj.xyz', d+'/inp.vasp')
+            s.wrap()
+            myDb.write(
+				s,
+				eV=ene_eV,
+				mag=mag,
+                done=1,
+                )
+            count_fin += 1
+    print('\n %i candidates writen to lmp-%s.db'%(count_fin, get_projName()))
+
 def db2vasp(dbName):
     traj = read(dbName, index=':')
     for i in range(len(traj)):
