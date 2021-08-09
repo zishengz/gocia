@@ -156,7 +156,7 @@ class PopulationCanonical:
                 s = read('%s/CONTCAR'%vaspdir)
                 s.wrap()
                 print('\nA CHILD IS BORN with G = %.3f eV'%(ene_eV))
-                if self.is_uniqueInPop(s):
+                if self.is_uniqueInPop(s，ene_eV):
                     if ene_eV < self.get_GMrow()['eV']:
                         print(' |- it is the new GM!')
                     self.gadb.write(
