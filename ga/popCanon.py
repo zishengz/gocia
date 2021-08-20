@@ -120,7 +120,7 @@ class PopulationCanonical:
                     break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.4, rattleOn=True, transOn = True, transVec=[[-2,2],[-2,2]]):
+    def gen_offspring(self, mutRate=0.4, rattleOn=True, zEnhance=True, transOn = True, transVec=[[-2,2],[-2,2]]):
         kid = None
         mater, pater = 0, 0
         while kid is None:
@@ -140,7 +140,7 @@ class PopulationCanonical:
             mutType = np.random.choice([0,1], size=1)[0]
             if mutType == 0 and rattleOn:
                 myMutate = 'rattle'
-                kid.rattleMut()
+                kid.rattleMut(zEnhance)
             if mutType == 1 and transOn:
                 myMutate = 'translate'
                 kid.transMut(transVec=transVec)
