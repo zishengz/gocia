@@ -120,7 +120,7 @@ class PopulationCanonical:
                     break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.4):
+    def gen_offspring(self, mutRate=0.4, rattleOn=True, transOn = True, transVec=[[-2,2],[-2,2]]):
         kid = None
         mater, pater = 0, 0
         while kid is None:
@@ -137,9 +137,14 @@ class PopulationCanonical:
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
-            print(' |- MUTATION!')
-            kid.transMut()
-            kid.rattleMut()
+            mutType = np.random.choice([0,1], size=1)[0]
+            if mutType == 0 and rattleOn:
+                myMutate = 'rattle'
+                kid.rattleMut()
+            if mutType == 1 and transOn:
+                myMutate = 'translate'
+                kid.transMut(transVec=transVec)
+        open('label', 'w').write('%i %i %s'%(mater, pater, myMutate))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
