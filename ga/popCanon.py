@@ -136,11 +136,12 @@ class PopulationCanonical:
             or srtDist_similar_zz(a2, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
+        myMutate = ''
         if np.random.rand() < mutRate:
             mutType = np.random.choice([0,1], size=1)[0]
             if mutType == 0 and rattleOn:
                 myMutate = 'rattle'
-                kid.rattleMut(zEnhance)
+                kid.rattleMut(zEnhance=zEnhance)
             if mutType == 1 and transOn:
                 myMutate = 'translate'
                 kid.transMut(transVec=transVec)
