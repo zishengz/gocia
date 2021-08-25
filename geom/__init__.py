@@ -181,3 +181,20 @@ def cart2frac(cartPos, cell):
 
 def frac2cart(fracPos, cell):
     return np.dot(fracPos, cell)
+
+def get_fragments(atoms, scale = 1.0):
+    bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale)]
+    frags = bps.copy()
+    while sum([len(i) for i in frags]) > len(atoms):
+        flag = False
+        for i in range(len(frags)):
+            for j in range(i+1,len(frags)):
+                if len(set(frags[i]) & set(frags[j]))>0:
+                    frags[i] = list(set(frags[i]) | set(frags[j]))
+                    frags.remove(frags[j])
+                    flag = True
+                    break
+            if flag == True:
+                break
+    return frags
+    
