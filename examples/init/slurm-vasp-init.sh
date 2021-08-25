@@ -46,7 +46,9 @@ export OMP_PLACES=threads
 export OMP_STACKSIZE=512m
 export OMP_NUM_THREADS=4
 
-python -u ../worker.py >> ../ga.log
+cp ../input.py .
+python -u ../init-worker.py
+rm input.py
 
 EOF
 

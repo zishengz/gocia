@@ -43,7 +43,9 @@ module load intel/17.0.1
 module load intelmpi/5.0.0
 export VASPHOME=/u/project/ana/hczhai/cnsi/program/VASP-VTST-SOL/vasp.5.4.1/bin
 
-python -u ../worker.py >> ../ga.log
+cp ../input.py .
+python -u ../ga-worker.py >> ../ga.log
+rm input.py
 
 EOF
 

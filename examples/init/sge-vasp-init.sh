@@ -24,11 +24,11 @@ EOF
 cat<<EOF >> $JOBSUB
 #$ -pe dc* $Nprocs
 
-Nprocs=$Nprocs
-VASPPOS=$VASPPOS
-WORKDIR=$WORKDIR
-WORKERID=$WORKERID
-JOBSUB=$JOBSUB
+export Nprocs=$Nprocs
+export VASPPOS=$VASPPOS
+export WORKDIR=$WORKDIR
+export WORKERID=$WORKERID
+export JOBSUB=$JOBSUB
 EOF
 
 cat<<'EOF' >> $JOBSUB
@@ -44,7 +44,9 @@ module load intel/17.0.1
 module load intelmpi/5.0.0
 export VASPHOME=/u/project/ana/hczhai/cnsi/program/VASP-VTST-SOL/vasp.5.4.1/bin
 
-python -u ../worker.py >> ../ga.log
+cp ../input.py .
+python -u ../init-worker.py
+rm input.py
 
 EOF
 

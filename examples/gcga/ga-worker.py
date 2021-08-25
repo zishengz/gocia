@@ -35,12 +35,14 @@ os.system('cp ../KPOINTS .')
 
 # VASP CALCULATIONS
 for i in range(1,3):
-    os.system('../INCAR-%i INCAR'%i)
+    os.system('cp ../INCAR-%i INCAR'%i)
     os.system(input.vasp_cmd)
     os.system('cp CONTCAR out-%i.vasp'%i)
     if len(get_fragments(read('CONTCAR'))) > 1:
         os.system('touch BADSTRUCTURE')
         exit()
+    else:
+        os.system('cp CONTCAR POSCAR')
 
 # ADD DATA& ClEAN UP
 pop.add_vaspResult()
