@@ -7,7 +7,9 @@
 ```GOCIA``` is a global optimization toolkit and Python modules specialized for sampling supported clusters, restructured interfaces and adsorbate configurations.
 
 Copyright © 2020 Zisheng Zhang
+
 [TOC]
+
 ## Requirements
 
 - Python 3.6 or later
@@ -17,13 +19,20 @@ Copyright © 2020 Zisheng Zhang
 ## Installation
 First, find the path to your Python site-packages by:
 ```bash
-python -c 'import site; print(site.getsitepackages())
+python -c 'import site; print(site.getsitepackages())’
+```
+It is highly recommended to add the displayed path to your ```.bashrc```:
+```bash
+export PYTHON_PKGS_PATH=xxx
+export GOCIA_PATH=$PYTHON_PKGS_PATH/gocia
 ```
 Then, simply download the GOCIA tarball and untar it into the site-packages‘ path:
 ```bash
+source ./bashrc
 wget https://github.com/zishengz/gocia/archive/master.zip
 unzip master.zip
-mv gocia-master/ $PYTHON_PKGS_PATH/gocia
+rm -rf $GOCIA_PATH master.zip
+mv gocia-master/ $GOCIA_PATH
 ```
 After these, run the following line to test:
 ```bash
@@ -52,7 +61,7 @@ The needed files include:
 - db2vasp.py
   Script for converting ase database files to systematically named  VASP-format files.
 
-```shell
+```bash
 python xxxSample.py substrate.vasp
 python db2vasp.py xxx.db
 ```
@@ -76,7 +85,7 @@ The needed files include:
 - collectVASP.py
   write VASP results into a ase database file and filter out the duplicates.
 
-```shell
+```bash
 chmod +x HPC-vasp.sh
 for i in s0*vasp; do ./HPC-vasp.sh $i; done
 
@@ -106,7 +115,7 @@ The needed files include:
 - gcga.db
   The ase database file containing the initial population, obtained from the previous step.
 
-```shell
+```bash
 cp xxxx.db gcga.db
 nohup python -u ga-HPC.py &
 ```
