@@ -8,6 +8,8 @@ class SGE:
         ):
         if username is not None:
             self.username = username
+        else:
+            self.username = os.popen('whoami').read()
         self.mainDir = os.getcwd() 
         self.jidList = []
         self.qinfoFile = qinfoFile
