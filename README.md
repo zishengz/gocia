@@ -19,16 +19,16 @@ Copyright © 2020 Zisheng Zhang
 ## Installation
 First, find the path to your Python site-packages by:
 ```bash
-python -c 'import site; print(site.getsitepackages())’
+python -c 'import site; print(site.getsitepackages())'
 ```
-It is highly recommended to add the displayed path to your ```.bashrc```:
+It is highly recommended to add the displayed path to your ```~/.bashrc```:
 ```bash
 export PYTHON_PKGS_PATH=xxx
 export GOCIA_PATH=$PYTHON_PKGS_PATH/gocia
 ```
 Then, simply download the GOCIA tarball and untar it into the site-packages‘ path:
 ```bash
-source ./bashrc
+source ~/.bashrc
 wget https://github.com/zishengz/gocia/archive/master.zip
 unzip master.zip
 rm -rf $GOCIA_PATH master.zip
