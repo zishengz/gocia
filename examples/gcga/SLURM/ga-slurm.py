@@ -40,7 +40,7 @@ while kidnum < totConf and\
         kidnum += 1
         print('Job %i\t@%s'%\
             (kidnum, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        queue.submit('./sge-vasp.sh %06d'%kidnum)
+        queue.submit('./slurm-vasp.sh %06d'%kidnum)
         sleep(10)
     sleep(300)
     queue.update()
