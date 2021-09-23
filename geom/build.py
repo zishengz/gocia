@@ -141,6 +141,10 @@ def boxSample_adatom(
             if goodStruc:
                 tmpInterfc = testInterfc
                 ind_curr += 1
+        # prevent dead loop
+        if n_attempts >= 10000:
+            print('DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            return None
     tmpInterfc.sort()
     print('%i\tplacements'%(n_attempts))
     if ljopt:
