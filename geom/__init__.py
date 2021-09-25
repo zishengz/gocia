@@ -198,3 +198,13 @@ def get_fragments(atoms, scale = 1.0):
                 break
     return frags
     
+def del_freeMol(atoms, scale = 1.0):
+    tmpAtoms = atoms.copy()
+    frags = get_fragments(tmpAtoms)
+    if len(frags) > 1:
+        deadList = []
+        for l in frags[1:]:
+            print(f'Remove mol: {tmpAtoms[l]}')
+            deadList+=l
+        del tmpAtoms[l]
+    return tmpAtoms
