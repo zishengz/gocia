@@ -206,5 +206,5 @@ def del_freeMol(atoms, scale = 1.0):
         for l in frags[1:]:
             print(f'Remove mol: {tmpAtoms[l]}')
             deadList+=l
-        del tmpAtoms[l]
+        del tmpAtoms[deadList]
     return tmpAtoms
