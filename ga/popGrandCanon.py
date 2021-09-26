@@ -25,6 +25,8 @@ class PopulationGrandCanonical:
         compParam=None,
         matingMethod=None,
         convergeCrit=None,
+        simParam1=5e-4,
+        simParam2=0.25
     ):
 
         if gadb is not None:
@@ -53,6 +55,9 @@ class PopulationGrandCanonical:
             self.chemPotDict = chemPotDict
 
         self.iniSize = len(self)
+
+        self.simParam1 = simParam1
+        self.simParam2 = simParam2
 
     def __len__(self):
         return len(self.gadb)
@@ -149,8 +154,8 @@ class PopulationGrandCanonical:
         isUnique = True
         for ii in range(len(aliveList)):
             a = self.gadb.get(id=aliveList[ii]).toatoms()
-            if srtDist_similar_zz(atoms, a):
-                if -eneCut < grandPotList[ii] - grandPot < eneCut:
+            if a.get_chemical_formula() == atoms.get_chemical_formula():
+                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2) and -eneCut < grandPotList[ii] - grandPot < eneCut:
                     isUnique = False
                     break
         return isUnique
@@ -256,7 +261,7 @@ class PopulationGrandCanonical:
                 and 'ERROR' not in open('%s/OSZICAR' % vaspdir).read():
             if 'E0' in open(vaspdir+'/OSZICAR', 'r').readlines()[-1]:
                 s = read('%s/OUTCAR' % vaspdir, index='-1')
-                info = os.getcwd().split('/')[-1]
+                dirname = os.getcwd().split('/')[-1]
                 mag = s.get_magnetic_moment()
                 ene_eV = s.get_potential_energy()
                 grndPot = self.calc_grandPot(s, ene_eV)
@@ -270,7 +275,7 @@ class PopulationGrandCanonical:
                             f.write(str(len(self)))
                     self.gadb.write(
                         s,
-                        name=info,
+                        name=dirname,
                         mag=mag,
                         eV=ene_eV,
                         grandPot=grndPot,
@@ -283,7 +288,7 @@ class PopulationGrandCanonical:
                     print(' |- it is a duplicate!')
                     self.gadb.write(
                         s,
-                        name=info,
+                        name=dirname,
                         mag=mag,
                         eV=ene_eV,
                         grandPot=grndPot,
