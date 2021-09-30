@@ -3,20 +3,22 @@
 from gocia import geom
 from ase import Atoms
 from ase.io.pov import get_bondpairs
+from ase.build.tools import sort
 import numpy as np
 import random
 
+
 def grow_adatom(
     interfc, addElemList,
-    xLim=None, yLim=None,zLim=None,
+    xLim=None, yLim=None, zLim=None,
     sampZEnhance=None,
     bldaSigma=0.1, bldaScale=1, toler=0.5,
     doShuffle=False,
-    rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
-    sameElemPenalty = 0,
-    cnCount=False,cnToler = 0.5,
+    rattle=False, rattleStdev=0.05, rattleZEnhance=False,
+    sameElemPenalty=0,
+    cnCount=False, cnToler=0.5,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
-    ):
+):
     numAds = len(addElemList)
     badStructure = True
     n_place = 0
@@ -39,16 +41,18 @@ def grow_adatom(
             # set to -1 for pure cluster growth (naive implementation)
             optElem = [tmpInterfc.get_chemical_symbols()[i] for i in optList]
             mult = np.ones(len(optList)) +\
-                np.array([sameElemPenalty if s != addElemList[ind_curr] else 0 for s in optElem])
+                np.array([sameElemPenalty if s !=
+                          addElemList[ind_curr] else 0 for s in optElem])
             if np.count_nonzero(mult) == 0:
                 mult = np.ones(len(optList))
             weights *= mult
             # Z-weighted sampling enhancement
             if sampZEnhance is not None:
                 # sampAEnhance = 1 makes p(zmax) = p(zmin)*2
-                optZ = tmpInterfc.get_pos()[:,2][[i for i in optList]]
+                optZ = tmpInterfc.get_pos()[:, 2][[i for i in optList]]
                 if optZ.max() - optZ.min() != 0:
-                    mult = 1 + (optZ - optZ.min())/(optZ.max() - optZ.min()) * sampZEnhance
+                    mult = 1 + (optZ - optZ.min()) / \
+                        (optZ.max() - optZ.min()) * sampZEnhance
                     weights *= mult
             weights /= weights.sum()
             i = np.random.choice(optList, p=weights)
@@ -57,20 +61,21 @@ def grow_adatom(
                 cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
                 if cn.max() - cn.min() != 0:
                     cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
-                    if np.random.rand() < cn * cnToler: continue
+                    if np.random.rand() < cn * cnToler:
+                        continue
 #             if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
 #                 if np.random.rand() >  1/2 + sameElemPenalty: continue
 #             else:
 #                 if np.random.rand() <= 1/2 + sameElemPenalty: continue
 # #                if np.random.rand() < sameElemPenalty: continue
-            coord = [0,0,-1000]
+            coord = [0, 0, -1000]
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
                 growVec = geom.rand_direction()
                 blda = geom.BLDA(
                     addElemList[ind_curr],
                     tmpInterfc.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
-                    )
+                )
                 growVec *= blda
                 coord = tmpInterfc.get_pos()[i] + growVec
 #                print(blda, growVec, coord)
@@ -79,28 +84,29 @@ def grow_adatom(
 #            print('pass')
             tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
             ind_curr += 1
-        if tmpInterfc.has_badContact(tolerance = toler):
+        if tmpInterfc.has_badContact(tolerance=toler):
             badStructure = True
         else:
             badStructure = False
         n_attempts += 1
     tmpInterfc.sort()
-    print('%i\tplacements| %i\ttabula rasa'%(n_place, n_attempts - 1))
+    print('%i\tplacements| %i\ttabula rasa' % (n_place, n_attempts - 1))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
 
+
 def boxSample_adatom(
     interfc, addElemList,
     xyzLims,
-    toler_BLmax = 0,
-    toler_BLmin = -0.2,
-    toler_CNmax = 4,
-    toler_CNmin = 1,
-    bondRejList = None,
+    toler_BLmax=0,
+    toler_BLmin=-0.2,
+    toler_CNmax=4,
+    toler_CNmin=1,
+    bondRejList=None,
     doShuffle=True,
     constrainTop=False,
-    rattle=False, rattleStdev = 0.05,rattleZEnhance=False,
+    rattle=False, rattleStdev=0.05, rattleZEnhance=False,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
 ):
     numAds = len(addElemList)
@@ -116,17 +122,18 @@ def boxSample_adatom(
         optList = tmpInterfc.get_optList()
         newAdsCoord = geom.rand_point_box(xyzLims)
         testInterfc = tmpInterfc.copy()
-        testInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [newAdsCoord]))
+        testInterfc.merge_adsorbate(
+            Atoms(addElemList[ind_curr], [newAdsCoord]))
         myContact = testInterfc.get_contactMat()[-1][:-1]
         myDist = testInterfc.get_allDistances()[-1][:-1]
-        bondDiff = myDist - myContact # actual distance - ideal covalent BL
+        bondDiff = myDist - myContact  # actual distance - ideal covalent BL
         myBond = bondDiff[bondDiff > toler_BLmin]
         myBond = myBond[myBond < toler_BLmax]
         if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
             goodStruc = True
             if bondRejList is not None:
                 mySymb = testInterfc.get_chemical_symbols()
-                myBPs = get_bondpairs(testInterfc.get_allAtoms(),0.85)
+                myBPs = get_bondpairs(testInterfc.get_allAtoms(), 0.85)
                 myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
                 for rj in bondRejList:
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
@@ -143,15 +150,41 @@ def boxSample_adatom(
                 ind_curr += 1
         # prevent dead loop
         if n_attempts >= 10000:
-            print('DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            print(
+                'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
     tmpInterfc.sort()
-    print('%i\tplacements'%(n_attempts))
+    print('%i\tplacements' % (n_attempts))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
 
-            
 
+# Below are for symmetric cell construction
+def split_sym_mirror(atoms, z_mirror, z_range=0.5):
+    slab_upper = atoms[[
+        a.index for a in atoms if a.position[2] >= z_mirror+z_range]]
+    slab_middle = atoms[[
+        a.index for a in atoms if z_mirror-z_range < a.position[2] < z_mirror+z_range]]
+    slab_bottom = atoms[[
+        a.index for a in atoms if a.position[2] <= z_mirror-z_range]]
+    return slab_upper, slab_middle, slab_bottom
+
+
+def get_sym_mirror(atoms, z_mirror, z_cell, z_range=0.5):
+    slab_asym = atoms.copy()
+    s_up, s_mid, s_btm = split_sym_mirror(slab_asym, z_mirror)
+    s_btm_sym = s_up.copy()
+    s_btm_sym.set_positions(
+        2*np.array([0, 0, z_mirror])-np.array([-1, -1, 1])*s_btm_sym.positions)
+    # Then put them together
+    slab_sym = s_btm_sym.copy()
+    slab_sym.extend(s_mid)
+    slab_sym.extend(s_up)
+    slab_sym = sort(slab_sym, tags=slab_sym.positions[:, 2])
+    mycell = slab_sym.get_cell(complete=True)
+    mycell[2][2] = z_cell
+    slab_sym.set_cell(mycell)
+    return slab_sym
 
 # TODO Adsorption site finder

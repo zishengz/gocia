@@ -144,18 +144,70 @@ class PopulationGrandCanonical:
                 print('REST IN PEACE, %i!' % d)
                 self.gadb.update(d, alive=0)
 
-    def is_uniqueInPop(self, atoms, grandPot):
+    def is_uniqueInPop(self, atoms, grandPot, eneCut=0.05):
         '''
         Check similarity against the current population
         '''
-        eneCut = 0.05
         aliveList = self.get_ID('alive=1')
         grandPotList = self.get_valueOf('grandPot', aliveList)
         isUnique = True
         for ii in range(len(aliveList)):
             a = self.gadb.get(id=aliveList[ii]).toatoms()
             if a.get_chemical_formula() == atoms.get_chemical_formula():
-                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2) and -eneCut < grandPotList[ii] - grandPot < eneCut:
+                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2):
+                    if eneCut > 0:
+                        if -eneCut < grandPotList[ii] - grandPot < eneCut:
+                            isUnique = False
+                            break
+                    else:
+                        isUnique = False
+                        break
+        return isUnique
+
+    def is_uniqueInAll(self, atoms, grandPot, eneCut=0.05):
+        '''
+        Check similarity against the all sampled structures
+        '''
+        aliveList = self.get_ID('done=1')
+        grandPotList = self.get_valueOf('grandPot', aliveList)
+        isUnique = True
+        for ii in range(len(aliveList)):
+            a = self.gadb.get(id=aliveList[ii]).toatoms()
+            if a.get_chemical_formula() == atoms.get_chemical_formula():
+                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2):
+                    if eneCut > 0:
+                        if -eneCut < grandPotList[ii] - grandPot < eneCut:
+                            isUnique = False
+                            break
+                    else:
+                        isUnique = False
+                        break
+        return isUnique
+
+    def is_uniqueInPop_geom(self, atoms):
+        '''
+        Check similarity against the all sampled structures
+        '''
+        aliveList = self.get_ID('alive=1')
+        isUnique = True
+        for ii in range(len(aliveList)):
+            a = self.gadb.get(id=aliveList[ii]).toatoms()
+            if a.get_chemical_formula() == atoms.get_chemical_formula():
+                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2):
+                    isUnique = False
+                    break
+        return isUnique
+
+    def is_uniqueInAll_geom(self, atoms):
+        '''
+        Check similarity against the all sampled structures
+        '''
+        aliveList = self.get_ID('done=1')
+        isUnique = True
+        for ii in range(len(aliveList)):
+            a = self.gadb.get(id=aliveList[ii]).toatoms()
+            if a.get_chemical_formula() == atoms.get_chemical_formula():
+                if srtDist_similar_zz(atoms, a, self.simParam1, self.simParam2):
                     isUnique = False
                     break
         return isUnique
@@ -173,9 +225,7 @@ class PopulationGrandCanonical:
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
-        if srtDist_similar_zz(a1, a2)\
-                or srtDist_similar_zz(a1, kid.get_allAtoms())\
-                or srtDist_similar_zz(a2, kid.get_allAtoms()):
+        if srtDist_similar_zz(a1, a2) or not self.is_uniqueInAll_geom(kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
@@ -268,7 +318,7 @@ class PopulationGrandCanonical:
                 myLabel = open('label', 'r').read()
                 print('\nA CHILD IS BORN with G = %.3f eV\t[%s]' % (
                     grndPot, myLabel))
-                if self.is_uniqueInPop(s, grndPot):
+                if self.is_uniqueInAll(s, grndPot):
                     if grndPot < self.get_GMrow()['grandPot']:
                         print(' |- it is the new GM!')
                         with open('gmid', 'w') as f:
@@ -297,6 +347,63 @@ class PopulationGrandCanonical:
                         alive=0,
                         label=myLabel
                     )
+
+
+def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
+    import os
+    cwdFiles = os.listdir(vaspdir)
+    if 'parabola.dat' in cwdFiles:
+        a, b, c = np.loadtxt('parabola.dat')
+        ene_sc = a*u_she**2 + b*u_she + c
+        ene_sc /= 2  # symmetric slab, divide it by 2
+        grndPot = self.calc_grandPot(s, ene_sc)
+        # below are non-sc results
+        s = read('%s/OUTCAR' % vaspdir, index='-1')
+        dirname = os.getcwd().split('/')[-1]
+        mag = s.get_magnetic_moment()
+        ene_eV = s.get_potential_energy()
+        myLabel = open('label', 'r').read()
+        print('\nA CHILD IS BORN with G = %.3f eV\t[%s]' % (
+            grndPot, myLabel))
+        if self.is_uniqueInAll(s, grndPot):
+            if grndPot < self.get_GMrow()['grandPot']:
+                print(' |- it is the new GM!')
+                with open('gmid', 'w') as f:
+                    f.write(str(len(self)))
+            self.gadb.write(
+                s,
+                name=dirname,
+                mag=mag,
+                eV=ene_eV,
+                sc_U=u_she,
+                sc_eV=ene_sc,
+                grandPot=grndPot,
+                a=a,
+                b=b,
+                c=c,
+                mated=0,
+                done=1,
+                alive=1,
+                label=myLabel
+            )
+        else:
+            print(' |- it is a duplicate!')
+            self.gadb.write(
+                s,
+                name=dirname,
+                mag=mag,
+                eV=ene_eV,
+                sc_U=u_she,
+                sc_eV=ene_sc,
+                grandPot=grndPot,
+                a=a,
+                b=b,
+                c=c,
+                mated=0,
+                done=1,
+                alive=0,
+                label=myLabel
+            )
 
 # TODO convergence: TEST
 # TODO XTB interface
