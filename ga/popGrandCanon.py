@@ -316,11 +316,11 @@ class PopulationGrandCanonical:
                 ene_eV = s.get_potential_energy()
                 grndPot = self.calc_grandPot(s, ene_eV)
                 myLabel = open('label', 'r').read()
-                print('\nA CHILD IS BORN with G = %.3f eV\t[%s]' % (
-                    grndPot, myLabel))
+                print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+                    dirname, grndPot, myLabel))
                 if self.is_uniqueInAll(s, grndPot):
                     if grndPot < self.get_GMrow()['grandPot']:
-                        print(' |- it is the new GM!')
+                        print(f' |- {dirname} is the new GM!')
                         with open('gmid', 'w') as f:
                             f.write(str(len(self)))
                     self.gadb.write(
@@ -335,7 +335,7 @@ class PopulationGrandCanonical:
                         label=myLabel
                     )
                 else:
-                    print(' |- it is a duplicate!')
+                    print(f' |- {dirname} is a duplicate!')
                     self.gadb.write(
                         s,
                         name=dirname,
@@ -363,11 +363,11 @@ def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
         mag = s.get_magnetic_moment()
         ene_eV = s.get_potential_energy()
         myLabel = open('label', 'r').read()
-        print('\nA CHILD IS BORN with G = %.3f eV\t[%s]' % (
-            grndPot, myLabel))
+        print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+            dirname, grndPot, myLabel))
         if self.is_uniqueInAll(s, grndPot):
             if grndPot < self.get_GMrow()['grandPot']:
-                print(' |- it is the new GM!')
+                print(f' |- {dirname} is the new GM!')
                 with open('gmid', 'w') as f:
                     f.write(str(len(self)))
             self.gadb.write(
@@ -387,7 +387,7 @@ def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
                 label=myLabel
             )
         else:
-            print(' |- it is a duplicate!')
+            print(f' |- {dirname} is a duplicate!')
             self.gadb.write(
                 s,
                 name=dirname,
