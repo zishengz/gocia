@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from ase.io import read
+from ase.io import read, write
+from gocia.geom import get_fragments, del_freeMol
 
 
 def get_elems(poscar='POSCAR', potDict=None):
@@ -18,6 +19,30 @@ def gen_POTCAR(potPath, elems):
 
 def pos2pot(potPath, poscar='POSCAR', potDict=None):
     gen_POTCAR(potPath, get_elems(poscar, potDict))
+
+
+def is_vaspSuccess(jobdir='.'):
+    return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
+
+
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True):
+    for i in range(1, step+1):
+        os.system(f'cp ../INCAR-{i} INCAR')
+        os.system(vasp_cmd)
+        if not is_vaspSuccess():
+            os.system('touch FAIL')
+            exit()
+        os.system(f'cp CONTCAR out-{i}.vasp')
+        if not chkMol:
+            os.system('cp CONTCAR POSCAR')
+        else:
+            write('POSCAR', del_freeMol(read('CONTCAR')))
+            # Make sure the final structure has no free molecule
+            if i == step:
+                if len(get_fragments(read('CONTCAR'))) > 1:
+                    os.system('touch BADSTRUCTURE')
+                    exit()
+    os.system('rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 
 # Below are for surface charging calculations
@@ -68,6 +93,8 @@ def do_surfChrg_sp(nelect, vasp_cmd):
     os.system(vasp_cmd)
     val, nelect, ene, efermi, shftfermi = extractVASPsol()
     USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi)
+    os.system(
+        'rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
     os.chdir(homedir)
     return USHE, G
 
