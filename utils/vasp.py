@@ -27,6 +27,7 @@ def is_vaspSuccess(jobdir='.'):
 
 def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True):
     for i in range(1, step+1):
+        print(f'Optimization step: {i}')
         os.system(f'cp ../INCAR-{i} INCAR')
         os.system(vasp_cmd)
         if not is_vaspSuccess():

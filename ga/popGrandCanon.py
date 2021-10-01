@@ -87,15 +87,21 @@ class PopulationGrandCanonical:
                 myPot -= self.chemPotDict[s]
         return myPot
 
-    def initializeDB(self):
-        for i in range(len(self.gadb)):
-            r = self.gadb.get(id=i+1)
-            self.gadb.update(i+1, mated=0, alive=1,
-                             grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
+    def initializeDB(self, sc=False):
+        if sc:
+            for i in range(len(self.gadb)):
+                r = self.gadb.get(id=i+1)
+                self.gadb.update(i+1, mated=0, alive=1,
+                                grandPot=self.calc_grandPot(r.toatoms(), r.sc_eV), label='0 0 init')
+        else:
+            for i in range(len(self.gadb)):
+                r = self.gadb.get(id=i+1)
+                self.gadb.update(i+1, mated=0, alive=1,
+                                grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
         self.natural_selection()
         gm = self.get_GMrow()
         with open('gmid', 'w') as f:
-            f.write(str(self.get_GMrow().id))
+            f.write(str(gm.id))
 
     def get_ID(self, condString):
         tmp = []
