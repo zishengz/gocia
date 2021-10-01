@@ -100,8 +100,8 @@ def do_surfChrg_sp(nelect, vasp_cmd):
     return USHE, G
 
 
-def do_surfChrg_batch(list_deltaCharge, vasp_cmd):
-    pos2pot(input.pp_path)
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd):
+    pos2pot(pp_path)
     nelect_neu = get_neu_nelect()
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
