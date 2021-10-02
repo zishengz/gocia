@@ -88,6 +88,10 @@ def vasp2db_SC(nameKey='', u_she=0):
                 continue
             s = read(d+'/OUTCAR', index='-1')
             a, b, c = np.loadtxt(f'{d}/parabola.dat')
+            try:
+                mag = s.get_magnetic_moment()
+            except:
+                mag = 0
             myDb.write(
                 s,
                 a=a,
@@ -96,7 +100,7 @@ def vasp2db_SC(nameKey='', u_she=0):
                 sc_U=u_she,
                 sc_eV=a*u_she**2+b*u_she+c,
                 eV=s.get_potential_energy(),
-                mag=s.get_magnetic_moment(),
+                mag=mag,
                 done=1,
             )
             print('-O', end='\t')

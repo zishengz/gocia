@@ -318,7 +318,10 @@ class PopulationGrandCanonical:
             if 'E0' in open(vaspdir+'/OSZICAR', 'r').readlines()[-1]:
                 s = read('%s/OUTCAR' % vaspdir, index='-1')
                 dirname = os.getcwd().split('/')[-1]
-                mag = s.get_magnetic_moment()
+                try:
+                    mag = s.get_magnetic_moment()
+                except:
+                    mag = 0
                 ene_eV = s.get_potential_energy()
                 grndPot = self.calc_grandPot(s, ene_eV)
                 myLabel = open('label', 'r').read()
@@ -366,7 +369,10 @@ def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
         # below are non-sc results
         s = read('%s/OUTCAR' % vaspdir, index='-1')
         dirname = os.getcwd().split('/')[-1]
-        mag = s.get_magnetic_moment()
+        try:
+            mag = s.get_magnetic_moment()
+        except:
+            mag = 0
         ene_eV = s.get_potential_energy()
         myLabel = open('label', 'r').read()
         print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
