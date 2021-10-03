@@ -92,7 +92,7 @@ class PopulationGrandCanonical:
             for i in range(len(self.gadb)):
                 r = self.gadb.get(id=i+1)
                 self.gadb.update(i+1, mated=0, alive=1,
-                                grandPot=self.calc_grandPot(r.toatoms(), r.sc_eV), label='0 0 init')
+                                grandPot=self.calc_grandPot(r.toatoms(), r.sc_eV/2), label='0 0 init')
         else:
             for i in range(len(self.gadb)):
                 r = self.gadb.get(id=i+1)
@@ -364,7 +364,6 @@ def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
     if 'parabola.dat' in cwdFiles:
         a, b, c = np.loadtxt('parabola.dat')
         ene_sc = a*u_she**2 + b*u_she + c
-        ene_sc /= 2  # symmetric slab, divide it by 2
         grndPot = self.calc_grandPot(s, ene_sc)
         # below are non-sc results
         s = read('%s/OUTCAR' % vaspdir, index='-1')
