@@ -287,8 +287,12 @@ class PopulationGrandCanonical:
                 kid.rattleMut()
             if mutType == 1 and growOn:
                 myMutate = 'grow'
-                kid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                tmpKid = None
+                while tmpKid is None:
+                    tmpKid = kid.copy()
+                    tmpKid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
+                kid = tmpKid.copy()
             if mutType == 2 and leachOn:
                 myMutate = 'leach'
                 kid.leachMut([l for l in self.chemPotDict])
