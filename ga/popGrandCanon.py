@@ -362,63 +362,63 @@ class PopulationGrandCanonical:
                     )
 
 
-def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
-    import os
-    cwdFiles = os.listdir(vaspdir)
-    if 'parabola.dat' in cwdFiles:
-        a, b, c = np.loadtxt('parabola.dat')
-        ene_sc = a*u_she**2 + b*u_she + c
-        grndPot = self.calc_grandPot(s, ene_sc)
-        # below are non-sc results
-        s = read('%s/OUTCAR' % vaspdir, index='-1')
-        dirname = os.getcwd().split('/')[-1]
-        try:
-            mag = s.get_magnetic_moment()
-        except:
-            mag = 0
-        ene_eV = s.get_potential_energy()
-        myLabel = open('label', 'r').read()
-        print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
-            dirname, grndPot, myLabel))
-        if self.is_uniqueInAll(s, grndPot):
-            if grndPot < self.get_GMrow()['grandPot']:
-                print(f' |- {dirname} is the new GM!')
-                with open('gmid', 'w') as f:
-                    f.write(str(len(self)))
-            self.gadb.write(
-                s,
-                name=dirname,
-                mag=mag,
-                eV=ene_eV,
-                sc_U=u_she,
-                sc_eV=ene_sc,
-                grandPot=grndPot,
-                a=a,
-                b=b,
-                c=c,
-                mated=0,
-                done=1,
-                alive=1,
-                label=myLabel
-            )
-        else:
-            print(f' |- {dirname} is a duplicate!')
-            self.gadb.write(
-                s,
-                name=dirname,
-                mag=mag,
-                eV=ene_eV,
-                sc_U=u_she,
-                sc_eV=ene_sc,
-                grandPot=grndPot,
-                a=a,
-                b=b,
-                c=c,
-                mated=0,
-                done=1,
-                alive=0,
-                label=myLabel
-            )
+    def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
+        import os
+        cwdFiles = os.listdir(vaspdir)
+        if 'parabola.dat' in cwdFiles:
+            a, b, c = np.loadtxt('parabola.dat')
+            ene_sc = a*u_she**2 + b*u_she + c
+            grndPot = self.calc_grandPot(s, ene_sc)
+            # below are non-sc results
+            s = read('%s/OUTCAR' % vaspdir, index='-1')
+            dirname = os.getcwd().split('/')[-1]
+            try:
+                mag = s.get_magnetic_moment()
+            except:
+                mag = 0
+            ene_eV = s.get_potential_energy()
+            myLabel = open('label', 'r').read()
+            print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+                dirname, grndPot, myLabel))
+            if self.is_uniqueInAll(s, grndPot):
+                if grndPot < self.get_GMrow()['grandPot']:
+                    print(f' |- {dirname} is the new GM!')
+                    with open('gmid', 'w') as f:
+                        f.write(str(len(self)))
+                self.gadb.write(
+                    s,
+                    name=dirname,
+                    mag=mag,
+                    eV=ene_eV,
+                    sc_U=u_she,
+                    sc_eV=ene_sc,
+                    grandPot=grndPot,
+                    a=a,
+                    b=b,
+                    c=c,
+                    mated=0,
+                    done=1,
+                    alive=1,
+                    label=myLabel
+                )
+            else:
+                print(f' |- {dirname} is a duplicate!')
+                self.gadb.write(
+                    s,
+                    name=dirname,
+                    mag=mag,
+                    eV=ene_eV,
+                    sc_U=u_she,
+                    sc_eV=ene_sc,
+                    grandPot=grndPot,
+                    a=a,
+                    b=b,
+                    c=c,
+                    mated=0,
+                    done=1,
+                    alive=0,
+                    label=myLabel
+                )
 
 # TODO convergence: TEST
 # TODO XTB interface
