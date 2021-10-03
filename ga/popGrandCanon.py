@@ -368,10 +368,10 @@ class PopulationGrandCanonical:
         if 'parabola.dat' in cwdFiles:
             a, b, c = np.loadtxt('parabola.dat')
             ene_sc = a*u_she**2 + b*u_she + c
-            grndPot = self.calc_grandPot(s, ene_sc)
             # below are non-sc results
             s = read('%s/OUTCAR' % vaspdir, index='-1')
             dirname = os.getcwd().split('/')[-1]
+            grndPot = self.calc_grandPot(s, ene_sc)
             try:
                 mag = s.get_magnetic_moment()
             except:
