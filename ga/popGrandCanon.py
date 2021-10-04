@@ -371,7 +371,7 @@ class PopulationGrandCanonical:
             # below are non-sc results
             s = read('%s/OUTCAR' % vaspdir, index='-1')
             dirname = os.getcwd().split('/')[-1]
-            grndPot = self.calc_grandPot(s, ene_sc)
+            grndPot = self.calc_grandPot(s, ene_sc/2)
             try:
                 mag = s.get_magnetic_moment()
             except:
