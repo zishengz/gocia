@@ -158,7 +158,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
         newSurf.set_adsAtoms(Atoms(newAdsElem, newAdsPos))
         newSurf.wrap()
         isBADSTRUCTURE = newSurf.has_badContact(tolerance=tolerance)
-        if n_trial > 100:
+        if n_trial > 1000:
             isBADSTRUCTURE = False
             newSurf = None
     if newSurf is not None:

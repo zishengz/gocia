@@ -159,6 +159,8 @@ def boxSample_adatom(
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
 
+    
+
 
 # Below are for symmetric cell construction
 def split_sym_mirror(atoms, z_mirror, z_range=0.5):
