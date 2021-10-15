@@ -231,11 +231,14 @@ class PopulationGrandCanonical:
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
+        # choices of mutation method
+        mutList = [0,1,2,3,4]
         if srtDist_similar_zz(a1, a2) or not self.is_uniqueInAll_geom(kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
+            mutList = [0,1,2]
         if np.random.rand() < mutRate:
-            mutType = np.random.choice([0, 1, 2, 3, 4], size=1)[0]
+            mutType = np.random.choice(mutList, size=1)[0]
             if mutType == 0 and rattleOn:
                 myMutate = 'rattle'
                 kid.rattleMut()
