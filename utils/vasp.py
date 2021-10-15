@@ -2,6 +2,7 @@ import os
 import numpy as np
 from ase.io import read, write
 from gocia.geom import get_fragments, del_freeMol
+from gocia.interface import Interface
 
 
 def get_elems(poscar='POSCAR', potDict=None):
@@ -25,7 +26,7 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True, zLim=None, substrate='../substrate.vasp'):
     for i in range(1, step+1):
         print(f'Optimization step: {i}')
         os.system(f'cp ../INCAR-{i} INCAR')
@@ -41,6 +42,18 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True):
             # Make sure the final structure has no free molecule
             if i == step:
                 if len(get_fragments(read('CONTCAR'))) > 1:
+                    os.system('touch BADSTRUCTURE')
+                    exit()
+        if zLim is not None:
+            surf = Interface(
+                read('POSCAR'),
+                substrate,
+                zLim = input.zLim
+            )
+            if surf.has_outsideBox():
+                surf.del_outsideBox()
+                surf.write('POSCAR')
+                if i == step:
                     os.system('touch BADSTRUCTURE')
                     exit()
     os.system('rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')

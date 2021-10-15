@@ -207,6 +207,27 @@ class Interface:
     def get_allDistances(self):
         return self.get_allAtoms().get_all_distances(mic=True)
 
+    def has_outsideBox(self):
+        tmp = []
+        ads = self.get_adsAtoms()
+        for a in ads:
+            if a.position[2] < min(self.zLim) or a.position[2] > max(self.zLim):
+                tmp.append(a.index)
+        if len(tmp) > 0:
+            return True
+        else:
+            return False
+
+    def del_outsideBox(self):
+        tmp = []
+        ads = self.get_adsAtoms()
+        for a in ads:
+            if a.position[2] < min(self.zLim) or a.position[2] > max(self.zLim):
+                tmp.append(a.index)
+        if len(tmp) > 0:
+            del ads[tmp]
+            self.set_adsAtoms(ads)
+
     def has_badContact(self, tolerance=0):
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
         return diff.min() < 0
@@ -283,7 +304,7 @@ class Interface:
             rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
         self.set_allPos(pos + rattleVec)
 
-    def rattleMut(self, stdev = 0.25, mutRate = 0.33, zEnhance=True):
+    def rattleMut(self, stdev = 0.25, mutRate = 0.5, zEnhance=True):
         '''
         enhances the atoms with higher position
         '''
@@ -376,7 +397,8 @@ class Interface:
             bondRejList=bondRejList,
             constrainTop=constrainTop
         )
-        self.set_allAtoms(tmpInterfc.get_allAtoms())
+        if tmpInterfc is not None:
+            self.set_allAtoms(tmpInterfc.get_allAtoms())
 
     def preopt_lj(self, fileBaseName='tmp',\
         toler=0.2, stepsize=0.05, nsteps=200):
