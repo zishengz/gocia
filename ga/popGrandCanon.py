@@ -66,8 +66,10 @@ class PopulationGrandCanonical:
         gmid = self.get_GMrow().id
         if gmid < self.iniSize:
             return False
+        if len(self) - gmid > self.convergeCrit:
+            return True
         else:
-            return len(self) - gmid > self.convergeCrit
+            return False
 
     def is_converged2(self):
         gmid = eval(open('gmid').read())
