@@ -59,14 +59,20 @@ def vasp2db(nameKey='', excludeBAD=False):
                 if 'BADSTRUCTURE' in os.listdir(d):
                     print('-X', end='\t')
                     continue
-            if 'E0' not in open(d+'/OSZICAR', 'r').readlines()[-1]:
+            oszicar_tail = open(d+'/OSZICAR', 'r').readlines()[-1]
+            if 'E0' not in oszicar_tail:
                 print('-X', end='\t')
                 continue
-            s = read(d+'/OUTCAR', index='-1')
+            s = read(d+'/CONTCAR')
+            eV = eval(oszicar_tail.split()[4])
+            if 'mag' in oszicar_tail:
+                mag = eval(oszicar_tail.split()[-1])
+            else:
+                mag = 0
             myDb.write(
                 s,
-                eV=s.get_potential_energy(),
-                mag=s.get_magnetic_moment(),
+                eV=eV,
+                mag=mag,
                 done=1,
             )
             print('-O', end='\t')
@@ -74,6 +80,36 @@ def vasp2db(nameKey='', excludeBAD=False):
     print('\n %i candidates writen to vasp-%s.db' %
           (count_fin, get_projName()))
 
+def vasp2db_OUTCAR(nameKey='', excludeBAD=False):
+    print(' --- Collecting VASP results ---')
+    vdirs = [d.split('/')[0]
+             for d in os.popen('ls *%s*/OSZICAR' % nameKey).readlines()]
+    count_fin = 0
+    with connect('vasp-%s.db' % get_projName(), append=False) as myDb:
+        for d in vdirs:
+            print('%s' % d, end='')
+            if excludeBAD:
+                if 'BADSTRUCTURE' in os.listdir(d):
+                    print('-X', end='\t')
+                    continue
+            if 'E0' not in open(d+'/OSZICAR', 'r').readlines()[-1]:
+                print('-X', end='\t')
+                continue
+            s = read(d+'/OUTCAR', index='-1')
+            try:
+                mag = s.get_magnetic_moment()
+            except:
+                mag = 0
+            myDb.write(
+                s,
+                eV=s.get_potential_energy(),
+                mag=mag,
+                done=1,
+            )
+            print('-O', end='\t')
+            count_fin += 1
+    print('\n %i candidates writen to vasp-%s.db' %
+          (count_fin, get_projName()))
 
 def vasp2db_SC(nameKey='', u_she=0):
     print(' --- Collecting VASP results ---')
