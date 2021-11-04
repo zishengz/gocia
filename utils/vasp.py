@@ -56,7 +56,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True, zLim=None, substrate='../
                 if i == step:
                     os.system('touch BADSTRUCTURE')
                     exit()
-    os.system('rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
+    os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 
 # Below are for surface charging calculations

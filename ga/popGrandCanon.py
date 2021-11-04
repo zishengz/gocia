@@ -325,12 +325,19 @@ class PopulationGrandCanonical:
                 and 'BADSTRUCTURE' not in cwdFiles\
                 and 'ERROR' not in open('%s/OSZICAR' % vaspdir).read():
             if 'E0' in open(vaspdir+'/OSZICAR', 'r').readlines()[-1]:
-                s = read('%s/OUTCAR' % vaspdir, index='-1')
+                try:
+                    s = read('%s/OUTCAR' % vaspdir, index='-1')
+                except:
+                    s = read('%s/vasprun.xml' % vaspdir, index='-1')
                 dirname = os.getcwd().split('/')[-1]
                 try:
                     mag = s.get_magnetic_moment()
                 except:
-                    mag = 0
+                    oszicar_tail = open('OSZICAR').readlines()[-1]
+                    if 'mag' in oszicar_tail:
+                        mag = eval(oszicar_tail.split()[-1])
+                    else:
+                        mag = 0
                 ene_eV = s.get_potential_energy()
                 grndPot = self.calc_grandPot(s, ene_eV)
                 myLabel = open('label', 'r').read()

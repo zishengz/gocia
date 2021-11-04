@@ -72,26 +72,20 @@ class SLURM:
             self.jidList.remove(killID)
 
 # TODO: rewrite for SLURM
+# this is for perlmutter
     def jobInfo(self, jobid):
-        rawInfo = os.popen('qstat -j %s'%jobid).readlines()[1:-1]
+        rawInfo = os.popen('squeue -j %s'%jobid).readlines()[1:]
         jobInfo = {
             'state': 'd',
             'name': '',
             'wkdir': '',
         }
         if len(rawInfo) > 0:
-            # update job state
-            tmp = [l for l in rawInfo if 'job_state' in l]
-            if len(tmp) > 0:
+            if rawInfo.split()[4] == 'R':
                 jobInfo.update({'state': 'r'})
-            else:
+            elif rawInfo.split()[4] =='PD':
                 jobInfo.update({'state': 'q'})
-            # update job rundir
-            tmp = [l for l in rawInfo if 'cwd' in l]
-            jobInfo.update({'wkdir': tmp[0].split()[1]})
-            # update job name
-            tmp = [l for l in rawInfo if 'job_name' in l]
-            jobInfo.update({'name': tmp[0].split()[1]})
+            jobInfo.update({'name': rawInfo.split()[2]})
         return jobInfo
 
     
