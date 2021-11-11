@@ -104,10 +104,12 @@ def boxSample_adatom(
     toler_CNmax=4,
     toler_CNmin=1,
     bondRejList=None,
+    bondMustList=None,
     doShuffle=True,
     constrainTop=False,
     rattle=False, rattleStdev=0.05, rattleZEnhance=False,
-    ljopt=False, ljstepsize=0.01, ljnsteps=400
+    ljopt=False, ljstepsize=0.01, ljnsteps=400,
+    bondCutoff = 0.85
 ):
     numAds = len(addElemList)
     n_attempts = 0
@@ -120,8 +122,15 @@ def boxSample_adatom(
     while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
         n_attempts += 1
         optList = tmpInterfc.get_optList()
-        newAdsCoord = geom.rand_point_box(xyzLims)
         testInterfc = tmpInterfc.copy()
+        # get the current bond pairs
+#        mySymb = testInterfc.get_chemical_symbols()
+        if bondMustList is not None:
+            myBPs_old = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
+            myBPs_old = [[i[0], i[1]] for i in myBPs_old]
+#        myBPs_old = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+        # add adsorbate
+        newAdsCoord = geom.rand_point_box(xyzLims)
         testInterfc.merge_adsorbate(
             Atoms(addElemList[ind_curr], [newAdsCoord]))
         myContact = testInterfc.get_contactMat()[-1][:-1]
@@ -133,12 +142,27 @@ def boxSample_adatom(
             goodStruc = True
             if bondRejList is not None:
                 mySymb = testInterfc.get_chemical_symbols()
-                myBPs = get_bondpairs(testInterfc.get_allAtoms(), 0.85)
+                myBPs = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
                 myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
                 for rj in bondRejList:
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
                         goodStruc = False
                         break
+            if bondMustList is not None:
+                mySymb = testInterfc.get_chemical_symbols()
+                myBPs = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
+                myBPs = [[i[0], i[1]] for i in myBPs]
+                myBPs = [i for i in myBPs if i not in myBPs_old]
+                if len(myBPs) == 0:
+                    goodStruc = False
+                    #break
+                else:
+                    myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+                    print(myBPs)
+                    print(any(x in myBPs for x in bondMustList))
+                    if not any(x in myBPs for x in bondMustList):
+                        goodStruc = False
+                        #break
             if constrainTop:
                 pos = testInterfc.get_pos()
                 for i in testInterfc.get_bufList():
@@ -188,5 +212,29 @@ def get_sym_mirror(atoms, z_mirror, z_cell, z_range=0.5):
     mycell[2][2] = z_cell
     slab_sym.set_cell(mycell)
     return slab_sym
+
+def split_sym_center(atoms, z_split):
+    return atoms[[a.index for a in atoms if a.position[2] >= z_split]]
+
+def get_sym_center(atoms, pos_center, z_cell):
+    slab_asym = atoms.copy()
+    s_up = split_sym_center(slab_asym, pos_center[2])
+    s_btm_sym = s_up.copy()
+    # Otherwise the position will not be changed
+    del s_btm_sym.constraints
+    s_btm_sym.set_positions(
+        2*np.array(pos_center)-np.array([1, 1, 1])*s_btm_sym.positions)
+    # Then put them together
+    slab_sym = s_btm_sym.copy()
+    slab_sym.extend(s_up)
+    slab_sym = sort(slab_sym, tags=slab_sym.positions[:, 2])
+    mycell = slab_sym.get_cell(complete=True)
+    mycell[2][2] = z_cell
+    slab_sym.set_cell(mycell)
+    slab_sym.wrap()
+    return slab_sym
+
+
+
 
 # TODO Adsorption site finder
