@@ -95,6 +95,22 @@ def pb_calc(val, nelect, energy, fermi_ene, fermi_shift):
     ene_corr = energy + dNelect * wkFunc
     return pot_she, ene_corr
 
+def make_surfChrg_sp(nelect, vasp_cmd):
+    homedir = os.getcwd()
+    os.system(f'mkdir n_{nelect:.2f}')
+    os.chdir(f'n_{nelect:.2f}')
+    os.system('cp ../../KPOINTS ../POSCAR ../POTCAR .')
+    os.system('cp ../../INCAR-sc INCAR')
+    with open('INCAR', 'a') as f:
+        f.write(f'NELECT={nelect}')
+    os.chdir(homedir)
+
+def make_surfChrg_batch(pp_path, list_deltaCharge):
+    pos2pot(pp_path)
+    nelect_neu = get_neu_nelect()
+    for d in list_deltaCharge:
+        nelect_tmp = nelect_neu + d
+        make_surfChrg_sp()
 
 def do_surfChrg_sp(nelect, vasp_cmd):
     homedir = os.getcwd()
