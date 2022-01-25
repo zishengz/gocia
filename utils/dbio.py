@@ -144,6 +144,38 @@ def vasp2db_SC(nameKey='', u_she=0):
     print('\n %i candidates writen to vasp-%s.db' %
           (count_fin, get_projName()))
 
+def vasp2db_SC_noSP(nameKey='', u_she=0):
+    print(' --- Collecting VASP results ---')
+    vdirs = [d.split('/')[0]
+             for d in os.popen('ls *%s*/POSCAR' % nameKey).readlines()]
+    count_fin = 0
+    with connect('vaspSC-%s.db' % get_projName(), append=False) as myDb:
+        for d in vdirs:
+            print('%s' % d, end='')
+            if 'parabola.dat' not in os.listdir(d):
+                print('-X', end='\t')
+                continue
+            s = read(d+'/inp.vasp')
+            a, b, c = np.loadtxt(f'{d}/parabola.dat')
+            try:
+                mag = s.get_magnetic_moment()
+            except:
+                mag = 0
+            myDb.write(
+                s,
+                a=a,
+                b=b,
+                c=c,
+                sc_U=u_she,
+                sc_eV=a*u_she**2+b*u_she+c,
+                eV=c,
+                mag=mag,
+                done=1,
+            )
+            print('-O', end='\t')
+            count_fin += 1
+    print('\n %i candidates writen to vasp-%s.db' %
+          (count_fin, get_projName()))
 
 def lmp2db(nameKey='', excludeBAD=False):
     import gocia.utils.lammps as lmp
