@@ -217,7 +217,7 @@ def draw_BSsurf(
     atoms.set_positions(atoms.get_positions() - (ori_cell[0]+ori_cell[1])/2)
     atoms.set_pbc([0,0,0])
     atoms = Atoms(sorted(atoms, key=lambda atm: atm.position[2]))
-    allpos = atoms.get_positions()
+#    allpos = atoms.get_positions()
 
     allnum = atoms.get_atomic_numbers()
     allpos = atoms.get_positions()
@@ -322,12 +322,40 @@ def draw_CPKsurf(
         ori_cell[0] * 1 + ori_cell[1] * 1,
         ori_cell[0] * 0 + ori_cell[1] * 1,
         linwt=5)
+    x0 = min(ori_cell[0][0], ori_cell[1][0])
+    x1 = max(ori_cell[0][0], ori_cell[1][0])
+    y0 = min(ori_cell[0][1], ori_cell[1][1])
+    y1 = max(ori_cell[0][1], ori_cell[1][1])
+    
     for i in range(len(atoms)):
         anum = allnum[i]
         apos = allpos[i]
         plotAtom(anum, apos, scale=ascale,\
             colorparam=allc[i], linwt=1.5-allc[i]/2)
         plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.667)
+        moveVec = np.array([0,0,0])
+        if x0 < allpos[i][0] < x0+2:
+            moveVec += np.array([1, 0, 0])
+        if x1 - 2 < allpos[i][0] < x1:
+            moveVec += np.array([-1, 0, 0])
+        if y0 < allpos[i][1] < y0+2:
+            moveVec += np.array([0, 1, 0])
+        if y1 - 2 < allpos[i][1] < y1:
+            moveVec += np.array([0, -1, 0])
+        if (moveVec**2).sum() == 1:
+            apos = allpos[i] + moveVec[0]*ori_cell[0] + moveVec[1]*ori_cell[1]
+            plotAtom(anum, apos, scale=ascale,\
+            colorparam=allc[i], linwt=1.5-allc[i]/2)
+            plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.667)
+        elif (moveVec**2).sum() == 2:
+            for j in [[1,1], [0, 1], [1, 0]]:
+                apos = allpos[i] + j[0]*moveVec[0]*ori_cell[0] + j[1]*moveVec[1]*ori_cell[1]
+                print(apos)
+                plotAtom(anum, apos, scale=ascale,\
+                colorparam=allc[i], linwt=1.5-allc[i]/2)
+                plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.667)
+
+
     plt.axis('scaled')
     plt.xlim(min(ori_cell[0][0], ori_cell[1][0]), max(ori_cell[0][0], ori_cell[1][0]))
     plt.ylim(min(ori_cell[0][1], ori_cell[1][1]), max(ori_cell[0][1], ori_cell[1][1]))
