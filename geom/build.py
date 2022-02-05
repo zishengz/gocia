@@ -192,13 +192,18 @@ def split_sym_mirror(atoms, z_mirror, z_range=0.5):
         a.index for a in atoms if a.position[2] >= z_mirror+z_range]]
     slab_middle = atoms[[
         a.index for a in atoms if z_mirror-z_range < a.position[2] < z_mirror+z_range]]
-    slab_bottom = atoms[[
-        a.index for a in atoms if a.position[2] <= z_mirror-z_range]]
+    bottom_list = [a.index for a in atoms if a.position[2] <= z_mirror-z_range]
+    if len(bottom_list)>0:
+        slab_bottom = atoms[[
+            a.index for a in atoms if a.position[2] <= z_mirror-z_range]]
+    else:
+        slab_bottom = []
     return slab_upper, slab_middle, slab_bottom
 
 
 def get_sym_mirror(atoms, z_mirror, z_cell, z_range=0.5):
     slab_asym = atoms.copy()
+    del slab_asym.constraints # otherwise they wont move
     s_up, s_mid, s_btm = split_sym_mirror(slab_asym, z_mirror)
     s_btm_sym = s_up.copy()
     s_btm_sym.set_positions(
