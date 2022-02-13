@@ -276,7 +276,7 @@ def draw_BSsurf(
     plt.margins(0,0)
     plt.title(title, fontsize='xx-large', fontweight='bold')
     if outName is not None:
-        plt.savefig(outName+'-bs.png', dpi=100, \
+        plt.savefig(outName+'-bs.png', dpi=200, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
     else:
         plt.show()
@@ -350,7 +350,6 @@ def draw_CPKsurf(
         elif (moveVec**2).sum() == 2:
             for j in [[1,1], [0, 1], [1, 0]]:
                 apos = allpos[i] + j[0]*moveVec[0]*ori_cell[0] + j[1]*moveVec[1]*ori_cell[1]
-                print(apos)
                 plotAtom(anum, apos, scale=ascale,\
                 colorparam=allc[i], linwt=1.5-allc[i]/2)
                 plotElliShine(anum, apos, atomscale=ascale, shift=0.45, scale=0.667)
@@ -366,7 +365,7 @@ def draw_CPKsurf(
     plt.margins(0,0)
     plt.title(title, fontsize='xx-large', fontweight='bold')
     if outName is not None:
-        plt.savefig(outName+'-cpk.png', dpi=100, \
+        plt.savefig(outName+'-cpk.png', dpi=300, \
             bbox_inches = "tight", transparent=True, pad_inches = 0)
     else:
         plt.show()

@@ -81,7 +81,7 @@ def extractVASPsol(dirName='.'):
                       if 'E-fermi' in l][-1].split()[2])
     nelect = eval([l for l in open('INCAR').readlines()
                    if 'NELECT' in l][-1].split('=')[-1])
-    energy = eval(open('OSZICAR').readlines()[-1].split()[4])
+    energy = eval([l for l in open('OSZICAR').readlines() if 'F=' in l][-1].split()[4])
     os.chdir(tmpHome)
     return val, nelect, energy, fermi_ene, fermi_shift
 
