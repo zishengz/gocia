@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: >-
+  GOCIA: Global Optimizer for Clusters, Interfaces,
+  and Adsorbates
+message: >-
+  Please check https://github.com/zishengz/gocia for
+  the latest reference list.
+type: software
+authors:
+  - given-names: Zisheng
+    family-names: Zhang
+    email: zisheng@chem.ucla.edu
+    affiliation: 'University of California, Los Angeles'
+    orcid: 'https://orcid.org/0000-0002-4370-4038'
+url: "https://github.com/zishengz/gocia"
