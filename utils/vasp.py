@@ -86,10 +86,10 @@ def extractVASPsol(dirName='.'):
     return val, nelect, energy, fermi_ene, fermi_shift
 
 
-def pb_calc(val, nelect, energy, fermi_ene, fermi_shift):
+def pb_calc(val, nelect, energy, fermi_ene, fermi_shift, u_ref=4.44):
     dNelect = nelect - val
     wkFunc = -fermi_ene - fermi_shift
-    pot_she = wkFunc - 4.44
+    pot_she = wkFunc - u_ref
     # Bugged VASPsol? surrently needed
     energy += fermi_shift * (dNelect)
     ene_corr = energy + dNelect * wkFunc
@@ -112,7 +112,7 @@ def make_surfChrg_batch(pp_path, list_deltaCharge):
         nelect_tmp = nelect_neu + d
         make_surfChrg_sp(nelect_tmp)
 
-def do_surfChrg_sp(nelect, vasp_cmd):
+def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44):
     homedir = os.getcwd()
     os.system(f'mkdir n_{nelect:.2f}')
     os.chdir(f'n_{nelect:.2f}')
@@ -122,19 +122,19 @@ def do_surfChrg_sp(nelect, vasp_cmd):
         f.write(f'NELECT={nelect}')
     os.system(vasp_cmd)
     val, nelect, ene, efermi, shftfermi = extractVASPsol()
-    USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi)
+    USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi, u_ref=u_ref)
     os.system(
         'rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
     os.chdir(homedir)
     return USHE, G
 
 
-def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd):
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44):
     pos2pot(pp_path)
     nelect_neu = get_neu_nelect()
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
-        ushe, g = do_surfChrg_sp(nelect_tmp, vasp_cmd)
+        ushe, g = do_surfChrg_sp(nelect_tmp, vasp_cmd, u_ref=u_ref)
         with open('sc.dat', 'a') as f:
             f.write(f'{d}\t{ushe}\t{g}\n')
 
