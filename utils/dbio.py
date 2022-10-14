@@ -69,11 +69,16 @@ def vasp2db(nameKey='', excludeBAD=False):
                 mag = eval(oszicar_tail.split()[-1])
             else:
                 mag = 0
+            if 'fragments' in os.listdir(d):
+                fragments = open(d+'/fragments', 'r').readlines()[0].rstrip('\n')
+            else:
+                fragments = []
             myDb.write(
                 s,
                 eV=eV,
                 mag=mag,
                 done=1,
+                adsFrags=fragments,
             )
             print('-O', end='\t')
             count_fin += 1

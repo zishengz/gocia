@@ -76,6 +76,11 @@ def clusterIsomerAbs(
         eneArray = [a.info['eV'] for a in trajAtoms]
     else:
         eneArray = [a.get_potential_energy() for a in trajAtoms]
+    if 'adsFrags' in trajAtoms[0].info.keys():
+        fragArray = [a.info['adsFrags'] for a in trajAtoms]
+    else:
+        fragArray = []
+        print('Uh oh, gotta get frag list somehow into gocia.ensemble.clusterIsomerAbs')
 
     print(' * Detecting unique isomers...')
     nStates = len(trajAtoms)
@@ -104,6 +109,7 @@ def clusterIsomerAbs(
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
+    fragUniq = [fragArray[i] for i in isoUniq]
     countUniq = [isomerLabel.count(i) for i in isoUniq]
 #    print(countUniq)
     print('-'*76)
@@ -122,6 +128,7 @@ def clusterIsomerAbs(
                 eV2GM=sorted(eneUniq)[i] - min(eneUniq),
                 mag=magUniq[eneUniq.index(sorted(eneUniq)[i])],
                 counts=countUniq[eneUniq.index(sorted(eneUniq)[i])],
+                adsFrags=fragUniq[eneUniq.index(sorted(eneUniq)[i])],
             )
 
 
@@ -142,7 +149,10 @@ def clusterIsomerAbs_GC(
     if 'grandPot' in trajAtoms[0].info.keys():
         eneArray = [a.info['grandPot'] for a in trajAtoms]
     else:
-        eneArray = [a.get_potential_energy() for a in trajAtoms]
+        try:
+            eneArray = [a.get_potential_energy() for a in trajAtoms]
+        except:
+            eneArray = [a.info['eV'] for a in trajAtoms]
     rawEneArray = [a.info['eV'] for a in trajAtoms]
 
     print(' * Detecting unique isomers...')

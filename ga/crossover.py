@@ -3,6 +3,8 @@ import numpy as np
 import ase.io as fio
 from ase.atoms import Atoms
 from gocia.interface import Interface
+from gocia import frag
+from ase.build.tools import sort
 
 def dist2lin(p1, p2, p3):
     '''
@@ -99,15 +101,18 @@ def splice_2d_GC(surf1, badPos, goodPos, center, direction):
     return tmpSurf
 
 def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
-    matPos, patPos = surf1.get_fixBufPos(), surf2.get_fixBufPos()
-    matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms()
+    matPos, patPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms in substrate
+    matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms() # adsorbate atoms
     goodPos, badPos = [], []
+    # look until we find a viable structure
     isBADSTRUCTURE = True
     n_trial = 0
     while isBADSTRUCTURE:
         n_trial += 1
+        # find center of mass and generate a random direction to define a line for splitting
         center, direction = split_2d(surf1.get_adsAtoms(), surf2.get_adsAtoms())
 
+        # make list of distances between the position of every mother/father atom in the x,y-plane and the splitting line
         # keep number of atoms constant in the buffer region!
         matDist = [dist2lin(center, center+direction, i) for i in matPos[:, :2]]
         patDist = [dist2lin(center, center+direction, i) for i in patPos[:, :2]]
@@ -123,6 +128,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
                 tmpBad.append(patPos[i])
             goodPos.append(tmpGood)
             badPos.append(tmpBad)
+        # make a child by taking proper atoms
         childPos = []
         newSurf = surf1.copy()
         for i in range(len(matPos)):
@@ -167,14 +173,114 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
     return newSurf
 
 
-        # print(sum([len(l) for l in goodPos]))
-        # print(sum([len(l) for l in badPos]))
-#        childSurf = splice_2d_GC(surf1, badPos, goodPos, center, direction)
-    #     isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
-    #     if n_trial > 100:
-    #         isBADSTRUCTURE = False
-    #         childSurf = None
-    # if childSurf is not None:
-    #     print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
-    #         (n_trial, tolerance))
-    # return childSurf
+def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
+    # Get relevant positions from mother and father surfaces
+    matFixBufPos, patFixBufPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms, or equivalently, substrate atoms with get_subPos()
+    matBridPos, patBridPos = surf1.get_bridPos(), surf2.get_bridPos() # positions of bridle atoms
+    matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms() # adsorbate atoms
+
+    # Look until we find a viable child structure
+    isBADSTRUCTURE = True
+    n_trial = 0
+    goodPos, badPos = [], []
+    while isBADSTRUCTURE:
+        n_trial += 1
+
+        # Find center of mass and generate a random direction to define line for splitting
+        center, direction = split_2d(matAds, patAds)
+
+        ### Start with fixed and buffer atoms
+        # Make list of distances between the position of every mother/father atom in the x,y-plane and the splitting line
+        matDist = [dist2lin(center, center+direction, i) for i in matFixBufPos[:, :2]]
+        patDist = [dist2lin(center, center+direction, i) for i in patFixBufPos[:, :2]]
+
+        # Sort all mother/father atoms into good and bad
+        # REQUIRES SAME NUMBER OF FIXED AND BUFFER ATOMS IN MOTHER AND FATHER
+        for i in range(len(matFixBufPos)): 
+            tmpGood, tmpBad = [], []
+            if matDist[i] <= 0:     
+                tmpGood.append(matFixBufPos[i])
+            else:                  
+                tmpBad.append(matFixBufPos[i])
+            if patDist[i] > 0:    
+                tmpGood.append(patFixBufPos[i])
+            else:
+                tmpBad.append(patFixBufPos[i])
+            goodPos.append(tmpGood)
+            badPos.append(tmpBad)
+
+        # Make child by taking proper atoms
+        childPos = []
+        childSurf = surf1.copy()
+        for i in range(len(matFixBufPos)):
+            if len(goodPos[i]) == 1:
+                childPos.append(goodPos[i][0])
+            elif len(goodPos[i]) == 0:
+                # Then there must be 2 in bad position list
+                # We keep the one closer to splitline
+                tmpDist = [dist2lin(center, center+direction, p[:2])\
+                        for p in badPos[i]]
+                childPos.append(badPos[i][tmpDist.index(min(tmpDist))])
+            elif len(goodPos[i]) == 2:
+                # We keep the one closer to splitline
+                tmpDist = [dist2lin(center, center+direction, p[:2])\
+                        for p in goodPos[i]]
+                childPos.append(goodPos[i][tmpDist.index(min(tmpDist))])
+        childSurf.set_fixBufPos(childPos)
+
+        ### Then work on adsorbate fragment atoms
+        # Take distance from bridle atom of each fragment to splitting line
+        matDist = [dist2lin(center, center+direction, i) for i in matBridPos[:, :2]]
+        patDist = [dist2lin(center, center+direction, i) for i in patBridPos[:, :2]]
+
+        # !!! Similar strategy in permuteMut(): slide index, separately select and sort, fuse together, slide back
+        # Get mother/father fragment lists and transpose indices down to only adsorbate atoms
+        matFragList = frag.transposeDown(surf1.get_fragList(), surf1)
+        patFragList = frag.transposeDown(surf2.get_fragList(), surf2)
+
+        print('matFragList: %s' % matFragList)
+        print('patFragList: %s' % patFragList)
+
+        # Select proper fragments from mother/father
+        newMatFragList, newPatFragList = [], []
+        newMatFragAtms, newPatFragAtms = Atoms(), Atoms()
+        for i in range(len(matDist)):
+            if matDist[i] <= 0:
+                matFrag = matFragList[i]
+                newMatFragList.append(matFrag)
+                newMatFragAtms += matAds[[i for i in matFrag]]
+        for i in range(len(patDist)):
+            if patDist[i] > 0:
+                patFrag = patFragList[i]
+                newPatFragList.append(patFrag)
+                newPatFragAtms += patAds[[i for i in patFrag]]
+
+        # Condense and sort each
+        if len(newMatFragAtms) > 0:
+            newMatFragList = frag.remake(newMatFragList,frag.flatsort(newMatFragList),range(len(newMatFragAtms))) 
+            newMatFragAtms = sort(newMatFragAtms)
+        if len(newPatFragAtms) > 0:
+            newPatFragList = frag.remake(newPatFragList,frag.flatsort(newPatFragList),range(len(newPatFragAtms))) 
+            newPatFragAtms = sort(newPatFragAtms) 
+
+        # Fuse together
+        newStructure = newMatFragList + newPatFragList
+        newContents = frag.flatten(newMatFragList) + [len(frag.flatten(newMatFragList)) + i for f in newPatFragList for i in f]
+        newFragList = frag.refill(newStructure,newContents)
+        newFragAtms = newMatFragAtms + newPatFragAtms
+
+        # Transpose indices up to all interface atoms and set fragment atoms
+        newFragAtms.info['adsorbate_fragments'] = frag.transposeUp(newFragList, childSurf)
+        childSurf.set_adsAtoms_frag(newFragAtms)
+        childSurf.wrap()
+
+        # Evaluate quality of kid structure
+        isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
+        if n_trial > 1000:
+            isBADSTRUCTURE = False
+            childSurf = None
+    if childSurf is not None:
+        print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
+            (n_trial, tolerance))
+    return childSurf
+    
