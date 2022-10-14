@@ -17,6 +17,8 @@ Copyright © 2020 Zisheng Zhang
 - Natsort and LATEX (pdf report generation)
 
 ## Installation
+
+### Python environment 
 First, install your own python environment, since HPCs usually don't give regular users write permission to the python path. To save disk space, it is recommended to install ```Miniconda```:
 
 ```shell
@@ -26,30 +28,50 @@ sh Miniconda3-latest-Linux-x86_64.sh
 
 Yes all the way through and ```source ~/.bashrc``` to activate the conda environment. You can run ```python``` in the terminal to check the version of the python that you are using.
 
-Then, find the path to your Python site-packages by:
+
+### GOCIA installation
+
+If your machine has `Git` installed, simply clone the repo to your local directory by:
 
 ```bash
-python -c 'import site; print(site.getsitepackages())'
+git clone https://github.com/zishengz/gocia.git
 ```
-It is highly recommended to add the displayed path to your ```~/.bashrc```:
+
+Or, you can also download and unzip the source code:
+
 ```bash
-export PYTHON_PKGS_PATH=xxx
-export GOCIA_PATH=$PYTHON_PKGS_PATH/gocia
+wget https://github.com/zishengz/echo/archive/refs/heads/main.zip
+unzip main.zip
+rm main.zip
+mv main gocia
 ```
-To install GOCIA, simply download the tarball and untar it into the site-packages‘ path:
+
+After fetching the `gocia` repo, add it to your `PYTHONPATH` by:
+
 ```bash
-source ~/.bashrc
-wget https://github.com/zishengz/gocia/archive/master.zip
-unzip master.zip
-rm -rf $GOCIA_PATH master.zip
-mv gocia-master/ $GOCIA_PATH
+export PYTHONPATH=$PYTHONPATH:`pwd`/gocia
 ```
-You can put the commands in the block above to a script to save time when you wanna update GOCIA the next time. After these, run the following line to test:
+
+Remember to add this export line to your `~/.bashrc` or the submission script, so that `GOCIA` package is accessible by Python.
+
+After these, run the following line to test:
 
 ```bash
 python -c 'import gocia'
 ```
 If no error occurs, GOCIA should have been imported into your path!
+
+### Update `GOCIA`
+
+If you installed via Git, then update by pulling from the main branch in the `gocia` directory:
+
+```bash
+cd xxx/gocia
+git pull
+```
+
+Otherwise, you need to manually remove the old `gocia` directory, and then download and unzip again.
+
 
 ## Tutorial
 
