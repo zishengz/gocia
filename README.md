@@ -10,7 +10,7 @@ Copyright © 2020 Zisheng Zhang
 
 Please CITE [THIS PAPER](https://zishengz.github.io/docs/2022jacs.pdf) if you use any part of this repo:
 
-> Zhang, Z.; Wei, Z.; Sautet, P.; Alexandrova, A. N., Hydrogen-induced Restructuring of a Cu(100) Electrode in Electroreduction Conditions. J. Am. Chem. Soc., 2022, doi:\href{https://doi.org/10.1021/jacs.2c06188}{10.1021/jacs.2c06188}.
+> Zhang, Z.; Wei, Z.; Sautet, P.; Alexandrova, A. N., Hydrogen-induced Restructuring of a Cu(100) Electrode in Electroreduction Conditions. J. Am. Chem. Soc., 2022, doi:[10.1021/jacs.2c06188](https://doi.org/10.1021/jacs.2c06188).
 
 [TOC]
 
