@@ -314,15 +314,15 @@ class PopulationGrandCanonicalPoly:
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
-                    tmpKid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
             if mutType == 2 and leachOn:
                 myMutate = 'leach'
-                kid.leachMut([l for l in self.chemPotDict])
+                kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 3 and permuteOn:
                 myMutate = 'permute'
-                kid.permuteMut()
+                kid.permuteMut_frag()
             if mutType == 4 and transOn:
                 myMutate = 'translate'
                 kid.transMut(transVec=transVec)

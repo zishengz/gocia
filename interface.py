@@ -611,6 +611,7 @@ class Interface:
         tmpInterfc = self.copy()
         myFrag = np.random.choice(fragPool, size=1)[0]
         print(myFrag)
+        from gocia.geom.build import boxSample_frag
         tmpInterfc = boxSample_frag(
             tmpInterfc,
             [myFrag],
