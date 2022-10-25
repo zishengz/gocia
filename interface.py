@@ -11,6 +11,7 @@ This module defines the Surface object.
 from gocia.data import elemSymbol, covalRadii
 from gocia import geom
 from gocia import frag
+from gocia.geom.build import grow_frag
 
 import ase.io as fio
 from ase.atoms import Atoms
@@ -21,8 +22,7 @@ import json
 
 from re import A, I
 import random
-
-from gocia.geom.build import grow_frag
+from scipy.spatial.transform import Rotation as R
 
 class Interface:
     def __init__(self,
@@ -456,7 +456,80 @@ class Interface:
                 pos[i] += rattleVec[i]
                 if pos[i][2] > max(self.zLim): pos[i][2] = max(self.zLim)
                 if pos[i][2] < min(self.zLim): pos[i][2] = min(self.zLim)
-        self.set_allPos(pos + rattleVec)
+        self.set_allPos(pos + rattleVec) # It looks like rattleVec is actually added twice in rattleMut?
+
+    def rattleMut_frag(self, stdev = 0.25, mutRate = 0.5, zEnhance=True, toler=0.5):
+
+        # Initialize as before
+        print(' |- Rattle mutation!')
+        tmpAtoms = self.get_allAtoms()
+        pos = tmpAtoms.get_positions()
+        zBuf = self.get_bufAtoms().get_positions()[:,2]
+        rattleVec = np.random.normal(scale=stdev, size=pos.shape)
+        # Enhance the rattling of atoms with higher position
+        if zEnhance and pos[:,2].max()-zBuf.min() != 0:
+            rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
+        # Rattle buffer atoms as before, shifting position by rattleVec and ensuring within z-limits
+        for i in self.get_bufList():
+            if np.random.rand() < mutRate:
+                pos[i] += rattleVec[i] * 0.5
+                if pos[i][2] > max(zBuf): pos[i][2] = max(zBuf)
+                if pos[i][2] < min(zBuf): pos[i][2] = min(zBuf)
+
+        # Now for rattling fragments . . . 
+        fragList = self.get_fragList()
+        fragNames = self.get_fragNames()
+        bridList = self.get_bridList()
+        for fragID in range(len(fragList)):
+            # Rattle fragments that are single atoms
+            if len(fragList[fragID]) == 1 and np.random.rand() < mutRate:
+                i = fragList[fragID][0]
+                pos[i] += rattleVec[i]
+                if pos[i][2] > max(self.zLim): pos[i][2] = max(self.zLim)
+                if pos[i][2] < min(self.zLim): pos[i][2] = min(self.zLim) 
+            # Rotate multiatom fragments as a whole unit
+            if len(fragList[fragID]) > 1 and np.random.rand() < mutRate:
+                # Need name of fragment
+                fragName = fragNames[fragID]
+                # Rotate fragment positions until no collisions
+                keepStructure = False
+                while not keepStructure: 
+                    # Position of bridle atom is reference for positioning whole fragment
+                    bridPos = pos[bridList[fragID]]
+                    # Now we rattle bridle atom position
+                    bridPos += rattleVec[bridList[fragID]]
+                    # Make nicely oriented atoms object
+                    fragTemp = ''
+                    if fragName == 'CO':
+                        fragTemp = Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)])
+                    elif fragName == 'H':
+                        fragTemp = Atoms('H',[(0,0,0)])
+                    elif fragName == 'H2O':
+                        fragTemp = Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)])
+                    else:
+                        print('Unknown fragment: must add option to grow {} in twistMut() in interface.py'.format(fragName))
+                    # Ensure fragTemp sorted in same way as order of fragment atoms in pos
+                    fragTemp = sort(fragTemp)
+                    # Get well-ordered positions
+                    posTemp = fragTemp.get_positions()
+                    # Rotate positions about z-axis
+                    rot = R.from_rotvec(- random.random()*np.pi * np.array([0, 0, 1]))
+                    posTemp = rot.apply(posTemp)
+                    # Rotate positions by random angle (less than pi/2) about random axis 
+                    rot = R.from_rotvec(- random.random()*np.pi/3 * geom.rand_direction())
+                    posTemp = rot.apply(posTemp)
+                    # Set positions relative to rattled bridle atom position
+                    posNew = posTemp + bridPos
+                    # Update positions
+                    for i in range(len(fragList[fragID])):
+                        pos[fragList[fragID][i]] = posNew[i]
+                    # Keep structure unless it has bad contacts (might not even be necessary as didn't check before?)
+                    tmpTest = self.copy()
+                    tmpTest.set_allPos(pos)
+                    if not tmpTest.has_badContact(tolerance=toler): # Hmm do I need to check for bad contact in the buffer atoms?
+                        keepStructure = True 
+        # Set positions
+        self.set_allPos(pos)
 
     def transMut(self, transVec=[[-2,2],[-2,2]]):
         tmpAds = self.get_adsAtoms()
@@ -611,6 +684,7 @@ class Interface:
         tmpInterfc = self.copy()
         myFrag = np.random.choice(fragPool, size=1)[0]
         print(myFrag)
+        from gocia.geom.build import boxSample_frag
         tmpInterfc = boxSample_frag(
             tmpInterfc,
             [myFrag],
