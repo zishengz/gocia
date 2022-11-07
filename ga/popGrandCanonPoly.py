@@ -247,7 +247,7 @@ class PopulationGrandCanonicalPoly:
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
         # choices of mutation method
-        mutList = [0,1,2,3,4]
+        mutList = [0,1,2,3,4,5]
         if srtDist_similar_zz(matAtms, patAtms) or not self.is_uniqueInAll_geom(kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
@@ -256,24 +256,27 @@ class PopulationGrandCanonicalPoly:
             mutType = np.random.choice(mutList, size=1)[0]
             if mutType == 0 and rattleOn:
                 myMutate = 'rattle'
-                kid.rattleMut()
+                kid.rattleMut_frag()
             if mutType == 1 and growOn:
                 myMutate = 'grow'
-                kid.growMut([l for l in self.chemPotDict])
+                kid.growMut_frag([l for l in self.chemPotDict])
             if mutType == 2 and leachOn:
                 myMutate = 'leach'
-                kid.leachMut([l for l in self.chemPotDict])
+                kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 3 and permuteOn:
                 myMutate = 'permute'
-                kid.permuteMut()
+                kid.permuteMut_frag()
             if mutType == 4 and transOn:
                 myMutate = 'translate'
                 kid.transMut(transVec=transVec)
+            if mutType == 5 and moveOn:
+                myMutate = 'move'
+                kid.moveMut_frag([l for l in self.chemPotDict])
         if len(kid.get_adsList()) <= 1:
             myMutate = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
-            kid.rattleMut()
+            kid.rattleMut_frag()
             kid.growMut([l for l in self.chemPotDict])
         open('label', 'w').write('%i %i %s' % (mater, pater, myMutate))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
@@ -281,7 +284,7 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -305,10 +308,10 @@ class PopulationGrandCanonicalPoly:
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
-            mutType = np.random.choice([0, 1, 2, 3, 4], size=1)[0]
+            mutType = np.random.choice([0, 1, 2, 3, 4, 5], size=1)[0]
             if mutType == 0 and rattleOn:
                 myMutate = 'rattle'
-                kid.rattleMut()
+                kid.rattleMut_frag()
             if mutType == 1 and growOn:
                 myMutate = 'grow'
                 tmpKid = None
@@ -326,11 +329,14 @@ class PopulationGrandCanonicalPoly:
             if mutType == 4 and transOn:
                 myMutate = 'translate'
                 kid.transMut(transVec=transVec)
+            if mutType == 5 and moveOn:
+                myMutate = 'move'
+                kid.moveMut_frag([l for l in self.chemPotDict])
         if len(kid.get_adsList()) <= 1:
             myMutate = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
-            kid.rattleMut()
+            kid.rattleMut_frag()
             kid.growMut([l for l in self.chemPotDict])
         open('label', 'w').write('%i %i %s' % (mater, pater, myMutate))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
