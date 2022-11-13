@@ -287,7 +287,7 @@ class PopulationGrandCanonical:
             print(' |- TOO SIMILAR!')
             mutRate = 1
 
-        if np.random.rand() < mutRate:
+        if len(kid.get_adsList()) > 1 and np.random.rand() < mutRate:
             # collect the operatoins to use
             mutList = []
             if rattleOn: mutList.append('rattle')
