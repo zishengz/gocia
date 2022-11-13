@@ -301,19 +301,28 @@ class PopulationGrandCanonicalPoly:
             kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
-        myMutate = ''
+        mutType = ''
         if srtDist_similar_zz(matAtms, patAtms)\
                 or srtDist_similar_zz(matAtms, kid.get_allAtoms())\
                 or srtDist_similar_zz(patAtms, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
         if np.random.rand() < mutRate:
-            mutType = np.random.choice([0, 1, 2, 3, 4, 5], size=1)[0]
-            if mutType == 0 and rattleOn:
-                myMutate = 'rattle'
+            # collect the operatoins to use
+            mutList = []
+            if rattleOn: mutList.append('rattle')
+            if growOn: mutList.append('grow')
+            if leachOn: mutList.append('leach')
+            if moveOn: mutList.append('grow')
+            if permuteOn: mutList.append('permute')
+            if transOn: mutList.append('trans')
+
+            #mutType = np.random.choice([0, 1, 2, 3, 4, 5], size=1)[0]
+            mutType = np.random.choice(mutList)
+            if mutType == 'rattle':
+                kid.rattleMut_buffer()
                 kid.rattleMut_frag()
             if mutType == 1 and growOn:
-                myMutate = 'grow'
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
@@ -321,25 +330,22 @@ class PopulationGrandCanonicalPoly:
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
             if mutType == 2 and leachOn:
-                myMutate = 'leach'
                 kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 3 and permuteOn:
-                myMutate = 'permute'
                 kid.permuteMut_frag()
             if mutType == 4 and transOn:
-                myMutate = 'translate'
                 kid.transMut(transVec=transVec)
             if mutType == 5 and moveOn:
-                myMutate = 'move'
                 kid.moveMut_frag([l for l in self.chemPotDict])
         if len(kid.get_adsList()) <= 1:
-            myMutate = 'init'
+            mutType = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
+            kid.rattleMut_buffer()
             kid.rattleMut_frag()
             kid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
-        open('label', 'w').write('%i %i %s' % (mater, pater, myMutate))
+        open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         open('fragments', 'w').write('%s' % kid.get_fragList() )

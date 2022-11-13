@@ -456,7 +456,23 @@ class Interface:
                 pos[i] += rattleVec[i]
                 if pos[i][2] > max(self.zLim): pos[i][2] = max(self.zLim)
                 if pos[i][2] < min(self.zLim): pos[i][2] = min(self.zLim)
-        self.set_allPos(pos + rattleVec) # It looks like rattleVec is actually added twice in rattleMut?
+        self.set_allPos(pos)
+    
+    def rattleMut_buffer(self, stdev = 0.25, mutRate = 0.5, zEnhance=True):
+        print(' |- Rattle mutation! -- buffer atoms')
+        tmpAtoms = self.get_allAtoms()
+        pos = tmpAtoms.get_positions()
+        zBuf = self.get_bufAtoms().get_positions()[:,2]
+        rattleVec = np.random.normal(scale=stdev, size=pos.shape)
+        if zEnhance and pos[:,2].max()-zBuf.min() != 0:
+            rattleVec = (rattleVec.T * (pos[:,2]-zBuf.min())/(pos[:,2].max()-zBuf.min())).T
+        for i in self.get_bufList():
+            if np.random.rand() < mutRate:
+                pos[i] += rattleVec[i]
+                if pos[i][2] > max(zBuf): pos[i][2] = max(zBuf)
+                if pos[i][2] < min(zBuf): pos[i][2] = min(zBuf)
+        self.set_allPos(pos)
+
 
     def rattleMut_frag(self, stdev = 0.25, mutRate = 0.5, zEnhance=True, toler=0.5):
 
