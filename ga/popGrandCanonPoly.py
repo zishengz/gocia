@@ -363,7 +363,7 @@ class PopulationGrandCanonicalPoly:
             # Could two fragments combine to make a new fragment? How evaluate?
 
 
-    def add_vaspResult(self, vaspdir='.'):
+    def add_vaspResult(self, vaspdir='.', isAlive=1):
         import os
         cwdFiles = os.listdir(vaspdir)
         if 'OSZICAR' in cwdFiles\
@@ -403,7 +403,7 @@ class PopulationGrandCanonicalPoly:
                         grandPot=grndPot,
                         mated=0,
                         done=1,
-                        alive=1,
+                        alive=isAlive,
                         label=myLabel,
                         adsFrags=myFragList 
                     )
@@ -423,7 +423,7 @@ class PopulationGrandCanonicalPoly:
                     )
 
 
-    def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
+    def add_vaspResult_SC(self, u_she=0, vaspdir='.', isAlive=1):
         import os
         cwdFiles = os.listdir(vaspdir)
         if 'parabola.dat' in cwdFiles:
@@ -461,7 +461,7 @@ class PopulationGrandCanonicalPoly:
                     c=c,
                     mated=0,
                     done=1,
-                    alive=1,
+                    alive=isAlive,
                     label=myLabel,
                     adsFrags=myFragList 
                 )
