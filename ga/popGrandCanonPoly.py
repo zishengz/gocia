@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import ast
 from ase.db import connect
 from gocia.interface import Interface
@@ -299,7 +300,7 @@ class PopulationGrandCanonicalPoly:
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
             kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75)
-            parent = surf1.copy()
+            parent = random.choice([surf1, surf2]).copy()
         print('PARENTS: %i and %i' % (mater, pater))
         mutType = ''
         if srtDist_similar_zz(matAtms, patAtms)\
@@ -307,36 +308,40 @@ class PopulationGrandCanonicalPoly:
                 or srtDist_similar_zz(patAtms, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
+
         if np.random.rand() < mutRate:
             # collect the operatoins to use
             mutList = []
             if rattleOn: mutList.append('rattle')
             if growOn: mutList.append('grow')
             if leachOn: mutList.append('leach')
-            if moveOn: mutList.append('grow')
+            if moveOn: mutList.append('move')
             if permuteOn: mutList.append('permute')
-            if transOn: mutList.append('trans')
+            if transOn: mutList.append('translate')
 
-            #mutType = np.random.choice([0, 1, 2, 3, 4, 5], size=1)[0]
             mutType = np.random.choice(mutList)
             if mutType == 'rattle':
                 kid.rattleMut_buffer()
                 kid.rattleMut_frag()
-            if mutType == 1 and growOn:
+            if mutType == 'grow':
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
                     tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
-            if mutType == 2 and leachOn:
-                kid.leachMut_frag([l for l in self.chemPotDict])
-            if mutType == 3 and permuteOn:
-                kid.permuteMut_frag()
-            if mutType == 4 and transOn:
-                kid.transMut(transVec=transVec)
-            if mutType == 5 and moveOn:
+            if mutType == 'leach':
+                ## TODO: detecting existing fragment species
+                ##       and only allow one of them ot be removed
+#                species_kid = kid.get_fragList()
+                kid.get_adsAtoms().get_chemical_symbols()
+                kid.leachMut([l for l in self.chemPotDict if l in species_kid])
+            if mutType == 'move':
                 kid.moveMut_frag([l for l in self.chemPotDict])
+            if mutType == 'permute':
+                kid.permuteMut_frag()
+            if mutType == 'translate':
+                kid.transMut(transVec=transVec)
         if len(kid.get_adsList()) <= 1:
             mutType = 'init'
             print(' |- Bare substrate, BAD!')
@@ -351,16 +356,15 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-        ### HOW DO I GET FRAGMENTS OUT OF A VASP RESULT?
-        ## Something like label for now?
-    def findFragList(s):
-        #Maybe just assume same as kid but then check bonding okay?
-        if s:
-            print('# do something')
-        # Definitely need to check contacts:
-            # We'd expect bond between atoms in fragment and if not then broke bond
-            # We'd also expect some bond between bridle atom and anchor atom, maybe more for bridle atom
-            # Could two fragments combine to make a new fragment? How evaluate?
+
+    # TODO: connectivity checker and customizable "rules"
+        # needed for cases where there are reactive events between frags during local opt
+        # We'd expect bond between atoms in fragment and if not then broke bond
+        # We'd also expect some bond between bridle atom and anchor atom, maybe more for bridle atom
+            # ZZ: There may be changes in the binding site/mode. But if it is still on the usrface it should be fine
+        # Could two fragments combine to make a new fragment? How evaluate?
+            # ZZ: removing the substrate, and clustering into fragments by connectivity. Then decide.
+        # How to calculate grand potential when there are new unexpected fragments???
 
 
     def add_vaspResult(self, vaspdir='.', isAlive=1):
@@ -384,8 +388,21 @@ class PopulationGrandCanonicalPoly:
                     else:
                         mag = 0
                 ene_eV = s.get_potential_energy()
-                myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
+
+                # read or detect the fragment list
+                try:
+                    myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
+                    if max([i for f in myFragList for i in f]) >= len(s):
+                        myFragList = None
+                except:
+                    myFragList = None
+                if myFragList == None:
+                    print('Bad/No fragList! Detecting from connectivity...')
+                    surf_tmp = Interface(s, self.substrate)
+                    myFragList = surf_tmp.detect_fragList()
+                    del surf_tmp
                 myInfo = self.convertFragStrToInfo(myFragList)
+
                 grndPot = self.calc_grandPot(s, ene_eV, myInfo)
                 myLabel = open('label', 'r').read()
                 print('\n%s IS BORN with G = %.3f eV\t[%s]' % (

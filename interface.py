@@ -334,6 +334,10 @@ class Interface:
         tmpAtoms.info = tmpAdsAtoms.info # all atoms take on info from sorted new adsorbate atoms
         self.set_allAtoms(tmpAtoms)
 
+    def set_fragList(self, my_fragList):
+        # sets the list of fragments as provided
+        self.info['adsorbate_fragments'] = my_fragList.copy()
+
     # def set_positions(self, newPos):
     #     tmpAtoms = self.get_allAtoms()
     #     tmpAtoms.set_positions(newPos)
@@ -422,6 +426,15 @@ class Interface:
             reindexList = list(range(len(self.get_subAtoms()),int(len(self.get_subAtoms())+len(fragFlatSort))))
             tmpAtoms.info['adsorbate_fragments'] = frag.remake(delFragList,fragFlatSort,reindexList)
         self.set_allAtoms(tmpAtoms) # Do we need to sort before setting? Currently it keeps the same order just with fragments removed
+
+    def detect_fragList(self, scale=1.0, update = False):
+        ads = self.get_adsAtoms()
+        n_subs = len(self.get_subAtoms())
+        my_fragList = geom.get_fragments(ads, scale=scale)
+        my_fragList = [[i+n_subs for i in f] for f in my_fragList]
+        if update:
+            self.set_fragList(my_fragList)
+        return my_fragList
 
     def rattle(self, stdev = 0.1, zEnhance=False):
         '''
