@@ -230,6 +230,14 @@ class PopulationGrandCanonicalPoly:
             info['adsorbate_fragments'] = []
         return info
 
+    def convertFragListToInfo(self, fragList):
+        info = {}
+        if fragList is not None:
+            info['adsorbate_fragments'] = fragList
+        else:
+            info['adsorbate_fragments'] = []
+        return info
+
     def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
         kid, parent = None, None
         mater, pater = 0, 0
@@ -391,17 +399,18 @@ class PopulationGrandCanonicalPoly:
 
                 # read or detect the fragment list
                 try:
-                    myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
+                    myFragList = eval(open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n'))
                     if max([i for f in myFragList for i in f]) >= len(s):
+                        print('Bad fragList! Detecting from connectivity...')
                         myFragList = None
                 except:
+                    print('No fragList! Detecting from connectivity...')
                     myFragList = None
                 if myFragList == None:
-                    print('Bad/No fragList! Detecting from connectivity...')
                     surf_tmp = Interface(s, self.substrate)
                     myFragList = surf_tmp.detect_fragList()
                     del surf_tmp
-                myInfo = self.convertFragStrToInfo(myFragList)
+                myInfo = self.convertFragListToInfo(myFragList)
 
                 grndPot = self.calc_grandPot(s, ene_eV, myInfo)
                 myLabel = open('label', 'r').read()
@@ -450,7 +459,7 @@ class PopulationGrandCanonicalPoly:
             s = read('%s/OUTCAR' % vaspdir, index='-1')
             dirname = os.getcwd().split('/')[-1]
             myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
-            myInfo = self.convertFragStrToInfo(myFragList)
+            myInfo = self.convertFragListToInfo(myFragList)
             grndPot = self.calc_grandPot(s, ene_sc/2, myInfo)
             try:
                 mag = s.get_magnetic_moment()
