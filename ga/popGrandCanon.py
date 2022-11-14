@@ -318,7 +318,8 @@ class PopulationGrandCanonical:
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
             kid.rattleMut()
-            kid.growMut([l for l in self.chemPotDict])
+            tmpKid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                                bondRejList=bondRejList, constrainTop=constrainTop)
         open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
