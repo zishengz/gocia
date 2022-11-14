@@ -113,6 +113,9 @@ class Interface:
         self.info = self.allAtoms.info # Updates Interface info to match allAtoms info
 
     def sort(self):
+        self.sortAds()
+
+    def sortAds(self):
         ads = self.get_adsAtoms().copy()
         ads = sort(ads)
         self.set_adsAtoms(ads)
