@@ -633,7 +633,7 @@ class Interface:
         fragList_dup = fragList_tmpAds*2
         tmpAds.info['adsorbate_fragments'] = frag.refill(fragList_dup,fill)
         # Clean-up adsorbate atoms
-        tmpAds = self.sortAds(tmpAds)
+        tmpAds = self.sortAds_frag(tmpAds)
         tmpAds.wrap()
         # Reindex frags from Ads to All: [[0, 2], [1, 3]] to [[144,146],[145,147]] 
         tmpAdsInd = [i for i in list(range(len(tmpAds)))]
