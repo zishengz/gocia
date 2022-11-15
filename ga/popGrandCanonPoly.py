@@ -346,7 +346,13 @@ class PopulationGrandCanonicalPoly:
                 # kid.leachMut([l for l in self.chemPotDict if l in species_kid])
                 kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 'move':
-                kid.moveMut_frag([l for l in self.chemPotDict])
+                #kid.moveMut_frag([l for l in self.chemPotDict])
+                myFrag = np.random.choice([l for l in self.chemPotDict], size=1)[0]
+                kid.leachMut_frag([myFrag])
+                # the grow step needs info of the constraints
+                # otherwise very prone to dead loop!
+                kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
+                                bondRejList=bondRejList, constrainTop=constrainTop)
             if mutType == 'permute':
                 kid.permuteMut_frag()
             if mutType == 'translate':
