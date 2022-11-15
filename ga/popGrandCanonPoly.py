@@ -418,6 +418,7 @@ class PopulationGrandCanonicalPoly:
                     myFragList = surf_tmp.detect_fragList()
                     del surf_tmp
                 myInfo = self.convertFragListToInfo(myFragList)
+                myFragList = str(myFragList)
 
                 grndPot = self.calc_grandPot(s, ene_eV, myInfo)
                 myLabel = open('label', 'r').read()
