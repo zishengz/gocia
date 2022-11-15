@@ -174,7 +174,7 @@ def grow_frag(
             # Grow fragment a proper bond length away from chosen atom
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
                 growVec = geom.rand_direction()
-                growVec[2] = np.abs(growVec)
+                growVec[2] = np.abs(growVec[2])
                 blda = geom.BLDA(
                     fragAtms.get_chemical_symbols()[0], #NEED TO IMPROVE : assumes first atom is bridle 
                     tmpInterfc_test.get_chemical_symbols()[i],
