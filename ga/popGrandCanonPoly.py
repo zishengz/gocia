@@ -341,9 +341,10 @@ class PopulationGrandCanonicalPoly:
             if mutType == 'leach':
                 ## TODO: detecting existing fragment species
                 ##       and only allow one of them ot be removed
-                species_kid = kid.get_fragList()
-                kid.get_adsAtoms().get_chemical_symbols()
-                kid.leachMut([l for l in self.chemPotDict if l in species_kid])
+                # species_kid = kid.get_fragList()
+                # kid.get_adsAtoms().get_chemical_symbols()
+                # kid.leachMut([l for l in self.chemPotDict if l in species_kid])
+                kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 'move':
                 kid.moveMut_frag([l for l in self.chemPotDict])
             if mutType == 'permute':
