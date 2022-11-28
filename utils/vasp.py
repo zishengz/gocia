@@ -26,7 +26,7 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True, zLim=None, substrate='../substrate.vasp'):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp'):
     for i in range(1, step+1):
         print(f'Optimization step: {i}')
         os.system(f'cp ../INCAR-{i} INCAR')
@@ -48,7 +48,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=True, zLim=None, substrate='../
             surf = Interface(
                 read('POSCAR'),
                 substrate,
-                zLim = input.zLim
+                zLim = zLim
             )
             if surf.has_outsideBox():
                 surf.del_outsideBox()
