@@ -3,6 +3,7 @@ import numpy as np
 from ase.io import read, write
 from gocia.geom import get_fragments, del_freeMol
 from gocia.interface import Interface
+from gocia.geom.frag import *
 
 
 def get_elems(poscar='POSCAR', potDict=None):
@@ -26,36 +27,44 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp'):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0]):
+    continueRunning = True
     for i in range(1, step+1):
-        print(f'Optimization step: {i}')
-        os.system(f'cp ../INCAR-{i} INCAR')
-        os.system(vasp_cmd)
-        if not is_vaspSuccess():
-            os.system('touch FAIL')
-            exit()
-        os.system(f'cp CONTCAR out-{i}.vasp')
-        if not chkMol:
-            os.system('cp CONTCAR POSCAR')
-        else:
-            write('POSCAR', del_freeMol(read('CONTCAR')))
-            # Make sure the final structure has no free molecule
-            if i == step:
-                if len(get_fragments(read('CONTCAR'))) > 1:
-                    os.system('touch BADSTRUCTURE')
-                    exit()
-        if zLim is not None:
-            surf = Interface(
-                read('POSCAR'),
-                substrate,
-                zLim = zLim
-            )
-            if surf.has_outsideBox():
-                surf.del_outsideBox()
-                surf.write('POSCAR')
+        if continueRunning:
+            print(f'Optimization step: {i}')
+            os.system(f'cp ../INCAR-{i} INCAR')
+            os.system(vasp_cmd)
+            if not is_vaspSuccess():
+                os.system('touch FAIL')
+                exit()
+            os.system(f'cp CONTCAR out-{i}.vasp')
+            if not chkMol:
+                os.system('cp CONTCAR POSCAR')
+            else:
+                geom_tmp, list_del = del_freeMol(read('CONTCAR'), list_keep=list_keep)
+                write('POSCAR', geom_tmp)
+                my_fraglist = read_frag(fn=fn_frag)
+                if my_fraglist is not None:
+                    update_frag_del(list_del, fn=fn_frag)
+                # Make sure the final structure has no free molecule
                 if i == step:
-                    os.system('touch BADSTRUCTURE')
-                    exit()
+                    if len(list_del) > 1:
+                        os.system('touch BADSTRUCTURE')
+                        continueRunning = False
+                        continue
+            if zLim is not None:
+                surf = Interface(
+                    read('POSCAR'),
+                    substrate,
+                    zLim = zLim
+                )
+                if surf.has_outsideBox():
+                    surf.del_outsideBox()
+                    surf.write('POSCAR')
+                    if i == step:
+                        os.system('touch BADSTRUCTURE')
+                        continueRunning = False
+                        continue
     os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 
