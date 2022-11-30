@@ -59,7 +59,14 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     zLim = zLim
                 )
                 if surf.has_outsideBox():
-                    surf.del_outsideBox()
+                    # TODO: This breaks fragments
+                    # need to modify
+                    my_fraglist = read_frag(fn=fn_frag)
+                    if my_fraglist is not None:
+                        surf.del_outsideBox_frag()
+                        write_frag(surf.get_fragList())
+                    else:
+                        surf.del_outsideBox()
                     surf.write('POSCAR')
                     if i == step:
                         os.system('touch BADSTRUCTURE')

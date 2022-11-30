@@ -289,15 +289,44 @@ class Interface:
         else:
             return False
 
-    def del_outsideBox(self):
+    def get_outsideBox(self):
+        # indeces are in adsAtoms list, not in allAtoms list!
         tmp = []
         ads = self.get_adsAtoms()
         for a in ads:
             if a.position[2] < min(self.zLim) or a.position[2] > max(self.zLim):
-                tmp.append(a.index)
-        if len(tmp) > 0:
-            del ads[tmp]
-            self.set_adsAtoms(ads)
+                tmp.append(a.index + len(self.get_allAtoms()) - len(self.get_adsAtoms()))
+        return tmp
+
+    def del_outsideBox(self):
+        list_del = self.get_outsideBox()
+        if len(list_del) > 0:
+            print('Delete ', list_del)
+            all = self.get_allAtoms()
+            del all[list_del]
+            self.set_allAtoms(all)
+
+    def del_outsideBox_frag(self):
+        list_del = self.get_outsideBox()
+        list_frag = self.get_fragList()
+        print(list_del)
+        list_del_frag = []
+        list_frag_new = []
+        for f in list_frag:
+            for d in list_del:
+                if d in f:
+                    list_del_frag += f
+                    continue
+            list_frag_new.append(
+                [ii - len(list_del_frag) for ii in f]
+                )
+        print('list including whole fragments', list_del_frag)
+        if len(list_del_frag) > 0:
+            print('Delete ', list_del_frag)
+            all = self.get_allAtoms()
+            del all[list_del_frag]
+            self.set_allAtoms(all)
+            self.set_fragList(list_frag_new)
 
     def has_badContact(self, tolerance=0):
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
@@ -490,10 +519,10 @@ class Interface:
         self.set_allPos(pos)
 
 
-    def rattleMut_frag(self, stdev = 0.25, mutRate = 0.5, zEnhance=True, toler=0.5):
+    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.5):
 
         # Initialize as before
-        print(' |- Rattle mutation!')
+        print(' |- Rattle mutation! -- fragments')
         tmpAtoms = self.get_allAtoms()
         pos = tmpAtoms.get_positions()
         zBuf = self.get_bufAtoms().get_positions()[:,2]
@@ -533,7 +562,7 @@ class Interface:
                     # Make nicely oriented atoms object
                     fragTemp = ''
                     if fragName == 'CO':
-                        fragTemp = Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)])
+                        fragTemp = Atoms('CO',[(0, 0, 0),(0, 0, 1.43)])
                     elif fragName == 'H':
                         fragTemp = Atoms('H',[(0,0,0)])
                     elif fragName == 'H2O':
@@ -547,8 +576,8 @@ class Interface:
                     # Rotate positions about z-axis
                     rot = R.from_rotvec(- random.random()*np.pi * np.array([0, 0, 1]))
                     posTemp = rot.apply(posTemp)
-                    # Rotate positions by random angle (less than pi/2) about random axis 
-                    rot = R.from_rotvec(- random.random()*np.pi/3 * geom.rand_direction())
+                    # Rotate positions by random angle (less than 45 deg) about random axis 
+                    rot = R.from_rotvec(- random.random()*np.pi/4 * geom.rand_direction())
                     posTemp = rot.apply(posTemp)
                     # Set positions relative to rattled bridle atom position
                     posNew = posTemp + bridPos

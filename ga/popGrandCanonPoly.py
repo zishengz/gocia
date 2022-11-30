@@ -304,12 +304,13 @@ class PopulationGrandCanonicalPoly:
             patFragStr = self.gadb.get(id=pater).get('adsFrags')
             matInfo = self.convertFragStrToInfo(matFragStr)
             patInfo = self.convertFragStrToInfo(patFragStr)
-            print(matInfo['adsorbate_fragments'])
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
             kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75)
             parent = random.choice([surf1, surf2]).copy()
-        print('PARENTS: %i and %i' % (mater, pater))
+            print('PARENTS: %i and %i' % (mater, pater))
+        print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
+        print(patInfo['adsorbate_fragments'], [patAtms[l].get_chemical_formula() for l in patInfo['adsorbate_fragments']])
         mutType = ''
         if srtDist_similar_zz(matAtms, patAtms)\
                 or srtDist_similar_zz(matAtms, kid.get_allAtoms())\
