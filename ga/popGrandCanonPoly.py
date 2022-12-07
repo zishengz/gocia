@@ -327,6 +327,7 @@ class PopulationGrandCanonicalPoly:
             if moveOn: mutList.append('move')
             if permuteOn: mutList.append('permute')
             if transOn: mutList.append('translate')
+            print('Mutation operator list: ', mutList)
 
             mutType = np.random.choice(mutList)
             if mutType == 'rattle':

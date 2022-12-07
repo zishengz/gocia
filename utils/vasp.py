@@ -43,8 +43,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             else:
                 geom_tmp, list_del = del_freeMol(read('CONTCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
-                my_fraglist = read_frag(fn=fn_frag)
-                if my_fraglist is not None:
+                my_fragList = read_frag(fn=fn_frag)
+                if my_fragList is not None:
                     update_frag_del(list_del, fn=fn_frag)
                 # Make sure the final structure has no free molecule
                 if i == step:
@@ -61,8 +61,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 if surf.has_outsideBox():
                     # TODO: This breaks fragments
                     # need to modify
-                    my_fraglist = read_frag(fn=fn_frag)
-                    if my_fraglist is not None:
+                    my_fragList = read_frag(fn=fn_frag)
+                    if my_fragList is not None:
                         surf.del_outsideBox_frag()
                         write_frag(surf.get_fragList())
                     else:
@@ -72,6 +72,20 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                         os.system('touch BADSTRUCTURE')
                         continueRunning = False
                         continue
+            my_fragList = read_frag
+            if my_fragList is not None:
+                struct = read('POSCAR')
+                my_fragAtoms = [struct[f] for f in my_fragList]
+                # Check connectivity
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if len(get_fragments(my_fragAtoms[i]))!=1:
+                        list_del += my_fragList[i]
+                if len(my_fragList) > 0:
+                    print('Remove broken fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
     os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 

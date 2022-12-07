@@ -31,6 +31,7 @@ class Interface:
                  fixList=None,
                  bufList=None,
                  adsList=None,
+                 fragList=None,
                  cellParam=None,
                  pbcParam=None,
                  zLim=None,
@@ -79,6 +80,12 @@ class Interface:
         else:
             self.info={}
 
+        if fragList is not None:
+            self.fragList = fragList
+            self.set_fragList(self.fragList)
+        else:
+            self.fragList = None
+
     def __len__(self):
         return len(self.allAtoms)
 
@@ -124,9 +131,11 @@ class Interface:
         # Obtain atoms and list of fragments in adsorbate
         if atoms is not None:
             adsAtoms = atoms.copy()
+            fragList = adsAtoms.info['adsorbate_fragments']
         else:
             adsAtoms = self.get_adsAtoms().copy()
-        fragList = adsAtoms.info['adsorbate_fragments']
+            fragList = self.get_fragList()
+        #print([self.get_allAtoms()[f].get_chemical_formula() for f in fragList])
 
         if not fragList:
             adsSort = adsAtoms
@@ -164,7 +173,21 @@ class Interface:
             print(' |-Fragment:     ',self.get_adsAtoms().symbols)
         print(' |-Buffer region:   Z = %.3f to %.3f'%\
             (self.zLim[0], self.zLim[1]))
-        print(' |-Info:           ', self.info, '\n')
+        print(' |-Info:           ', self.info)
+        if self.fragList is not None:
+            print([self.get_allAtoms()[f].get_chemical_formula()for f in self.fragList])
+        print('\n')
+
+    def has_broken_frag(self):
+        my_fragList = self.get_fragList()
+        my_fragAtoms = [self.get_allAtoms()[f] for f in my_fragList]
+        # Check connectivity
+        flags = [len(geom.get_fragments(ads))==1 for ads in my_fragAtoms]
+        if False in flags:
+            return True
+        else:
+            return False
+
         
     def get_atomic_numbers(self):
         return self.allAtoms.get_atomic_numbers()
@@ -365,10 +388,19 @@ class Interface:
         tmpAtoms.extend(tmpAdsAtoms)
         tmpAtoms.info = tmpAdsAtoms.info # all atoms take on info from sorted new adsorbate atoms
         self.set_allAtoms(tmpAtoms)
+        self.set_fragList(tmpAdsAtoms.info['adsorbate_fragments'])
 
     def set_fragList(self, my_fragList):
         # sets the list of fragments as provided
-        self.info['adsorbate_fragments'] = my_fragList.copy()
+        if type(my_fragList) is list:
+            self.info['adsorbate_fragments'] = my_fragList
+            self.fragList = my_fragList
+        elif type(my_fragList) is str:
+            try:
+                self.info['adsorbate_fragments'] = eval(my_fragList)
+                self.fragList = eval(my_fragList)
+            except:
+                print('fragLIst must be list or str!')
 
     # def set_positions(self, newPos):
     #     tmpAtoms = self.get_allAtoms()
@@ -625,7 +657,7 @@ class Interface:
         tmpAds.wrap()
         self.set_adsAtoms(tmpAds)
 
-    def permuteMut_frag(self):
+    def permuteMut_frag_old(self):
         # Obtain adsorbate atoms and their center of mass within the unit cell
         tmpAds = self.get_adsAtoms()
         myCell = np.array(tmpAds.get_cell())
@@ -668,6 +700,56 @@ class Interface:
         tmpAdsInd = [i for i in list(range(len(tmpAds)))]
         tmpAds.info['adsorbate_fragments'] = frag.remake(tmpAds.info['adsorbate_fragments'], tmpAdsInd, [a + len(self.get_subAtoms()) for a in tmpAdsInd])
         self.set_adsAtoms(tmpAds)
+
+    def permuteMut_frag(self):
+        # Obtain adsorbate atoms and their center of mass within the unit cell
+        tmpAds = self.get_adsAtoms()
+        myCell = np.array(tmpAds.get_cell())
+        adsCom = tmpAds.get_center_of_mass()
+        adsCom = geom.cart2frac(adsCom, myCell)
+        # Choose parameters designating two quadrants to permute
+        myAxis = np.random.choice([0,1],size=1)[0]
+        myBase = np.random.choice([0,1],size=1)[0]
+        print(' |- Permutation mutation!')
+        # Reindex frags from All to Ads: [[144,146],[145,147]] to [[0, 2], [1, 3]] 
+        fragList_tmpAds = frag.remake(self.get_fragList(),self.get_adsList(),[a - len(self.get_subAtoms()) for a in self.get_adsList()])
+        # Get atoms which bridle fragments and their relative positions
+        bridleAtms = [a - len(self.get_subAtoms()) for a in self.get_bridList()] # length of bridleList should equal length of fragList_tmpAds
+        tmpAdsFrac = geom.cart2frac(tmpAds.get_positions(), myCell)
+        # Remove fragments which aren't bridled within choosen quadrants
+        if myBase == 0:
+            del tmpAds[[i for f in range(len(fragList_tmpAds)) for i in fragList_tmpAds[f] if tmpAdsFrac[bridleAtms[f]][myAxis] > adsCom[myAxis] ]]
+            fragList_tmpAds = [fragList_tmpAds[f] for f in range(len(fragList_tmpAds)) if not tmpAdsFrac[bridleAtms[f]][myAxis] > adsCom[myAxis] ]
+        else: 
+            del tmpAds[[i for f in range(len(fragList_tmpAds)) for i in fragList_tmpAds[f] if tmpAdsFrac[bridleAtms[f]][myAxis] < adsCom[myAxis] ]]
+            fragList_tmpAds = [fragList_tmpAds[f] for f in range(len(fragList_tmpAds)) if not tmpAdsFrac[bridleAtms[f]][myAxis] < adsCom[myAxis] ]
+        # Reindex remaining fragments 
+        if not len(fragList_tmpAds) > 0:
+            fragList_tmpAds = []
+        else:
+            fragList_tmpAds = frag.remake(fragList_tmpAds,frag.flatsort(fragList_tmpAds),range(len(tmpAds)))
+        # Duplicate and translate adsorbate atoms
+        tmpTmp = tmpAds.copy()
+        tmpTmp.set_positions(tmpTmp.get_positions() + myCell[myAxis]/2)
+        tmpAds.extend(tmpTmp) 
+        # Make fragment list including originals and duplicates 
+        flat = frag.flatten(fragList_tmpAds)
+        fill = flat + [len(flat) + i for frag in fragList_tmpAds for i in frag]
+        fragList_dup = fragList_tmpAds*2
+        fragList_dup = frag.refill(fragList_dup,fill)
+        #fragList_dup = frag.transposeUp(fragList_dup, self)
+        tmpAds.info['adsorbate_fragments'] = fragList_dup
+        self.set_fragList(fragList_dup)
+        print(fragList_dup)
+        # Clean-up adsorbate atoms
+        tmpAds = self.sortAds_frag(tmpAds)
+        tmpAds.wrap()
+        # Reindex frags from Ads to All: [[0, 2], [1, 3]] to [[144,146],[145,147]] 
+        tmpAdsInd = [i for i in list(range(len(tmpAds)))]
+        fragList_final = frag.remake(tmpAds.info['adsorbate_fragments'], tmpAdsInd, [a + len(self.get_subAtoms()) for a in tmpAdsInd])
+        tmpAds.info['adsorbate_fragments'] = fragList_final
+        self.set_adsAtoms(tmpAds)
+        self.set_fragList(fragList_final)
 
     def leachMut(self, elemList):
         print(' |- Leaching mutation:', end = '\t')
@@ -717,6 +799,8 @@ class Interface:
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
     def moveMut_frag(self, fragPool):
+        # DO NOT USE IT FOR NOW!
+        # The popGrandCanonPoly has a better implementation which includes constraints
         print(' |- Move mutation (Leach & Grow)', end = '\n')
         tmpInterfc = self.copy()
         myFrag = np.random.choice(fragPool, size=1)[0]
