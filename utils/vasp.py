@@ -72,7 +72,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                         os.system('touch BADSTRUCTURE')
                         continueRunning = False
                         continue
-            my_fragList = read_frag
+            my_fragList = read_frag(fn=fn_frag)
             if my_fragList is not None:
                 struct = read('POSCAR')
                 my_fragAtoms = [struct[f] for f in my_fragList]
