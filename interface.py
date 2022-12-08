@@ -488,7 +488,9 @@ class Interface:
         else:
             fragFlatSort = frag.flatsort(delFragList)
             reindexList = list(range(len(self.get_subAtoms()),int(len(self.get_subAtoms())+len(fragFlatSort))))
-            tmpAtoms.info['adsorbate_fragments'] = frag.remake(delFragList,fragFlatSort,reindexList)
+            new_fragList = frag.remake(delFragList,fragFlatSort,reindexList)
+            tmpAtoms.info['adsorbate_fragments'] = new_fragList
+            self.set_fragList(new_fragList)
         self.set_allAtoms(tmpAtoms) # Do we need to sort before setting? Currently it keeps the same order just with fragments removed
 
     def detect_fragList(self, scale=1.0, update = False):
