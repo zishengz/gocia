@@ -198,6 +198,14 @@ def get_fragments(atoms, scale = 1.0):
                     break
             if flag == True:
                 break
+
+    if sum([len(f) for f in frags]) < len(atoms):
+        #print('adding back single atoms...')
+        frag_single = []
+        for i in range(len(atoms)):
+            if not any(i in l for l in frags):
+                frag_single.append([i])
+        frags += frag_single
     return frags
     
 def del_freeMol(atoms, list_keep=[0], scale = 1.0):
@@ -211,3 +219,21 @@ def del_freeMol(atoms, list_keep=[0], scale = 1.0):
                 deadList+=l
         del tmpAtoms[deadList]
     return tmpAtoms, deadList
+
+
+def detect_bond_between_adsFrag(atoms, fragList):
+    fragAtoms = [atoms[f] for f in fragList]
+    bondList = []
+    for i in range(len(fragAtoms)):
+        for j in range(len(fragAtoms)):
+            if i<j:
+                bonds_i = [set(l[:2]) for l in get_bondpairs(fragAtoms[i])]
+                bonds_j = [set(l[:2]) for l in get_bondpairs(fragAtoms[j])]
+                bonds_j = [set([i + len(fragAtoms[i]) for i in l]) for l in bonds_j]
+                frags_combined = fragAtoms[i] + fragAtoms[j]
+                bonds_merge = bonds_i + bonds_j
+                bonds_c = [set(l[:2]) for l in get_bondpairs(frags_combined)]
+                bonds_inter = [l for l in bonds_c if l not in bonds_merge]
+                if len(bonds_inter) > 0:
+                    bondList.append([i, j, bonds_inter])
+    return bondList
