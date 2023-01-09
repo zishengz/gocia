@@ -88,6 +88,7 @@ class PopulationGrandCanonicalPoly:
             if s in self.chemPotDict:   # Might need to worry here about being same fragment but not matching as different order?
                 myPot -= self.chemPotDict[s]
             else:
+                print(f'{s} not in the chemPotDict!')
                 print('Oops, need to worry about order of atoms in fragment in calc_grandPot()')
         return myPot
 
