@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import ast
 from ase.db import connect
 from gocia.interface import Interface
@@ -87,6 +88,7 @@ class PopulationGrandCanonicalPoly:
             if s in self.chemPotDict:   # Might need to worry here about being same fragment but not matching as different order?
                 myPot -= self.chemPotDict[s]
             else:
+                print(f'{s} not in the chemPotDict!')
                 print('Oops, need to worry about order of atoms in fragment in calc_grandPot()')
         return myPot
 
@@ -229,6 +231,14 @@ class PopulationGrandCanonicalPoly:
             info['adsorbate_fragments'] = []
         return info
 
+    def convertFragListToInfo(self, fragList):
+        info = {}
+        if fragList is not None:
+            info['adsorbate_fragments'] = fragList
+        else:
+            info['adsorbate_fragments'] = []
+        return info
+
     def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
         kid, parent = None, None
         mater, pater = 0, 0
@@ -295,69 +305,87 @@ class PopulationGrandCanonicalPoly:
             patFragStr = self.gadb.get(id=pater).get('adsFrags')
             matInfo = self.convertFragStrToInfo(matFragStr)
             patInfo = self.convertFragStrToInfo(patFragStr)
-            print(matInfo['adsorbate_fragments'])
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
             kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75)
-            parent = surf1.copy()
-        print('PARENTS: %i and %i' % (mater, pater))
-        myMutate = ''
+            parent = random.choice([surf1, surf2]).copy()
+            print('PARENTS: %i and %i' % (mater, pater))
+        print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
+        print(patInfo['adsorbate_fragments'], [patAtms[l].get_chemical_formula() for l in patInfo['adsorbate_fragments']])
+        mutType = ''
         if srtDist_similar_zz(matAtms, patAtms)\
                 or srtDist_similar_zz(matAtms, kid.get_allAtoms())\
                 or srtDist_similar_zz(patAtms, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
+
         if np.random.rand() < mutRate:
-            mutType = np.random.choice([0, 1, 2, 3, 4, 5], size=1)[0]
-            if mutType == 0 and rattleOn:
-                myMutate = 'rattle'
+            # collect the operatoins to use
+            mutList = []
+            if rattleOn: mutList.append('rattle')
+            if growOn: mutList.append('grow')
+            if leachOn: mutList.append('leach')
+            if moveOn: mutList.append('move')
+            if permuteOn: mutList.append('permute')
+            if transOn: mutList.append('translate')
+            print('Mutation operator list: ', mutList)
+
+            mutType = np.random.choice(mutList)
+            if mutType == 'rattle':
+                kid.rattleMut_buffer()
                 kid.rattleMut_frag()
-            if mutType == 1 and growOn:
-                myMutate = 'grow'
+            if mutType == 'grow':
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
                     tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
-            if mutType == 2 and leachOn:
-                myMutate = 'leach'
+            if mutType == 'leach':
+                ## TODO: detecting existing fragment species
+                ##       and only allow one of them ot be removed
+                # species_kid = kid.get_fragList()
+                # kid.get_adsAtoms().get_chemical_symbols()
+                # kid.leachMut([l for l in self.chemPotDict if l in species_kid])
                 kid.leachMut_frag([l for l in self.chemPotDict])
-            if mutType == 3 and permuteOn:
-                myMutate = 'permute'
+            if mutType == 'move':
+                #kid.moveMut_frag([l for l in self.chemPotDict])
+                myFrag = np.random.choice([l for l in self.chemPotDict], size=1)[0]
+                kid.leachMut_frag([myFrag])
+                # the grow step needs info of the constraints
+                # otherwise very prone to dead loop!
+                kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
+                                bondRejList=bondRejList, constrainTop=constrainTop)
+            if mutType == 'permute':
                 kid.permuteMut_frag()
-            if mutType == 4 and transOn:
-                myMutate = 'translate'
+            if mutType == 'translate':
                 kid.transMut(transVec=transVec)
-            if mutType == 5 and moveOn:
-                myMutate = 'move'
-                kid.moveMut_frag([l for l in self.chemPotDict])
         if len(kid.get_adsList()) <= 1:
-            myMutate = 'init'
+            mutType = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
+            kid.rattleMut_buffer()
             kid.rattleMut_frag()
             kid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
-        open('label', 'w').write('%i %i %s' % (mater, pater, myMutate))
+        open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-        ### HOW DO I GET FRAGMENTS OUT OF A VASP RESULT?
-        ## Something like label for now?
-    def findFragList(s):
-        #Maybe just assume same as kid but then check bonding okay?
-        if s:
-            print('# do something')
-        # Definitely need to check contacts:
-            # We'd expect bond between atoms in fragment and if not then broke bond
-            # We'd also expect some bond between bridle atom and anchor atom, maybe more for bridle atom
-            # Could two fragments combine to make a new fragment? How evaluate?
+
+    # TODO: connectivity checker and customizable "rules"
+        # needed for cases where there are reactive events between frags during local opt
+        # We'd expect bond between atoms in fragment and if not then broke bond
+        # We'd also expect some bond between bridle atom and anchor atom, maybe more for bridle atom
+            # ZZ: There may be changes in the binding site/mode. But if it is still on the usrface it should be fine
+        # Could two fragments combine to make a new fragment? How evaluate?
+            # ZZ: removing the substrate, and clustering into fragments by connectivity. Then decide.
+        # How to calculate grand potential when there are new unexpected fragments???
 
 
-    def add_vaspResult(self, vaspdir='.'):
+    def add_vaspResult(self, vaspdir='.', isAlive=1):
         import os
         cwdFiles = os.listdir(vaspdir)
         if 'OSZICAR' in cwdFiles\
@@ -378,8 +406,23 @@ class PopulationGrandCanonicalPoly:
                     else:
                         mag = 0
                 ene_eV = s.get_potential_energy()
-                myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
-                myInfo = self.convertFragStrToInfo(myFragList)
+
+                # read or detect the fragment list
+                try:
+                    myFragList = eval(open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n'))
+                    if max([i for f in myFragList for i in f]) >= len(s):
+                        print('Bad fragList! Detecting from connectivity...')
+                        myFragList = None
+                except:
+                    print('No fragList! Detecting from connectivity...')
+                    myFragList = None
+                if myFragList == None:
+                    surf_tmp = Interface(s, self.substrate)
+                    myFragList = surf_tmp.detect_fragList()
+                    del surf_tmp
+                myInfo = self.convertFragListToInfo(myFragList)
+                myFragList = str(myFragList)
+
                 grndPot = self.calc_grandPot(s, ene_eV, myInfo)
                 myLabel = open('label', 'r').read()
                 print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
@@ -397,7 +440,7 @@ class PopulationGrandCanonicalPoly:
                         grandPot=grndPot,
                         mated=0,
                         done=1,
-                        alive=1,
+                        alive=isAlive,
                         label=myLabel,
                         adsFrags=myFragList 
                     )
@@ -417,7 +460,7 @@ class PopulationGrandCanonicalPoly:
                     )
 
 
-    def add_vaspResult_SC(self, u_she=0, vaspdir='.'):
+    def add_vaspResult_SC(self, u_she=0, vaspdir='.', isAlive=1):
         import os
         cwdFiles = os.listdir(vaspdir)
         if 'parabola.dat' in cwdFiles:
@@ -427,7 +470,7 @@ class PopulationGrandCanonicalPoly:
             s = read('%s/OUTCAR' % vaspdir, index='-1')
             dirname = os.getcwd().split('/')[-1]
             myFragList = open('%s/fragments' % vaspdir, 'r').readlines()[0].rstrip('\n')
-            myInfo = self.convertFragStrToInfo(myFragList)
+            myInfo = self.convertFragListToInfo(myFragList)
             grndPot = self.calc_grandPot(s, ene_sc/2, myInfo)
             try:
                 mag = s.get_magnetic_moment()
@@ -455,7 +498,7 @@ class PopulationGrandCanonicalPoly:
                     c=c,
                     mated=0,
                     done=1,
-                    alive=1,
+                    alive=isAlive,
                     label=myLabel,
                     adsFrags=myFragList 
                 )

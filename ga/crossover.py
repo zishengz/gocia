@@ -170,8 +170,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
     if newSurf is not None:
         print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))
-    return newSurf
-
+    return newSurf    
 
 def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
     # Get relevant positions from mother and father surfaces
@@ -238,8 +237,8 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
         matFragList = frag.transposeDown(surf1.get_fragList(), surf1)
         patFragList = frag.transposeDown(surf2.get_fragList(), surf2)
 
-        print('matFragList: %s' % matFragList)
-        print('patFragList: %s' % patFragList)
+        # print('matFragList: ', matFragList, [matAds[f].get_chemical_formula() for f in matFragList])
+        # print('patFragList: ', patFragList, [patAds[f].get_chemical_formula() for f in patFragList])
 
         # Select proper fragments from mother/father
         newMatFragList, newPatFragList = [], []
@@ -248,28 +247,33 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
             if matDist[i] <= 0:
                 matFrag = matFragList[i]
                 newMatFragList.append(matFrag)
-                newMatFragAtms += matAds[[i for i in matFrag]]
+                newMatFragAtms.extend(matAds[matFrag])
         for i in range(len(patDist)):
             if patDist[i] > 0:
                 patFrag = patFragList[i]
                 newPatFragList.append(patFrag)
-                newPatFragAtms += patAds[[i for i in patFrag]]
+                newPatFragAtms.extend(patAds[patFrag])
 
         # Condense and sort each
         if len(newMatFragAtms) > 0:
             newMatFragList = frag.remake(newMatFragList,frag.flatsort(newMatFragList),range(len(newMatFragAtms))) 
             newMatFragAtms = sort(newMatFragAtms)
+            #print([newMatFragAtms[f].get_chemical_formula() for f in newMatFragList])
         if len(newPatFragAtms) > 0:
             newPatFragList = frag.remake(newPatFragList,frag.flatsort(newPatFragList),range(len(newPatFragAtms))) 
             newPatFragAtms = sort(newPatFragAtms) 
+            #print([newPatFragAtms[f].get_chemical_formula() for f in newPatFragList])
 
         # Fuse together
         newStructure = newMatFragList + newPatFragList
         newContents = frag.flatten(newMatFragList) + [len(frag.flatten(newMatFragList)) + i for f in newPatFragList for i in f]
         newFragList = frag.refill(newStructure,newContents)
         newFragAtms = newMatFragAtms + newPatFragAtms
+        #print([newFragAtms[f].get_chemical_formula() for f in newFragList])
 
         # Transpose indices up to all interface atoms and set fragment atoms
+        kid_fragList = frag.transposeUp(newFragList, childSurf)
+        childSurf.set_fragList(kid_fragList)
         newFragAtms.info['adsorbate_fragments'] = frag.transposeUp(newFragList, childSurf)
         childSurf.set_adsAtoms_frag(newFragAtms)
         childSurf.wrap()
@@ -283,4 +287,3 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
         print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))
     return childSurf
-    

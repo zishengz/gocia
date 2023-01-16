@@ -174,12 +174,14 @@ def grow_frag(
             # Grow fragment a proper bond length away from chosen atom
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
                 growVec = geom.rand_direction()
+                growVec[2] = np.abs(growVec[2])
                 blda = geom.BLDA(
                     fragAtms.get_chemical_symbols()[0], #NEED TO IMPROVE : assumes first atom is bridle 
                     tmpInterfc_test.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
                 )
                 growVec *= blda
+                ## TODO: add rotation of the frag according to growVec
                 coord = tmpInterfc_test.get_pos()[i] + growVec
                 #print(blda, growVec, coord)
                 #print(i, tmpInterfc.get_pos()[i])
@@ -197,6 +199,11 @@ def grow_frag(
             badStructure = False
             tmpInterfc = tmpInterfc_test.copy()
         n_attempts += 1
+        # prevent dead loop
+        if n_attempts >= 10000:
+            print(
+                'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            return None
     tmpInterfc.sortAds_frag()
     print('%i\tplacements| %i\ttabula rasa' % (n_place, n_attempts - 1)) # what does this line supposed to communicate?
     if ljopt:

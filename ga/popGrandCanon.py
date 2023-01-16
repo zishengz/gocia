@@ -249,7 +249,8 @@ class PopulationGrandCanonical:
                 kid.growMut([l for l in self.chemPotDict])
             if mutType == 2 and leachOn:
                 myMutate = 'leach'
-                kid.leachMut([l for l in self.chemPotDict])
+                kid.leachMut([l for l in self.chemPotDict\
+                    if l in kid.get_adsAtoms().get_chemical_symbols()])
             if mutType == 3 and permuteOn:
                 myMutate = 'permute'
                 kid.permuteMut()
@@ -279,46 +280,52 @@ class PopulationGrandCanonical:
             kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
-        myMutate = ''
+        mutType = ''
         if srtDist_similar_zz(a1, a2)\
                 or srtDist_similar_zz(a1, kid.get_allAtoms())\
                 or srtDist_similar_zz(a2, kid.get_allAtoms()):
             print(' |- TOO SIMILAR!')
             mutRate = 1
-        if np.random.rand() < mutRate:
-            mutType = np.random.choice([0, 1, 2, 3, 4], size=1)[0]
-            if mutType == 0 and rattleOn:
-                myMutate = 'rattle'
+
+        if len(kid.get_adsList()) > 1 and np.random.rand() < mutRate:
+            # collect the operatoins to use
+            mutList = []
+            if rattleOn: mutList.append('rattle')
+            if growOn: mutList.append('grow')
+            if leachOn: mutList.append('leach')
+            if permuteOn: mutList.append('permute')
+            if transOn: mutList.append('translate')
+
+            mutType = np.random.choice(mutList)
+            if mutType == 'rattle':
                 kid.rattleMut()
-            if mutType == 1 and growOn:
-                myMutate = 'grow'
+            if mutType == 'grow':
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
                     tmpKid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
-            if mutType == 2 and leachOn:
-                myMutate = 'leach'
-                kid.leachMut([l for l in self.chemPotDict])
-            if mutType == 3 and permuteOn:
-                myMutate = 'permute'
+            if mutType == 'leach':
+                species_kid = kid.get_adsAtoms().get_chemical_symbols()
+                kid.leachMut([l for l in self.chemPotDict if l in species_kid])
+            if mutType == 'permute':
                 kid.permuteMut()
-            if mutType == 4 and transOn:
-                myMutate = 'translate'
+            if mutType == 'translate':
                 kid.transMut(transVec=transVec)
         if len(kid.get_adsList()) <= 1:
-            myMutate = 'init'
+            mutType = 'init'
             print(' |- Bare substrate, BAD!')
             kid = parent.copy()
             kid.rattleMut()
-            kid.growMut([l for l in self.chemPotDict])
-        open('label', 'w').write('%i %i %s' % (mater, pater, myMutate))
+            kid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                                bondRejList=bondRejList, constrainTop=constrainTop)
+        open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
 
-    def add_vaspResult(self, vaspdir='.'):
+    def add_vaspResult(self, vaspdir='.', isAlive=1):
         import os
         cwdFiles = os.listdir(vaspdir)
         if 'OSZICAR' in cwdFiles\
@@ -356,7 +363,7 @@ class PopulationGrandCanonical:
                         grandPot=grndPot,
                         mated=0,
                         done=1,
-                        alive=1,
+                        alive=isAlive,
                         label=myLabel
                     )
                 else:

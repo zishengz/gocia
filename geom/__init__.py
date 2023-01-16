@@ -183,6 +183,8 @@ def frac2cart(fracPos, cell):
     return np.dot(fracPos, cell)
 
 def get_fragments(atoms, scale = 1.0):
+    if len(atoms) == 1:
+        return [[0]]    
     bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale)]
     frags = bps.copy()
     while sum([len(i) for i in frags]) > len(atoms):
@@ -196,15 +198,42 @@ def get_fragments(atoms, scale = 1.0):
                     break
             if flag == True:
                 break
+
+    if sum([len(f) for f in frags]) < len(atoms):
+        #print('adding back single atoms...')
+        frag_single = []
+        for i in range(len(atoms)):
+            if not any(i in l for l in frags):
+                frag_single.append([i])
+        frags += frag_single
     return frags
     
-def del_freeMol(atoms, scale = 1.0):
+def del_freeMol(atoms, list_keep=[0], scale = 1.0):
     tmpAtoms = atoms.copy()
     frags = get_fragments(tmpAtoms)
+    deadList = []
     if len(frags) > 1:
-        deadList = []
-        for l in frags[1:]:
-            print(f'Remove mol: {tmpAtoms[l]}')
-            deadList+=l
+        for l in frags:
+            if not set(l) & set(list_keep):
+                print(f'Remove fragment: {tmpAtoms[l].get_chemical_symbols()}, {l}')
+                deadList+=l
         del tmpAtoms[deadList]
-    return tmpAtoms
+    return tmpAtoms, deadList
+
+
+def detect_bond_between_adsFrag(atoms, fragList):
+    fragAtoms = [atoms[f] for f in fragList]
+    bondList = []
+    for i in range(len(fragAtoms)):
+        for j in range(len(fragAtoms)):
+            if i<j:
+                bonds_i = [set(l[:2]) for l in get_bondpairs(fragAtoms[i])]
+                bonds_j = [set(l[:2]) for l in get_bondpairs(fragAtoms[j])]
+                bonds_j = [set([i + len(fragAtoms[i]) for i in l]) for l in bonds_j]
+                frags_combined = fragAtoms[i] + fragAtoms[j]
+                bonds_merge = bonds_i + bonds_j
+                bonds_c = [set(l[:2]) for l in get_bondpairs(frags_combined)]
+                bonds_inter = [l for l in bonds_c if l not in bonds_merge]
+                if len(bonds_inter) > 0:
+                    bondList.append([i, j, bonds_inter])
+    return bondList
