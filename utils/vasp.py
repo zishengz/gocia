@@ -27,12 +27,13 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0]):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None):
     continueRunning = True
     for i in range(1, step+1):
         if continueRunning:
             print(f'Optimization step: {i}')
             os.system(f'cp ../INCAR-{i} INCAR')
+            pos2pot(potPath, poscar=poscar, potDict=potDict)
             os.system(vasp_cmd)
             if not is_vaspSuccess():
                 os.system('touch FAIL')
