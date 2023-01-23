@@ -139,7 +139,7 @@ def grow_frag(
         while len(tmpInterfc_test) < len(interfc) + numAds and ind_curr < numFrags:
             fragAtms = copy.deepcopy(frags_to_add[ind_curr])
             # Obtain candidate atoms to anchor fragment and give them weights before selecting one
-            anchorChoices = tmpInterfc_test.get_bufList() + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
+            anchorChoices = tmpInterfc_test.get_bufList()# + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
             weights = np.ones(len(anchorChoices))
             # Same-fragment penalty
             # value of 0 has no effect on weighting
