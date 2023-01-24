@@ -332,8 +332,8 @@ class PopulationGrandCanonicalPoly:
 
             mutType = np.random.choice(mutList)
             if mutType == 'rattle':
-                kid.rattleMut_buffer()
                 kid.rattleMut_frag()
+                kid.rattleMut_buffer()
             if mutType == 'grow':
                 tmpKid = None
                 while tmpKid is None:

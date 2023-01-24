@@ -553,7 +553,7 @@ class Interface:
         self.set_allPos(pos)
 
 
-    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.5):
+    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.333):
 
         # Initialize as before
         print(' |- Rattle mutation! -- fragments')
