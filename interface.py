@@ -553,7 +553,7 @@ class Interface:
         self.set_allPos(pos)
 
 
-    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.333):
+    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.5):
 
         # Initialize as before
         print(' |- Rattle mutation! -- fragments')
@@ -621,7 +621,10 @@ class Interface:
                     # Keep structure unless it has bad contacts (might not even be necessary as didn't check before?)
                     tmpTest = self.copy()
                     tmpTest.set_allPos(pos)
-                    if not tmpTest.has_badContact(tolerance=toler): # Hmm do I need to check for bad contact in the buffer atoms?
+                    #if not tmpTest.has_badContact(tolerance=toler):
+                    if not geom.has_badContact(tmpTest.get_adsAtoms(), tolerance=0.5):
+                        # WG: Hmm do I need to check for bad contact in the buffer atoms?
+                        # ZZ: let us check only the adsorbates here. Otherwise we may have very bad contacts in the buffer which cause a dead loop
                         keepStructure = True 
         # Set positions
         self.set_allPos(pos)

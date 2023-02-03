@@ -29,16 +29,20 @@ def is_vaspSuccess(jobdir='.'):
 
 def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None):
     continueRunning = True
-    for i in range(1, step+1):
+    counter = 1
+    while counter <= step:
         if continueRunning:
-            print(f'Optimization step: {i}')
-            os.system(f'cp ../INCAR-{i} INCAR')
+            print(f'Optimization step: {counter}')
+            os.system(f'cp ../INCAR-{counter} INCAR')
             pos2pot(potPath, poscar=poscar, potDict=potDict)
             os.system(vasp_cmd)
             if not is_vaspSuccess():
                 os.system('touch FAIL')
                 exit()
-            os.system(f'cp CONTCAR out-{i}.vasp')
+            os.system(f'cp CONTCAR out-{counter}.vasp')
+            os.system(f'cp vasprun.xml vasprun-{counter}.xml')
+            atom_tmp = read('CONTCAR')
+            counter += 1
             if not chkMol:
                 os.system('cp CONTCAR POSCAR')
             else:
@@ -48,11 +52,6 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 if my_fragList is not None:
                     update_frag_del(list_del, fn=fn_frag)
                 # Make sure the final structure has no free molecule
-                if i == step:
-                    if len(list_del) > 1:
-                        os.system('touch BADSTRUCTURE')
-                        continueRunning = False
-                        continue
             if zLim is not None:
                 surf = Interface(
                     read('POSCAR'),
@@ -62,6 +61,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 if surf.has_outsideBox():
                     # TODO: This breaks fragments
                     # need to modify
+                    atom_tmp = read('POSCAR')
                     my_fragList = read_frag(fn=fn_frag)
                     if my_fragList is not None:
                         surf.del_outsideBox_frag()
@@ -69,10 +69,6 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
-                    if i == step:
-                        os.system('touch BADSTRUCTURE')
-                        continueRunning = False
-                        continue
             my_fragList = read_frag(fn=fn_frag)
             if my_fragList is not None:
                 struct = read('POSCAR')
@@ -87,6 +83,10 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
                     write('POSCAR', struct)
+            if len(atom_tmp) > len(read('POSCAR')) and counter > step:
+                print(f'Redo the last opt step due to removal of atoms {list_del}')
+                counter -= 1 # redo the last opt step if something is removed
+                continue
     os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 
