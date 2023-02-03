@@ -59,11 +59,10 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     zLim = zLim
                 )
                 if surf.has_outsideBox():
-                    # TODO: This breaks fragments
-                    # need to modify
                     atom_tmp = read('POSCAR')
                     my_fragList = read_frag(fn=fn_frag)
                     if my_fragList is not None:
+                        surf.set_fragList(my_fragList)
                         surf.del_outsideBox_frag()
                         write_frag(surf.get_fragList())
                     else:
