@@ -41,17 +41,33 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 exit()
             os.system(f'cp CONTCAR out-{counter}.vasp')
             os.system(f'cp vasprun.xml vasprun-{counter}.xml')
+            os.system('cp CONTCAR POSCAR')
             atom_tmp = read('CONTCAR')
             counter += 1
-            if not chkMol:
-                os.system('cp CONTCAR POSCAR')
-            else:
-                geom_tmp, list_del = del_freeMol(read('CONTCAR'), list_keep=list_keep)
+
+            my_fragList = read_frag(fn=fn_frag)
+            if my_fragList is not None:
+                struct = read('POSCAR')
+                my_fragAtoms = [struct[f] for f in my_fragList]
+                # Check connectivity
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if len(get_fragments(my_fragAtoms[i]))!=1:
+                        list_del += my_fragList[i]
+                if len(my_fragList) > 0:
+                    print('Remove broken fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
+
+            if chkMol:
+                geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
                 my_fragList = read_frag(fn=fn_frag)
                 if my_fragList is not None:
                     update_frag_del(list_del, fn=fn_frag)
                 # Make sure the final structure has no free molecule
+
             if zLim is not None:
                 surf = Interface(
                     read('POSCAR'),
@@ -68,6 +84,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
+
             my_fragList = read_frag(fn=fn_frag)
             if my_fragList is not None:
                 struct = read('POSCAR')
@@ -82,6 +99,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
                     write('POSCAR', struct)
+
             if len(atom_tmp) > len(read('POSCAR')) and counter > step:
                 print(f'Redo the last opt step due to removal of atoms {list_del}')
                 counter -= 1 # redo the last opt step if something is removed
