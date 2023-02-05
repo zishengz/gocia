@@ -53,8 +53,10 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 list_del = []
                 for i in range(len(my_fragList)):
                     if len(get_fragments(my_fragAtoms[i]))!=1:
-                        list_del += my_fragList[i]
-                if len(my_fragList) > 0:
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
@@ -64,7 +66,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
                 my_fragList = read_frag(fn=fn_frag)
-                if my_fragList is not None:
+                if my_fragList is not None and len(list_del) > 0:
                     update_frag_del(list_del, fn=fn_frag)
                 # Make sure the final structure has no free molecule
 
@@ -78,9 +80,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     atom_tmp = read('POSCAR')
                     my_fragList = read_frag(fn=fn_frag)
                     if my_fragList is not None:
-                        surf.set_fragList(my_fragList)
-                        surf.del_outsideBox_frag()
-                        write_frag(surf.get_fragList())
+                        surf.del_outsideBox_frag(fn_frag)
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
@@ -93,8 +93,10 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 list_del = []
                 for i in range(len(my_fragList)):
                     if len(get_fragments(my_fragAtoms[i]))!=1:
-                        list_del += my_fragList[i]
-                if len(my_fragList) > 0:
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]

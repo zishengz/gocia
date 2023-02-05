@@ -210,7 +210,7 @@ def get_fragments(atoms, scale = 1.0):
     
 def del_freeMol(atoms, list_keep=[0], scale = 1.0):
     tmpAtoms = atoms.copy()
-    frags = get_fragments(tmpAtoms)
+    frags = get_fragments(tmpAtoms, scale=scale)
     deadList = []
     if len(frags) > 1:
         for l in frags:

@@ -12,6 +12,7 @@ from gocia.data import elemSymbol, covalRadii
 from gocia import geom
 from gocia import frag
 from gocia.geom.build import grow_frag
+from gocia.geom.frag import read_frag, update_frag_del
 
 import ase.io as fio
 from ase.atoms import Atoms
@@ -329,7 +330,7 @@ class Interface:
             del all[list_del]
             self.set_allAtoms(all)
 
-    def del_outsideBox_frag(self):
+    def del_outsideBox_frag_old(self):
         list_del = self.get_outsideBox()
         list_frag = self.get_fragList()
         print(list_del)
@@ -350,6 +351,17 @@ class Interface:
             del all[list_del_frag]
             self.set_allAtoms(all)
             self.set_fragList(list_frag_new)
+
+    def del_outsideBox_frag(self, fn_frag='fragments'):
+        list_del = self.get_outsideBox()
+        if len(list_del) > 0:
+            print(f'Out-of-box atoms: {list_del}')
+            update_frag_del(list_del, fn_frag=fn_frag)
+            print('Delete ', list_del)
+            all = self.get_allAtoms()
+            del all[list_del]
+            self.set_allAtoms(all)
+            self.set_fragList(read_frag(fn_frag=fn_frag))
 
     def has_badContact(self, tolerance=0):
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
