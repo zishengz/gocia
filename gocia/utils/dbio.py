@@ -72,7 +72,7 @@ def vasp2db(nameKey='', excludeBAD=False):
             if 'fragments' in os.listdir(d):
                 fragments = open(d+'/fragments', 'r').readlines()[0].rstrip('\n')
             else:
-                fragments = []
+                fragments = '[]'
             myDb.write(
                 s,
                 eV=eV,

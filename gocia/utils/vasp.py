@@ -29,50 +29,22 @@ def is_vaspSuccess(jobdir='.'):
 
 def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None):
     continueRunning = True
-    for i in range(1, step+1):
+    counter = 1
+    while counter <= step:
         if continueRunning:
-            print(f'Optimization step: {i}')
-            os.system(f'cp ../INCAR-{i} INCAR')
+            print(f'Optimization step: {counter}')
+            os.system(f'cp ../INCAR-{counter} INCAR')
             pos2pot(potPath, poscar=poscar, potDict=potDict)
             os.system(vasp_cmd)
             if not is_vaspSuccess():
                 os.system('touch FAIL')
                 exit()
-            os.system(f'cp CONTCAR out-{i}.vasp')
-            if not chkMol:
-                os.system('cp CONTCAR POSCAR')
-            else:
-                geom_tmp, list_del = del_freeMol(read('CONTCAR'), list_keep=list_keep)
-                write('POSCAR', geom_tmp)
-                my_fragList = read_frag(fn=fn_frag)
-                if my_fragList is not None:
-                    update_frag_del(list_del, fn=fn_frag)
-                # Make sure the final structure has no free molecule
-                if i == step:
-                    if len(list_del) > 1:
-                        os.system('touch BADSTRUCTURE')
-                        continueRunning = False
-                        continue
-            if zLim is not None:
-                surf = Interface(
-                    read('POSCAR'),
-                    substrate,
-                    zLim = zLim
-                )
-                if surf.has_outsideBox():
-                    # TODO: This breaks fragments
-                    # need to modify
-                    my_fragList = read_frag(fn=fn_frag)
-                    if my_fragList is not None:
-                        surf.del_outsideBox_frag()
-                        write_frag(surf.get_fragList())
-                    else:
-                        surf.del_outsideBox()
-                    surf.write('POSCAR')
-                    if i == step:
-                        os.system('touch BADSTRUCTURE')
-                        continueRunning = False
-                        continue
+            os.system(f'cp CONTCAR out-{counter}.vasp')
+            os.system(f'cp vasprun.xml vasprun-{counter}.xml')
+            os.system('cp CONTCAR POSCAR')
+            atom_tmp = read('CONTCAR')
+            counter += 1
+
             my_fragList = read_frag(fn=fn_frag)
             if my_fragList is not None:
                 struct = read('POSCAR')
@@ -81,12 +53,59 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 list_del = []
                 for i in range(len(my_fragList)):
                     if len(get_fragments(my_fragAtoms[i]))!=1:
-                        list_del += my_fragList[i]
-                if len(my_fragList) > 0:
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
                     write('POSCAR', struct)
+
+            if chkMol:
+                geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
+                write('POSCAR', geom_tmp)
+                my_fragList = read_frag(fn=fn_frag)
+                if my_fragList is not None and len(list_del) > 0:
+                    update_frag_del(list_del, fn=fn_frag)
+                # Make sure the final structure has no free molecule
+
+            if zLim is not None:
+                surf = Interface(
+                    read('POSCAR'),
+                    substrate,
+                    zLim = zLim
+                )
+                if surf.has_outsideBox():
+                    atom_tmp = read('POSCAR')
+                    my_fragList = read_frag(fn=fn_frag)
+                    if my_fragList is not None:
+                        surf.del_outsideBox_frag(fn_frag)
+                    else:
+                        surf.del_outsideBox()
+                    surf.write('POSCAR')
+
+            my_fragList = read_frag(fn=fn_frag)
+            if my_fragList is not None:
+                struct = read('POSCAR')
+                my_fragAtoms = [struct[f] for f in my_fragList]
+                # Check connectivity
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if len(get_fragments(my_fragAtoms[i]))!=1:
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
+                    print('Remove broken fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
+
+            if len(atom_tmp) > len(read('POSCAR')) and counter > step:
+                print(f'Redo the last opt step due to removal of atoms {list_del}')
+                counter -= 1 # redo the last opt step if something is removed
+                continue
     os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
 
 

@@ -210,7 +210,7 @@ def get_fragments(atoms, scale = 1.0):
     
 def del_freeMol(atoms, list_keep=[0], scale = 1.0):
     tmpAtoms = atoms.copy()
-    frags = get_fragments(tmpAtoms)
+    frags = get_fragments(tmpAtoms, scale=scale)
     deadList = []
     if len(frags) > 1:
         for l in frags:
@@ -237,3 +237,22 @@ def detect_bond_between_adsFrag(atoms, fragList):
                 if len(bonds_inter) > 0:
                     bondList.append([i, j, bonds_inter])
     return bondList
+
+def get_covalRadii(atoms):
+        return [covalRadii[i] for i in atoms.numbers]
+
+def get_contactMat(atoms, scale=1.0):
+    '''
+    returns the standard covalent bondlength between all atoms
+    '''
+    cvRad = get_covalRadii(atoms)
+    contact = np.tile(cvRad, [len(cvRad), 1])
+    contact += contact.T
+    contact *= scale
+    np.fill_diagonal(contact, 0)
+    return contact
+
+def has_badContact(atoms, tolerance=0):
+    diff = atoms.get_all_distances(mic=True) - get_contactMat(atoms, scale=1-tolerance)
+    return diff.min() < 0
+

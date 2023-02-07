@@ -12,6 +12,7 @@ from gocia.data import elemSymbol, covalRadii
 from gocia import geom
 from gocia import frag
 from gocia.geom.build import grow_frag
+from gocia.geom.frag import read_frag, update_frag_del
 
 import ase.io as fio
 from ase.atoms import Atoms
@@ -329,7 +330,7 @@ class Interface:
             del all[list_del]
             self.set_allAtoms(all)
 
-    def del_outsideBox_frag(self):
+    def del_outsideBox_frag_old(self):
         list_del = self.get_outsideBox()
         list_frag = self.get_fragList()
         print(list_del)
@@ -350,6 +351,17 @@ class Interface:
             del all[list_del_frag]
             self.set_allAtoms(all)
             self.set_fragList(list_frag_new)
+
+    def del_outsideBox_frag(self, fn_frag='fragments'):
+        list_del = self.get_outsideBox()
+        if len(list_del) > 0:
+            print(f'Out-of-box atoms: {list_del}')
+            update_frag_del(list_del, fn_frag=fn_frag)
+            print('Delete ', list_del)
+            all = self.get_allAtoms()
+            del all[list_del]
+            self.set_allAtoms(all)
+            self.set_fragList(read_frag(fn_frag=fn_frag))
 
     def has_badContact(self, tolerance=0):
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
@@ -553,7 +565,7 @@ class Interface:
         self.set_allPos(pos)
 
 
-    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.333):
+    def rattleMut_frag(self, stdev = 0.2, mutRate = 0.5, zEnhance=False, toler=0.5):
 
         # Initialize as before
         print(' |- Rattle mutation! -- fragments')
@@ -621,7 +633,10 @@ class Interface:
                     # Keep structure unless it has bad contacts (might not even be necessary as didn't check before?)
                     tmpTest = self.copy()
                     tmpTest.set_allPos(pos)
-                    if not tmpTest.has_badContact(tolerance=toler): # Hmm do I need to check for bad contact in the buffer atoms?
+                    #if not tmpTest.has_badContact(tolerance=toler):
+                    if not geom.has_badContact(tmpTest.get_adsAtoms(), tolerance=0.5):
+                        # WG: Hmm do I need to check for bad contact in the buffer atoms?
+                        # ZZ: let us check only the adsorbates here. Otherwise we may have very bad contacts in the buffer which cause a dead loop
                         keepStructure = True 
         # Set positions
         self.set_allPos(pos)
