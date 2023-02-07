@@ -27,7 +27,9 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False):
+    if read_frag(fn=fn_frag) is not None:
+        has_fragList = True
     continueRunning = True
     counter = 1
     while counter <= step:
@@ -45,8 +47,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             atom_tmp = read('CONTCAR')
             counter += 1
 
-            my_fragList = read_frag(fn=fn_frag)
-            if my_fragList is not None:
+            if has_fragList:
+                my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
                 my_fragAtoms = [struct[f] for f in my_fragList]
                 # Check connectivity
@@ -65,8 +67,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             if chkMol:
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
-                my_fragList = read_frag(fn=fn_frag)
-                if my_fragList is not None and len(list_del) > 0:
+                if has_fragList and len(list_del) > 0:
                     update_frag_del(list_del, fn=fn_frag)
                 # Make sure the final structure has no free molecule
 
@@ -78,15 +79,14 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 )
                 if surf.has_outsideBox():
                     atom_tmp = read('POSCAR')
-                    my_fragList = read_frag(fn=fn_frag)
-                    if my_fragList is not None:
+                    if has_fragList:
                         surf.del_outsideBox_frag(fn_frag)
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
 
-            my_fragList = read_frag(fn=fn_frag)
-            if my_fragList is not None:
+            if has_fragList:
+                my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
                 my_fragAtoms = [struct[f] for f in my_fragList]
                 # Check connectivity
@@ -102,8 +102,9 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     del struct[list_del]
                     write('POSCAR', struct)
 
-            if len(atom_tmp) > len(read('POSCAR')) and counter > step:
-                print(f'Redo the last opt step due to removal of atoms {list_del}')
+            natoms_removed = len(atom_tmp) - len(read('POSCAR'))
+            if natoms_removed > 0 and counter > step:
+                print(f'Redo the last opt step due to removal of {natoms_removed} atoms')
                 counter -= 1 # redo the last opt step if something is removed
                 continue
     os.system('rm WAVECAR CHG CHGCAR POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
