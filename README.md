@@ -53,10 +53,11 @@ mv main gocia
 After fetching the `gocia` repo, add it to your `PYTHONPATH` by:
 
 ```bash
-export PYTHONPATH=$PYTHONPATH:`pwd`/gocia
+export PYTHONPATH=$PYTHONPATH:`pwd`/gocia/
 ```
 
-Remember to add this export line to your `~/.bashrc` or the submission script, so that `GOCIA` package is accessible by Python.
+Remember to add this export line to your `~/.bashrc` or the submission script, so that `GOCIA` package is accessible by Python when you run the job.
+
 You need to use the absolute path (you can check it by running `pwd` in Bash shell) for this purpose.
 
 After these, run the following line to test:
