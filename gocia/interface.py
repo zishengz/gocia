@@ -361,7 +361,7 @@ class Interface:
             all = self.get_allAtoms()
             del all[list_del]
             self.set_allAtoms(all)
-            self.set_fragList(read_frag(fn_frag=fn_frag))
+            self.set_fragList(read_frag(fn=fn_frag))
 
     def has_badContact(self, tolerance=0):
         diff = self.get_allDistances() - self.get_contactMat(scale=1-tolerance)
