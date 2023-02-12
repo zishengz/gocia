@@ -356,7 +356,7 @@ class Interface:
         list_del = self.get_outsideBox()
         if len(list_del) > 0:
             print(f'Out-of-box atoms: {list_del}')
-            update_frag_del(list_del, fn_frag=fn_frag)
+            update_frag_del(list_del, fn=fn_frag)
             print('Delete ', list_del)
             all = self.get_allAtoms()
             del all[list_del]
