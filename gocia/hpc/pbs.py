@@ -1,6 +1,7 @@
 import os, sys
 
 class PBS:
+
     def __init__(
         self,
         username=None,
@@ -15,9 +16,9 @@ class PBS:
         self.qinfoFile = qinfoFile
 
     def get_allJobID(self):
-        rawInfo = os.popen('qstat -u %s'%(self.username)).readlines()[2:]
+        rawInfo = os.popen('qstat -u %s'%(self.username)).readlines()[5:]
         if len(rawInfo) > 1:
-            rawInfo = [l.split()[0] for l in rawInfo]
+            rawInfo = [l.split()[0].split('.')[0] for l in rawInfo]
         return rawInfo
 
     def get_run(self):
@@ -56,9 +57,14 @@ class PBS:
 
     def submit(self, jobCommand=''):
         subOut = os.popen(jobCommand).read()
-        if 'pbsserver' in subOut:
-            myID = subOut.split(".")[2]
+        # The output of qsub is xxxx.pbs01 for Onyx
+        # and xxx.pbsserver for other DoD machines
+        if 'pbs' in subOut:
+            myID = subOut.split(".")[0]
             self.add(myID)
+        else:
+            print('Unknown qsub output format: {subOut}')
+            exit()
 
     def add(self, addID):
         if type(addID) is int:
@@ -72,7 +78,7 @@ class PBS:
             self.jidList.remove(killID)
 
     def jobInfo(self, jobid):
-        rawInfo = os.popen('qstat -J %s'%jobid).readlines()[2:]
+        rawInfo = os.popen('qstat -J %s'%jobid).readlines()[2]
         jobInfo = {
             'state': 'd',
             'name': '',
