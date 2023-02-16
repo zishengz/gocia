@@ -8,9 +8,9 @@
 
 Copyright © 2020 Zisheng Zhang
 
-Please CITE [THIS PAPER](https://zishengz.github.io/docs/2022jacs.pdf) if you use any part of this repo:
+Please CITE the following paper if you use any part of this repo:
 
-> Zhang, Z.; Wei, Z.; Sautet, P.; Alexandrova, A. N., Hydrogen-induced Restructuring of a Cu(100) Electrode in Electroreduction Conditions. J. Am. Chem. Soc., 2022, doi:[10.1021/jacs.2c06188](https://doi.org/10.1021/jacs.2c06188).
+> Zhang, Z.; Wei, Z.; Sautet, P.; Alexandrova, A. N., Hydrogen-induced Restructuring of a Cu(100) Electrode in Electroreduction Conditions. J. Am. Chem. Soc., 2022, doi:[10.1021/jacs.2c06188](https://doi.org/10.1021/jacs.2c06188). -> [PDF DOWNLOAD](https://zishengz.github.io/docs/2022jacs.pdf)
 
 [TOC]
 
@@ -87,6 +87,7 @@ We assume the use of VASP for local optimization unless otherwise specified.
 
 - slurm: CORI
 - sge: Hoffman2
+- pbs: DoD machines
 
 ### 3-step local optimization
 
@@ -102,6 +103,9 @@ The needed files include:
   REMEMBER to replace the ```.bashrc``` path with yours.
 - input.py
   A data file that contains the pseudo-potential path and VASP command.
+- substrate.vasp (optional)
+  For reference during the geometry check, if zLim is provided.
+  
 
 Procedure:
 

@@ -1,0 +1,39 @@
+SYSTEM = opt-1
+ISTART  = 0
+ICHARG = 2
+
+#ISPIN = 2
+#ENCUT = 400
+ISMEAR  = 0
+SIGMA = 0.1
+
+GGA = RP
+#IVDW= 11  ! DFT-D3
+
+LREAL = Auto  
+EDIFF = 1e-4
+EDIFFG= -0.5
+PREC = L
+ALGO = F
+NPAR=4
+
+NELM = 100
+NELMIN = 5
+#NELMDL = -10
+
+NSW = 25
+POTIM = 0.4
+IBRION = 2  !low_accuracy use qn
+ISIF=2
+
+#IDIPOL=3
+#LDIPOL=.TRUE.
+
+LWAVE=F
+LCHARG=F
+
+#LSOL = .TRUE.
+#EB_K = 78.400000
+#TAU = 0.000000
+#LAMBDA_D_K = 3.000000
+
