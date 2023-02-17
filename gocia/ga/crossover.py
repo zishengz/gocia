@@ -172,7 +172,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
             (n_trial, tolerance))
     return newSurf    
 
-def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
+def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, keepCluster=''):
     # Get relevant positions from mother and father surfaces
     matFixBufPos, patFixBufPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms, or equivalently, substrate atoms with get_subPos()
     matBridPos, patBridPos = surf1.get_bridPos(), surf2.get_bridPos() # positions of bridle atoms
@@ -280,6 +280,8 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
 
         # Evaluate quality of kid structure
         isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
+        if childSurf.get_chemical_symbols().count(keepCluster) != surf1.get_chemical_symbols().count(keepCluster) or childSurf.get_chemical_symbols().count(keepCluster) != surf2.get_chemical_symbols().count(keepCluster):
+            isBADSTRUCTURE = True
         if n_trial > 1000:
             isBADSTRUCTURE = False
             childSurf = None
@@ -287,3 +289,4 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
         print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))
     return childSurf
+ 
