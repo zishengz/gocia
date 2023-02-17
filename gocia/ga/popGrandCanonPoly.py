@@ -27,7 +27,8 @@ class PopulationGrandCanonicalPoly:
         matingMethod=None,
         convergeCrit=None,
         simParam1=5e-4,
-        simParam2=0.25
+        simParam2=0.25,
+        keepCluster=''
     ):
 
         if gadb is not None:
@@ -239,7 +240,7 @@ class PopulationGrandCanonicalPoly:
             info['adsorbate_fragments'] = []
         return info
 
-    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=keepCluster):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -294,7 +295,7 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=keepCluster):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
