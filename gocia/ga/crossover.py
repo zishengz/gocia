@@ -100,7 +100,7 @@ def splice_2d_GC(surf1, badPos, goodPos, center, direction):
     tmpSurf.set_allPos(childPos)
     return tmpSurf
 
-def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
+def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5, keepCluster=''):
     matPos, patPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms in substrate
     matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms() # adsorbate atoms
     goodPos, badPos = [], []
