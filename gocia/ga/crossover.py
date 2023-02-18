@@ -164,7 +164,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5, keepCluster=''):
         newSurf.set_adsAtoms(Atoms(newAdsElem, newAdsPos))
         newSurf.wrap()
         isBADSTRUCTURE = newSurf.has_badContact(tolerance=tolerance)
-        if childSurf.get_chemical_symbols().count(keepCluster) != surf1.get_chemical_symbols().count(keepCluster) or childSurf.get_chemical_symbols().count(keepCluster) != surf2.get_chemical_symbols().count(keepCluster):
+        if newSurf.get_chemical_symbols().count(keepCluster) != surf1.get_chemical_symbols().count(keepCluster) or newSurf.get_chemical_symbols().count(keepCluster) != surf2.get_chemical_symbols().count(keepCluster):
             isBADSTRUCTURE = True
         if n_trial > 1000:
             isBADSTRUCTURE = False
