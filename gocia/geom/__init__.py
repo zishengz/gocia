@@ -182,7 +182,7 @@ def cart2frac(cartPos, cell):
 def frac2cart(fracPos, cell):
     return np.dot(fracPos, cell)
 
-def get_fragments(atoms, scale = 1.0):
+def get_fragments(atoms, scale = 0.9):
     if len(atoms) == 1:
         return [[0]]    
     bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale)]
