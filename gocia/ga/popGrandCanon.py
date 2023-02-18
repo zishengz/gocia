@@ -220,7 +220,7 @@ class PopulationGrandCanonical:
                     break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -229,7 +229,7 @@ class PopulationGrandCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75, keepCluster=keepCluster)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
@@ -268,7 +268,7 @@ class PopulationGrandCanonical:
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -277,7 +277,7 @@ class PopulationGrandCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75,keepCluster=keepCluster)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         mutType = ''
