@@ -189,7 +189,37 @@ def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44):
         with open('sc.dat', 'a') as f:
             f.write(f'{d}\t{ushe}\t{g}\n')
 
+def do_surfChrg_2step_sp(nelect, vasp_cmd, d, u_ref=4.44):
+    homedir = os.getcwd()
+    nelect_old = nelect - d
+    os.system(f'mkdir n_{nelect:.2f}')
+    os.chdir(f'n_{nelect:.2f}')
+    os.system('cp ../POSCAR ../POTCAR .')
+    if d!=0:
+        os.system(f'cp ../n_{nelect_old:.2f}/WAVECAR ../n_{nelect_old:.2f}/CHGCAR .')
+    for i in range(1,3):
+        os.system('cp ../../INCAR-%i INCAR'%i)
+        os.system('cp ../../KPOINTS-%i KPOINTS'%i)
+        with open('INCAR', 'a') as f:
+            f.write(f'NELECT={nelect}')
+        os.system(vasp_cmd)
+    val, nelect, ene, efermi, shftfermi = extractVASPsol()
+    USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi, u_ref=u_ref)
+    os.system(
+        'rm CHG vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
+    os.chdir(homedir)
+    return USHE, G
 
+def do_surfChrg_batch_wGuess(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44):
+    pos2pot(pp_path)
+    nelect_neu = get_neu_nelect()
+    for d in list_deltaCharge:
+        nelect_tmp = nelect_neu + d
+        ushe, g = do_surfChrg_2step_sp(nelect_tmp, vasp_cmd, d, u_ref=u_ref)
+        with open('sc.dat', 'a') as f:
+            f.write(f'{d}\t{ushe}\t{g}\n')
+    os.system('rm */CHGCAR */WAVECAR')
+            
 def get_parabola(dir_sc='.'):
     import matplotlib.pyplot as plt
     from sklearn.metrics import r2_score
