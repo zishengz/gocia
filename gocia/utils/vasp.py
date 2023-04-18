@@ -112,20 +112,20 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
 
 # Below are for surface charging calculations
 
-def get_neu_nelect(poscar='POSCAR', potcar='POTCAR'):
+def get_neu_nelect(poscar='POSCAR', potcar='POTCAR', shift=0):
     elem_list = [l.split()[-2]
                  for l in open(potcar).readlines() if 'TITEL' in l]
     elem_list = [e.split('_')[0] if '_' in e else e for e in elem_list]
     zval_list = [eval(l.split()[-4])
                  for l in open(potcar).readlines() if 'ZVAL' in l]
     atom_list = read(poscar).get_chemical_symbols()
-    return sum([zval_list[elem_list.index(a)] for a in atom_list])
+    return sum([zval_list[elem_list.index(a)] for a in atom_list]) + shift
 
 
-def extractVASPsol(dirName='.'):
+def extractVASPsol(dirName='.', shift=0):
     tmpHome = os.getcwd()
     os.chdir(dirName)
-    val = get_neu_nelect()
+    val = get_neu_nelect(shift=shift)
     fermi_shift = eval([l for l in open('out').readlines()
                         if 'FERMI_SHIFT' in l][-1].split()[2])
     fermi_ene = eval([l for l in open('OUTCAR').readlines()
@@ -156,14 +156,14 @@ def make_surfChrg_sp(nelect):
         f.write(f'NELECT={nelect}')
     os.chdir(homedir)
 
-def make_surfChrg_batch(pp_path, list_deltaCharge):
+def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0):
     pos2pot(pp_path)
-    nelect_neu = get_neu_nelect()
+    nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
         make_surfChrg_sp(nelect_tmp)
 
-def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44):
+def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44, shift=0):
     homedir = os.getcwd()
     os.system(f'mkdir n_{nelect:.2f}')
     os.chdir(f'n_{nelect:.2f}')
@@ -172,7 +172,7 @@ def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44):
     with open('INCAR', 'a') as f:
         f.write(f'NELECT={nelect}')
     os.system(vasp_cmd)
-    val, nelect, ene, efermi, shftfermi = extractVASPsol()
+    val, nelect, ene, efermi, shftfermi = extractVASPsol(shift=shift)
     USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi, u_ref=u_ref)
     os.system(
         'rm WAVECAR CHG CHGCAR vasprun.xml POTCAR PCDAT XDATCAR DOSCAR EIGENVAL IBZKPT')
@@ -180,12 +180,12 @@ def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44):
     return USHE, G
 
 
-def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44):
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
     pos2pot(pp_path)
-    nelect_neu = get_neu_nelect()
+    nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
-        ushe, g = do_surfChrg_sp(nelect_tmp, vasp_cmd, u_ref=u_ref)
+        ushe, g = do_surfChrg_sp(nelect_tmp, vasp_cmd, u_ref=u_ref, shift=shift)
         with open('sc.dat', 'a') as f:
             f.write(f'{d}\t{ushe}\t{g}\n')
 
