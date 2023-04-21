@@ -182,12 +182,12 @@ def cart2frac(cartPos, cell):
 def frac2cart(fracPos, cell):
     return np.dot(fracPos, cell)
 
-def get_fragments(atoms, scale = 1.0):
+def get_fragments_old(atoms, scale = 1.0):
     if len(atoms) == 1:
         return [[0]]    
-    bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale)]
+    bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale=scale)]
     frags = bps.copy()
-    while sum([len(i) for i in frags]) > len(atoms):
+    while sum([len(f) for f in frags]) > len(atoms):
         flag = False
         for i in range(len(frags)):
             for j in range(i+1,len(frags)):
@@ -207,13 +207,47 @@ def get_fragments(atoms, scale = 1.0):
                 frag_single.append([i])
         frags += frag_single
     return frags
-    
+
+def get_unique_indices(frags):
+    tmp = set([])
+    for i in range(len(frags)):
+        tmp = tmp | set(frags[i])
+    return tmp
+
+def get_fragments(atoms, scale = 1.0):
+    if len(atoms) == 1:
+        return [[0]]    
+    bps = [[bp[0], bp[1]] for bp in get_bondpairs(atoms, scale=scale)]
+    frags = bps.copy()
+
+    # add back the single atoms that are not bonded to anything
+    for i in range(len(atoms)):
+        for j in frags:
+            if i in j:
+                continue
+        frags.append([i])
+
+    # iterate to merge all frags that share any atoms
+    while sum([len(f) for f in frags]) > len(atoms):
+        flag = False
+        for i in range(len(frags)):
+            for j in range(i+1,len(frags)):
+                if len(set(frags[i]) & set(frags[j]))>0:
+                    frags[i] = list(set(frags[i]) | set(frags[j]))
+                    frags.remove(frags[j])
+                    flag = True
+                    break
+            if flag == True:
+                break
+
+    return frags
+
 def del_freeMol(atoms, list_keep=[0], scale = 1.0):
     tmpAtoms = atoms.copy()
-    frags = get_fragments(tmpAtoms, scale=scale)
+    myfrags = get_fragments(tmpAtoms, scale=scale)
     deadList = []
-    if len(frags) > 1:
-        for l in frags:
+    if len(myfrags) > 1:
+        for l in myfrags:
             if not set(l) & set(list_keep):
                 print(f'Remove fragment: {tmpAtoms[l].get_chemical_symbols()}, {l}')
                 deadList+=l
