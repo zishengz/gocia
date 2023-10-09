@@ -1,7 +1,8 @@
 import os
 import numpy as np
+import random
 from ase.io import read, write
-from gocia.geom import get_fragments, del_freeMol
+from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_between_adsFrag
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
@@ -27,7 +28,7 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     if read_frag(fn=fn_frag) is not None:
         has_fragList = True
     continueRunning = True
@@ -64,6 +65,39 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     del struct[list_del]
                     write('POSCAR', struct)
 
+            if has_fragList and has_fragSurfBond:
+                my_fragList = read_frag(fn=fn_frag)
+                struct = read('POSCAR')
+                list1 = list(range(len(read(substrate))))
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if not is_bonded(struct, list1, my_fragList[i]):
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
+                    print('Remove associated fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
+
+            if has_fragList and check_rxn_frags:
+                my_fragList = read_frag(fn=fn_frag)
+                struct = read('POSCAR')
+                ads_bonds = detect_bond_between_adsFrag(struct, my_fragList)
+                if len(ads_bonds) > 0:
+                    list_del = []
+                    for b in ads_bonds:
+                        i = random.choice(b[0:2])
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                    if len(list_del) > 0:
+                        print('Remove associated fragments containing:', list_del)
+                        update_frag_del(list_del, fn=fn_frag)
+                        del struct[list_del]
+                        write('POSCAR', struct)
+
             if chkMol:
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
@@ -78,12 +112,28 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     zLim = zLim
                 )
                 if surf.has_outsideBox():
-                    atom_tmp = read('POSCAR')
                     if has_fragList:
                         surf.del_outsideBox_frag(fn_frag)
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
+
+            if len(rmAtomsNotInBond) > 0:
+                # e.g. if [['H', 'Pt']]
+                # 'H' will be removed if not in Pt-H
+                struct = read('POSCAR')
+                list_del = []
+                for p in rmAtomsNotInBond:
+                    list_a0 = [a.index for a in struct if a.symbol==p[0]]
+                    list_a1 = [a.index for a in struct if a.symbol==p[1]]
+                    for a0 in list_a0:
+                        if not is_bonded(struct, [a0], list_a1):
+                            list_del.append(a0)
+                if len(list_del) > 0:
+                    print(f'Atoms {list_del} are removed becasue not in required bonds.')
+                    del struct[list_del]
+                    write('POSCAR', struct)
+                    del struct
 
             if has_fragList:
                 my_fragList = read_frag(fn=fn_frag)

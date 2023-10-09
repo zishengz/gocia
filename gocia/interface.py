@@ -611,6 +611,8 @@ class Interface:
                         fragTemp = Atoms('CO',[(0, 0, 0),(0, 0, 1.43)])
                     elif fragName == 'H':
                         fragTemp = Atoms('H',[(0,0,0)])
+                    elif fragName == 'HO':
+                        fragTemp = Atoms('HO',[(0,0,0), (0,0,0.9)])
                     elif fragName == 'H2O':
                         fragTemp = Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)])
                     else:

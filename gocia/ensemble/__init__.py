@@ -109,7 +109,10 @@ def clusterIsomerAbs(
     isoUniq = set(isomerLabel)
     eneUniq = [eneArray[i] for i in isoUniq]
     magUniq = [magArray[i] for i in isoUniq]
-    fragUniq = [fragArray[i] for i in isoUniq]
+    try:
+        fragUniq = [fragArray[i] for i in isoUniq]
+    except:
+        pass
     countUniq = [isomerLabel.count(i) for i in isoUniq]
 #    print(countUniq)
     print('-'*76)
