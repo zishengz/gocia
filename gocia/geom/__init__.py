@@ -290,3 +290,19 @@ def has_badContact(atoms, tolerance=0):
     diff = atoms.get_all_distances(mic=True) - get_contactMat(atoms, scale=1-tolerance)
     return diff.min() < 0
 
+def is_bonded(atoms, list1, list2, scale=1.0):
+    flag = False
+    cvRad = get_covalRadii(atoms)
+    for i in list1:
+        for j in list2:
+            if atoms.get_distance(i, j, mic=True) <= scale * (cvRad[i] + cvRad[j]):
+                flag = True
+                break
+        if flag == True:
+            break
+    return flag
+
+
+
+
+

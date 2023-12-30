@@ -462,6 +462,8 @@ class Interface:
         fragList = []
         if 'adsorbate_fragments' in tmpAtoms.info:
             fragList = tmpAtoms.info['adsorbate_fragments']
+        if 'adsorbate_fragments' in self.info:
+            fragList = self.info['adsorbate_fragments']
         diff = list(set(newAdsList) - set(oldAdsList))
         # only append if not already in list as otherwise keep adding same fragment while badStructure
         if diff not in fragList:

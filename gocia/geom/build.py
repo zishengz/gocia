@@ -100,7 +100,7 @@ def grow_frag(
     interfc,  growList,
     xLim=None, yLim=None, zLim=None,
     sampZEnhance=None,
-    bldaSigma=0.1, bldaScale=1, toler=0.5,
+    bldaSigma=0.1, bldaScale=1, toler=0.2,
     doShuffle=False,
     rattle=False, rattleStdev=0.05, rattleZEnhance=False,
     sameFragPenalty=0,
@@ -192,7 +192,7 @@ def grow_frag(
             fragAtms.set_positions(fragAtms.get_positions() + coord)
             # Add fragment then sort
             tmpInterfc_test.add_adsFrag(fragAtms) 
-            tmpInterfc_test.sortAds_frag() 
+            tmpInterfc_test.sortAds_frag()
             ind_curr += 1
         # Reject if bad contacts between atoms
         if not tmpInterfc_test.has_badContact(tolerance=toler):

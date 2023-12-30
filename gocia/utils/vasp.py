@@ -64,6 +64,10 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     del struct[list_del]
                     write('POSCAR', struct)
 
+
+
+
+
             if chkMol:
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
