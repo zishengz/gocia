@@ -256,6 +256,7 @@ def del_freeMol(atoms, list_keep=[0], scale = 1.0):
 
 
 def detect_bond_between_adsFrag(atoms, fragList):
+    # returns: [3, 8, [{1, 2}, {1, 3}]]
     fragAtoms = [atoms[f] for f in fragList]
     bondList = []
     for i in range(len(fragAtoms)):
@@ -290,7 +291,7 @@ def has_badContact(atoms, tolerance=0):
     diff = atoms.get_all_distances(mic=True) - get_contactMat(atoms, scale=1-tolerance)
     return diff.min() < 0
 
-def is_bonded(atoms, list1, list2, scale=1.0):
+def is_bonded(atoms, list1, list2, scale=1.1):
     flag = False
     cvRad = get_covalRadii(atoms)
     for i in list1:
