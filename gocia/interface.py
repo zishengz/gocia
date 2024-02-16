@@ -202,6 +202,13 @@ class Interface:
 
     def get_cell(self):
         return self.cellParam.copy()
+    
+    def get_sampling_box(self):
+        return np.array([
+            [0, self.get_cell()[0][0]],
+            [0, self.get_cell()[1][1]],
+            self.zLim
+        ])
 
     def get_pbc(self):
         return self.pbcParam.copy()

@@ -28,6 +28,8 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
+# TODO: DECOUPLE THE GEOMETRY CHECKER & MULTI_STEP OPT?
+
 def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     if read_frag(fn=fn_frag) is not None:
         has_fragList = True
@@ -48,6 +50,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             atom_tmp = read('CONTCAR')
             counter += 1
 
+            # REMOVE BROKEN FRAGMENTS
             if has_fragList:
                 my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
@@ -65,6 +68,9 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     del struct[list_del]
                     write('POSCAR', struct)
 
+            # REMOVE FRAGMENTS THAT DOES NOT BIND TO SURFACE ATOMS
+            # E.G. [SURF]-[C-O]-[C-O]
+            #      the latter CO is bonded to an adorbate but not the surface
             if has_fragList and has_fragSurfBond:
                 my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
@@ -81,6 +87,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     del struct[list_del]
                     write('POSCAR', struct)
 
+            # REMOVE FRAGMENTS THAT FROM BOND WITH OTHER FRAGMENTS
             if has_fragList and check_rxn_frags:
                 my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
@@ -98,13 +105,14 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                         del struct[list_del]
                         write('POSCAR', struct)
 
+            # REMOVE FREE MOLECULES DESORBED FROM THE SURFACE
             if chkMol:
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
                 if has_fragList and len(list_del) > 0:
                     update_frag_del(list_del, fn=fn_frag)
-                # Make sure the final structure has no free molecule
 
+            # REMOVE ATOMS OUTSIDE THE SAMPLING BOX
             if zLim is not None:
                 surf = Interface(
                     read('POSCAR'),
@@ -118,6 +126,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                         surf.del_outsideBox()
                     surf.write('POSCAR')
 
+            # REMOVE ATOMS THAT DO NOT FORM SPECIFIED BONDS
             if len(rmAtomsNotInBond) > 0:
                 # e.g. if [['H', 'Pt']]
                 # 'H' will be removed if not in Pt-H
@@ -135,6 +144,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     write('POSCAR', struct)
                     del struct
 
+            # REMOVE BROKEN FRAGMENTS
             if has_fragList:
                 my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')

@@ -439,6 +439,45 @@ class PopulationGrandCanonical:
                     label=myLabel
                 )
 
+    def add_aseResult(self, atoms, workdir='.', isAlive=1):
+        import os
+        cwdFiles = os.listdir(workdir)
+        dirname = os.getcwd().split('/')[-1]
+        ene_eV = atoms.get_potential_energy()
+        grndPot = self.calc_grandPot(atoms, ene_eV)
+        myLabel = open('label', 'r').read()
+        print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+            dirname, grndPot, myLabel))
+        if self.is_uniqueInAll(s, grndPot):
+            if grndPot < self.get_GMrow()['grandPot']:
+                print(f' |- {dirname} is the new GM!')
+                with open('gmid', 'w') as f:
+                    f.write(str(len(self)))
+            self.gadb.write(
+                atoms,
+                name=dirname,
+                mag=0,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=isAlive,
+                label=myLabel
+            )
+        else:
+            print(f' |- {dirname} is a duplicate!')
+            self.gadb.write(
+                atoms,
+                name=dirname,
+                mag=0,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=0,
+                label=myLabel
+            )
+
 # TODO convergence: TEST
 # TODO XTB interface
 # TODO CP2K interface
