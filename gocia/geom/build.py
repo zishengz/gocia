@@ -254,26 +254,25 @@ def boxSample_adatom(
         myBond = myBond[myBond < toler_BLmax]
         if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
             goodStruc = True
-            if bondRejList is not None:
+            if bondRejList is not None or bondMustList is not None:
                 mySymb = testInterfc.get_chemical_symbols()
-                myBPs = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
-                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+                myBPs_now = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
+            if bondRejList is not None:
+                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs_now]
                 for rj in bondRejList:
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
                         goodStruc = False
                         break
-            if bondMustList is not None:
-                mySymb = testInterfc.get_chemical_symbols()
-                myBPs = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
-                myBPs = [[i[0], i[1]] for i in myBPs]
+            if bondMustList is not None and goodStruc:
+                myBPs = [[i[0], i[1]] for i in myBPs_now]
                 myBPs = [i for i in myBPs if i not in myBPs_old]
                 if len(myBPs) == 0:
                     goodStruc = False
                     #break
                 else:
                     myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
-                    print(myBPs)
-                    print(any(x in myBPs for x in bondMustList))
+                    #print(myBPs)
+                    #print(any(x in myBPs for x in bondMustList))
                     if not any(x in myBPs for x in bondMustList):
                         goodStruc = False
                         #break
@@ -284,15 +283,20 @@ def boxSample_adatom(
                         if pos[i][2] > newAdsCoord[2]:
                             goodStruc = False
             if goodStruc:
+                print(f'# Progress: {ind_curr+1}/{numAds}\t@attempt {n_attempts}')
                 tmpInterfc = testInterfc
                 ind_curr += 1
         # prevent dead loop
-        if n_attempts >= 10000:
+        if ind_curr == 0 and n_attempts >= 200:
+            print(
+                'BAD STARTING STRUCTURE! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            return None
+        if n_attempts >= 100 * numAds:
             print(
                 'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
     tmpInterfc.sort()
-    print('%i\tplacements' % (n_attempts))
+    #print('%i\tplacements' % (n_attempts))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
