@@ -7,21 +7,34 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, fmax=0.1, label='test', optimizer='LBFGS'):
+def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
     atoms.calc = my_calc
-    write('POSCAR', atoms)
+
+    if label is not None:
+        cwd = os.getcwd()
+        try:
+            os.mkdir(label)
+        except:
+            pass
+        os.chdir(label)
+
     if optimizer == 'LBFGS':
         from ase.optimize import LBFGS
-        dyn = LBFGS(atoms, maxstep=0.05, trajectory=f'{label}.traj')
+        dyn = LBFGS(atoms, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
+
+    print(f'Optimizing {atoms.get_chemical_formula()} in {label}')
     dyn.run(fmax=fmax)
-    write('CONTCAR', atoms)
+
+    if label is not None:
+        os.chdir(cwd)
     return atoms
 
 
-def geomopt_iterate(atoms, my_calc, step=3, fmax=0.1, label='test', optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def geomopt_iterate(atoms, my_calc, fmax=0.1, label='test', optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
-    if read_frag(fn=fn_frag) is not None:
-        has_fragList = True
+    if fn_frag in os.listdir():
+        if read_frag(fn=fn_frag) is not None:
+            has_fragList = True
         
     continueRunning = True
     counter = 0

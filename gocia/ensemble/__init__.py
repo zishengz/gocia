@@ -80,7 +80,8 @@ def clusterIsomerAbs(
         fragArray = [a.info['adsFrags'] for a in trajAtoms]
     else:
         fragArray = []
-        print('Uh oh, gotta get frag list somehow into gocia.ensemble.clusterIsomerAbs')
+        print('WARNING: No frag list is found in the databse')
+        #print('Uh oh, gotta get frag list somehow into gocia.ensemble.clusterIsomerAbs')
 
     print(' * Detecting unique isomers...')
     nStates = len(trajAtoms)
