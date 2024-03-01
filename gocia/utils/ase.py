@@ -22,7 +22,10 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
         from ase.optimize import LBFGS
         dyn = LBFGS(atoms, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
 
-    print(f'Optimizing {atoms.get_chemical_formula()} in {label}')
+    if label is None:
+        print(f'Optimizing {atoms.get_chemical_formula()}')
+    else:
+        print(f'Optimizing {atoms.get_chemical_formula()} in {label}')
     dyn.run(fmax=fmax)
 
     if label is not None:
@@ -30,7 +33,7 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
     return atoms
 
 
-def geomopt_iterate(atoms, my_calc, fmax=0.1, label='test', optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
     if fn_frag in os.listdir():
         if read_frag(fn=fn_frag) is not None:

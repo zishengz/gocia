@@ -303,7 +303,7 @@ class PopulationGrandCanonical:
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
-                    tmpKid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    tmpKid.growMut_box([l for l in self.chemPotDict], #xyzLims=xyzLims,
                                 bondRejList=bondRejList, constrainTop=constrainTop)
                 kid = tmpKid.copy()
             if mutType == 'leach':
@@ -440,22 +440,19 @@ class PopulationGrandCanonical:
                 )
 
     def add_aseResult(self, atoms, workdir='.', isAlive=1):
-        import os
-        cwdFiles = os.listdir(workdir)
-        dirname = os.getcwd().split('/')[-1]
         ene_eV = atoms.get_potential_energy()
         grndPot = self.calc_grandPot(atoms, ene_eV)
-        myLabel = open('label', 'r').read()
+        myLabel = open(f'{workdir}/label', 'r').read()
         print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
-            dirname, grndPot, myLabel))
-        if self.is_uniqueInAll(s, grndPot):
+            workdir, grndPot, myLabel))
+        if self.is_uniqueInAll(atoms, grndPot):
             if grndPot < self.get_GMrow()['grandPot']:
-                print(f' |- {dirname} is the new GM!')
+                print(f' |- {workdir} is the new GM!')
                 with open('gmid', 'w') as f:
                     f.write(str(len(self)))
             self.gadb.write(
                 atoms,
-                name=dirname,
+                name=workdir,
                 mag=0,
                 eV=ene_eV,
                 grandPot=grndPot,
@@ -465,10 +462,10 @@ class PopulationGrandCanonical:
                 label=myLabel
             )
         else:
-            print(f' |- {dirname} is a duplicate!')
+            print(f' |- {workdir} is a duplicate!')
             self.gadb.write(
                 atoms,
-                name=dirname,
+                name=workdir,
                 mag=0,
                 eV=ene_eV,
                 grandPot=grndPot,

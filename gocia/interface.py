@@ -843,7 +843,9 @@ class Interface:
         tmpInterfc.growMut_frag([myFrag])
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_box(self, elemList, xyzLims, bondRejList = None, constrainTop=False):
+    def growMut_box(self, elemList, xyzLims=None, bondRejList = None, constrainTop=False):
+        if xyzLims is None:
+            xyzLims = self.get_sampling_box()
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import boxSample_adatom
         tmpInterfc = self.copy()
@@ -851,7 +853,7 @@ class Interface:
         print(myElem)
         tmpInterfc = boxSample_adatom(
             tmpInterfc,
-            myElem,
+            [myElem],
             xyzLims=xyzLims,
             bondRejList=bondRejList,
             constrainTop=constrainTop
