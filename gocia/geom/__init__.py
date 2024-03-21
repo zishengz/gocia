@@ -7,8 +7,10 @@ def BLDA(elem1, elem2, sigma = 0.1, scale = 1):
     '''
     From BLDA based on covalent radii of two atoms.
     '''
-    if type(elem1) is str:
+    if type(elem1) is str and type(elem2) is str:
         elem1, elem2 = atomNum[elem1], atomNum[elem2]
+    else:
+        print(f'ERROR: elem1 and elem2 need to be str! now: {type(elem2)} and {type(elem2)}')
     covalBl = (covalRadii[elem1] + covalRadii[elem2])
     return np.random.normal(covalBl, sigma) * scale
 

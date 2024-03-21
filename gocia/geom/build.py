@@ -20,18 +20,24 @@ def grow_adatom(
     cnCount=False, cnToler=0.5,
     ljopt=False, ljstepsize=0.01, ljnsteps=400
 ):
-    numAds = len(addElemList)
+    #print('addElemList', type(addElemList))
+    if type(addElemList) is str:
+        addElemList_tmp = [addElemList]
+    elif type(addElemList) is list:
+        addElemList_tmp = addElemList.copy()
+    #print('addElemList_tmp', addElemList_tmp)
+    numAds = len(addElemList_tmp)
     badStructure = True
     n_place = 0
     n_attempts = 0
     while badStructure:
         if doShuffle:
-            random.shuffle(addElemList)
+            random.shuffle(addElemList_tmp)
         ind_curr = 0
         tmpInterfc = interfc.copy()
         if rattle:
             tmpInterfc.rattle(rattleStdev, zEnhance=rattleZEnhance)
-        while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
+        while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList_tmp):
             optList = tmpInterfc.get_optList()
             weights = np.ones(len(optList))
             # Same-element penalty
@@ -43,7 +49,7 @@ def grow_adatom(
             optElem = [tmpInterfc.get_chemical_symbols()[i] for i in optList]
             mult = np.ones(len(optList)) +\
                 np.array([sameElemPenalty if s !=
-                          addElemList[ind_curr] else 0 for s in optElem])
+                          addElemList_tmp[ind_curr] else 0 for s in optElem])
             if np.count_nonzero(mult) == 0:
                 mult = np.ones(len(optList))
             weights *= mult
@@ -56,24 +62,32 @@ def grow_adatom(
                         (optZ.max() - optZ.min()) * sampZEnhance
                     weights *= mult
             weights /= weights.sum()
-            i = np.random.choice(optList, p=weights)
-            # Coordination-adapted sampling
-            if cnCount:
-                cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
-                if cn.max() - cn.min() != 0:
-                    cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
-                    if np.random.rand() < cn * cnToler:
-                        continue
-#             if addElemList[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
+            # i = np.random.choice(optList, p=weights)
+            # # Coordination-adapted sampling
+            # if cnCount:
+            #     cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
+            #     if cn.max() - cn.min() != 0:
+            #         cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
+            #         if np.random.rand() < cn * cnToler:
+            #             continue
+#             if addElemList_tmp[ind_curr] == tmpInterfc.get_chemical_symbols()[i]:
 #                 if np.random.rand() >  1/2 + sameElemPenalty: continue
 #             else:
 #                 if np.random.rand() <= 1/2 + sameElemPenalty: continue
 # #                if np.random.rand() < sameElemPenalty: continue
             coord = [0, 0, -1000]
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
+                i = np.random.choice(optList, p=weights)
+                # Coordination-adapted sampling
+                if cnCount:
+                    cn = geom.get_coordStatus(tmpInterfc.get_allAtoms())[0]
+                    if cn.max() - cn.min() != 0:
+                        cn = (cn[i] - cn.min()) / (cn.max() - cn.min())
+                        if np.random.rand() < cn * cnToler:
+                            continue
                 growVec = geom.rand_direction()
                 blda = geom.BLDA(
-                    addElemList[ind_curr],
+                    addElemList_tmp[ind_curr],
                     tmpInterfc.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
                 )
@@ -83,7 +97,7 @@ def grow_adatom(
 #                print(i, tmpInterfc.get_pos()[i])
                 n_place += 1
 #            print('pass')
-            tmpInterfc.merge_adsorbate(Atoms(addElemList[ind_curr], [coord]))
+            tmpInterfc.merge_adsorbate(Atoms(addElemList_tmp[ind_curr], [coord]))
             ind_curr += 1
         if tmpInterfc.has_badContact(tolerance=toler):
             badStructure = True
