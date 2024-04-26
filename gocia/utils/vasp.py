@@ -50,6 +50,20 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             atom_tmp = read('CONTCAR')
             counter += 1
 
+            # REMOVE ATOMS OUTSIDE THE SAMPLING BOX
+            if zLim is not None:
+                surf = Interface(
+                    read('POSCAR'),
+                    substrate,
+                    zLim = zLim
+                )
+                if surf.has_outsideBox():
+                    if has_fragList:
+                        surf.del_outsideBox_frag(fn_frag)
+                    else:
+                        surf.del_outsideBox()
+                    surf.write('POSCAR')
+
             # REMOVE BROKEN FRAGMENTS
             if has_fragList:
                 my_fragList = read_frag(fn=fn_frag)
@@ -63,6 +77,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                             if i_del not in list_del:
                                 list_del.append(i_del)
                 if len(list_del) > 0:
+                    list_del.sort()
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
@@ -82,6 +97,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                             if i_del not in list_del:
                                 list_del.append(i_del)
                 if len(list_del) > 0:
+                    list_del.sort()
                     print('Remove associated fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
@@ -100,6 +116,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                             if i_del not in list_del:
                                 list_del.append(i_del)
                     if len(list_del) > 0:
+                        list_del.sort()
                         print('Remove associated fragments containing:', list_del)
                         update_frag_del(list_del, fn=fn_frag)
                         del struct[list_del]
@@ -110,21 +127,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                 geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
                 write('POSCAR', geom_tmp)
                 if has_fragList and len(list_del) > 0:
+                    list_del.sort()
                     update_frag_del(list_del, fn=fn_frag)
-
-            # REMOVE ATOMS OUTSIDE THE SAMPLING BOX
-            if zLim is not None:
-                surf = Interface(
-                    read('POSCAR'),
-                    substrate,
-                    zLim = zLim
-                )
-                if surf.has_outsideBox():
-                    if has_fragList:
-                        surf.del_outsideBox_frag(fn_frag)
-                    else:
-                        surf.del_outsideBox()
-                    surf.write('POSCAR')
 
             # REMOVE ATOMS THAT DO NOT FORM SPECIFIED BONDS
             if len(rmAtomsNotInBond) > 0:
@@ -139,8 +143,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                         if not is_bonded(struct, [a0], list_a1):
                             list_del.append(a0)
                 if len(list_del) > 0:
+                    list_del.sort()
                     print(f'Atoms {list_del} are removed becasue not in required bonds.')
-                    del struct[list_del]
                     write('POSCAR', struct)
                     del struct
 
@@ -157,6 +161,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                             if i_del not in list_del:
                                 list_del.append(i_del)
                 if len(list_del) > 0:
+                    list_del.sort()
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
