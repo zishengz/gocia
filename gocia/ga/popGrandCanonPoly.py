@@ -307,7 +307,7 @@ class PopulationGrandCanonicalPoly:
             patInfo = self.convertFragStrToInfo(patFragStr)
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
-            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5)
+            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.333)
             parent = random.choice([surf1, surf2]).copy()
             print('PARENTS: %i and %i' % (mater, pater))
         print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
