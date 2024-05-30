@@ -114,7 +114,7 @@ def grow_frag(
     interfc,  growList,
     xLim=None, yLim=None, zLim=None,
     sampZEnhance=None,
-    bldaSigma=0.1, bldaScale=1, toler=0.333,
+    bldaSigma=0.1, bldaScale=1, toler=0.334,
     doShuffle=False,
     rattle=False, rattleStdev=0.05, rattleZEnhance=False,
     sameFragPenalty=0,
@@ -132,7 +132,7 @@ def grow_frag(
         elif fragName =='H2O':
             frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
         elif fragName == 'HO':
-            frags_to_add.append(Atoms('HO',[(0,0,0), (0,0,0.9)]))
+            frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
         else:
             print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
 

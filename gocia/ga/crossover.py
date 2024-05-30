@@ -280,7 +280,7 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
 
         # Evaluate quality of kid structure
         isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
-        if n_trial > 100:
+        if n_trial > 200:
             isBADSTRUCTURE = False
             childSurf = None
     if childSurf is not None:
