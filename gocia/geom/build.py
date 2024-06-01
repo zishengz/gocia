@@ -156,9 +156,11 @@ def grow_frag(
         # Keep going until added all necessary fragments 
         while len(tmpInterfc_test) < len(interfc) + numAds and ind_curr < numFrags:
             fragAtms = copy.deepcopy(frags_to_add[ind_curr])
+
             # Obtain candidate atoms to anchor fragment and give them weights before selecting one
-            #anchorChoices = tmpInterfc_test.get_bufList()# + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
-            anchorChoices = tmpInterfc_test.get_topBufLayerList()
+            anchorChoices = tmpInterfc_test.get_bufList()# + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
+            #anchorChoices = tmpInterfc_test.get_topBufLayerList()
+
             weights = np.ones(len(anchorChoices))
             # Same-fragment penalty
             # value of 0 has no effect on weighting
@@ -190,6 +192,9 @@ def grow_frag(
                         continue
                     #WON'T THIS CONTINUE EITHER WAY?
             
+            if tmpInterfc_test.get_pos()[i][2] < min(zLim) - 2:
+                continue
+
             coord = [0, 0, -1000]
             # Grow fragment a proper bond length away from chosen atom
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
@@ -205,6 +210,7 @@ def grow_frag(
                 #print(blda, growVec, coord)
                 #print(i, tmpInterfc.get_pos()[i])
                 n_place += 1
+                #print(coord, xLim, yLim, zLim, geom.is_withinPosLim(coord, xLim, yLim, zLim))
 
             # Might want to use other way to randomly rotate positiosn
             #fragAtms.rotate(random.random()*np.pi/2,geom.rand_direction(),center=(0,0,0))
@@ -231,10 +237,12 @@ def grow_frag(
                     if br in bps or [br[1],br[0]] in bps:
                         badStructure = True
                         break
-                # if isBADSTRUCTURE:
-                #     print('b', end='')
+                if badStructure:
+                    print('b', end='')
             if not badStructure:
                 tmpInterfc = tmpInterfc_test.copy()
+            else:
+                print('c', end='')
 
         n_attempts += 1
         # prevent dead loop
