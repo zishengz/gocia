@@ -8,6 +8,7 @@ import numpy as np
 import random
 import copy
 from scipy.spatial.transform import Rotation as R
+from ase.io import read, write
 
 def grow_adatom(
     interfc, addElemList,
@@ -114,12 +115,13 @@ def grow_frag(
     interfc,  growList,
     xLim=None, yLim=None, zLim=None,
     sampZEnhance=None,
-    bldaSigma=0.1, bldaScale=1, toler=0.334,
+    bldaSigma=0.1, bldaScale=1, toler=0.5,
     doShuffle=False,
     rattle=False, rattleStdev=0.05, rattleZEnhance=False,
     sameFragPenalty=0,
     cnCount=False, cnToler=0.5,
-    ljopt=False, ljstepsize=0.01, ljnsteps=400
+    bondRejList=None,
+    ljopt=False, ljstepsize=0.01, ljnsteps=400,
 ):
     # Translate fragments from strings into atoms objects
     # Atoms object MUST list atom connecting fragment to substrate at origin first (called the 'bridle' atom as steers whole fragment)
@@ -155,7 +157,8 @@ def grow_frag(
         while len(tmpInterfc_test) < len(interfc) + numAds and ind_curr < numFrags:
             fragAtms = copy.deepcopy(frags_to_add[ind_curr])
             # Obtain candidate atoms to anchor fragment and give them weights before selecting one
-            anchorChoices = tmpInterfc_test.get_bufList()# + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
+            #anchorChoices = tmpInterfc_test.get_bufList()# + tmpInterfc_test.get_bridList() # Might consider using get_topLayerList() 
+            anchorChoices = tmpInterfc_test.get_topBufLayerList()
             weights = np.ones(len(anchorChoices))
             # Same-fragment penalty
             # value of 0 has no effect on weighting
@@ -186,6 +189,7 @@ def grow_frag(
                     if np.random.rand() < cn * cnToler:
                         continue
                     #WON'T THIS CONTINUE EITHER WAY?
+            
             coord = [0, 0, -1000]
             # Grow fragment a proper bond length away from chosen atom
             while not geom.is_withinPosLim(coord, xLim, yLim, zLim):
@@ -196,24 +200,42 @@ def grow_frag(
                     tmpInterfc_test.get_chemical_symbols()[i],
                     sigma=bldaSigma, scale=bldaScale
                 )
-                growVec *= blda
                 ## TODO: add rotation of the frag according to growVec
-                coord = tmpInterfc_test.get_pos()[i] + growVec
+                coord = tmpInterfc_test.get_pos()[i] + growVec * blda
                 #print(blda, growVec, coord)
                 #print(i, tmpInterfc.get_pos()[i])
                 n_place += 1
 
             # Might want to use other way to randomly rotate positiosn
-            fragAtms.rotate(random.random()*np.pi/2,geom.rand_direction(),center=(0,0,0))
-            fragAtms.set_positions(fragAtms.get_positions() + coord)
+            #fragAtms.rotate(random.random()*np.pi/2,geom.rand_direction(),center=(0,0,0))
+            #fragAtms.rotate(random.random()*np.pi,growVec,center=(0,0,0))
+            pos_ads = fragAtms.get_positions()
+            rot = R.from_rotvec(- random.random()*np.pi * np.array([0, 0, 1]))
+            pos_ads = rot.apply(pos_ads)
+            #fragAtms.set_positions(geom.rotate_around_vector(fragAtms.get_positions(), np.array([0,0,1]), random.random()*np.pi))
+            pos_ads = geom.rotate_around_point(pos_ads, np.array([0, 0, 0]), np.array([0, 0, 1]), growVec)
+            fragAtms.set_positions(pos_ads + coord)
             # Add fragment then sort
             tmpInterfc_test.add_adsFrag(fragAtms) 
             tmpInterfc_test.sortAds_frag()
             ind_curr += 1
+
         # Reject if bad contacts between atoms
         if not tmpInterfc_test.has_badContact(tolerance=toler):
             badStructure = False
-            tmpInterfc = tmpInterfc_test.copy()
+            if bondRejList is not None:
+                mySymb = tmpInterfc_test.get_chemical_symbols()
+                bps = geom.get_bondpairs(tmpInterfc_test.get_allAtoms(), min(1-toler/2, 1-toler+0.2))
+                bps = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in bps]
+                for br in bondRejList:
+                    if br in bps or [br[1],br[0]] in bps:
+                        badStructure = True
+                        break
+                # if isBADSTRUCTURE:
+                #     print('b', end='')
+            if not badStructure:
+                tmpInterfc = tmpInterfc_test.copy()
+
         n_attempts += 1
         # prevent dead loop
         if n_attempts >= 10000:
@@ -319,11 +341,12 @@ def boxSample_adatom(
 
     
 def boxSample_frag(
-    interfc, growList,
+    interfc,
+    growList,
     xyzLims,
-    toler_BLmax=0,
-    toler_BLmin=-0.2,
-    toler_CNmax=4,
+    toler_BLmax=1.0,
+    toler_BLmin=0.45,
+    toler_CNmax=6,
     toler_CNmin=1,
     bondRejList=None,
     bondMustList=None,
@@ -331,8 +354,10 @@ def boxSample_frag(
     constrainTop=False,
     rattle=False, rattleStdev=0.05, rattleZEnhance=False,
     ljopt=False, ljstepsize=0.01, ljnsteps=400,
-    bondCutoff = 0.85
+    bondCutoff = 0.80
 ):
+    # PROBLEMATIC 
+    
     # Translate fragments from strings into atoms objects 
     # Atoms object MUST list atom connecting fragment to substrate at origin first (called the 'bridle' atom as steers whole fragment)
     frags_to_add = []
@@ -343,6 +368,8 @@ def boxSample_frag(
             frags_to_add.append(Atoms('H',[(0,0,0)]))
         elif fragName =='H2O':
             frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
+        elif fragName == 'HO':
+            frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
         else:
             print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
 
@@ -381,12 +408,17 @@ def boxSample_frag(
         # Get contact and distance matrices for bridle atom (atom at origin listed first so use length of fragment)
         myContact = testInterfc.get_contactMat()[-len(tmpFrag)][:-len(tmpFrag)] 
         myDist = testInterfc.get_allDistances()[-len(tmpFrag)][:-len(tmpFrag)]
-        bondDiff = myDist - myContact  # actual distance - ideal covalent BL
+        bondDiff = myDist / myContact  # actual distance - ideal covalent BL
+
         # Considered bonded if within bond limits
-        myBond = bondDiff[bondDiff > toler_BLmin]
+        myBond = bondDiff[bondDiff > 1-toler_BLmin]
         myBond = myBond[myBond < toler_BLmax]
+
+        print(len(bondDiff[bondDiff < 1-toler_BLmin]), len(myBond), end=' | ')
+
+
         # Considered good structure if no atoms are too close and if proper number of bonds
-        if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
+        if len(bondDiff[bondDiff < 1-toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
             goodStruc = True
             # Unless required to reject bonding with certain atoms
             if bondRejList is not None:
@@ -397,8 +429,11 @@ def boxSample_frag(
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
                         goodStruc = False
                         break
+                if not goodStruc:
+                    print('b', end='')
+            
             # Or required to bond with certain atoms
-            if bondMustList is not None:
+            if bondMustList is not None and goodStruc:
                 mySymb = testInterfc.get_chemical_symbols()
                 myBPs = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
                 myBPs = [[i[0], i[1]] for i in myBPs]
@@ -422,7 +457,7 @@ def boxSample_frag(
                 tmpInterfc = testInterfc
                 ind_curr += 1
         # Prevent dead loop
-        if n_attempts >= 10000:
+        if n_attempts >= 1000:
             print(
                 'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None

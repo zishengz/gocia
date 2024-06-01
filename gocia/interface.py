@@ -443,6 +443,17 @@ class Interface:
         allZ = self.get_pos()[:,2]
         return [a.index for a in self.allAtoms\
             if max(allZ) - allZ[a.index] <= depth]
+    
+    def get_topBufLayerList(self, depth = 3):
+        allZ = self.get_pos()[:,2]
+        bufZ = self.get_bufAtoms().positions[:,2]
+        return [a.index for a in self.allAtoms\
+            if 0 < max(bufZ) - allZ[a.index] <= depth and a.index in self.get_bufList()]
+    
+    # def get_topBufLayerList_ini(self, depth = 1):
+    #     allZ = self.get_subPos()[:,2]
+    #     return [a.index for a in self.allAtoms\
+    #         if 0 < max(allZ) - allZ[a.index] <= depth and a.index < len(self.get_subAtoms())]
 
     def wrap(self):
         tmpAtoms = self.get_allAtoms()
@@ -803,7 +814,7 @@ class Interface:
         nfrags = len(fragList)
         while len(self.get_fragList()) == nfrags:
             myDel = np.random.choice(list(range(nfrags)),size=1)[0]
-            print(self.get_fragNames()[myDel])
+            #print(self.get_fragNames()[myDel])
             if self.get_fragNames()[myDel] in fragPool:
                 print(self.get_fragNames()[myDel])
                 self.remove_adsFrag(fragList[myDel])
@@ -824,15 +835,17 @@ class Interface:
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_frag(self, fragPool):
+    def growMut_frag(self, fragPool,bondRejList=None):
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_frag
         tmpInterfc = self.copy()
         myFrag = np.random.choice(fragPool, size=1)[0]
+        print(myFrag, end='\t')
         tmpInterfc = grow_frag(
             tmpInterfc,
             [myFrag],
             zLim = self.zLim,
+            bondRejList=bondRejList
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 

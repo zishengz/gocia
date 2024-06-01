@@ -4,6 +4,7 @@ import ase.io as fio
 from ase.atoms import Atoms
 from gocia.interface import Interface
 from gocia import frag
+from gocia import geom
 from ase.build.tools import sort
 
 def dist2lin(p1, p2, p3):
@@ -172,7 +173,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
             (n_trial, tolerance))
     return newSurf    
 
-def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
+def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=None):
     # Get relevant positions from mother and father surfaces
     matFixBufPos, patFixBufPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms, or equivalently, substrate atoms with get_subPos()
     matBridPos, patBridPos = surf1.get_bridPos(), surf2.get_bridPos() # positions of bridle atoms
@@ -280,9 +281,29 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5):
 
         # Evaluate quality of kid structure
         isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
-        if n_trial > 200:
+
+        # check bonds
+        if not isBADSTRUCTURE:
+            if bondRejList is not None:
+                mySymb = childSurf.get_chemical_symbols()
+                bps = geom.get_bondpairs(childSurf.get_allAtoms(), min(1-tolerance/2, 1-tolerance+0.2))
+                #myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+                bps = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in bps]
+                for br in bondRejList:
+                    if br in bps or [br[1],br[0]] in bps:
+                        #print('Rejected bond exists: ', br)
+                        isBADSTRUCTURE = True
+                        break
+        #         if isBADSTRUCTURE:
+        #             print('b', end='')
+        # else:
+        #     print(f'c', end='')
+
+        if n_trial > int(200/tolerance):
             isBADSTRUCTURE = False
             childSurf = None
+            print(f' FAIL ', end='')
+            break
     if childSurf is not None:
         print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))

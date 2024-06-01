@@ -307,7 +307,7 @@ class PopulationGrandCanonicalPoly:
             patInfo = self.convertFragStrToInfo(patFragStr)
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
-            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.333)
+            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=bondRejList)
             parent = random.choice([surf1, surf2]).copy()
             print('PARENTS: %i and %i' % (mater, pater))
         print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
@@ -338,8 +338,10 @@ class PopulationGrandCanonicalPoly:
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
-                    tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+                    # # growMut_box_frag() is messed up -- needs fixing
+                    # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    #             bondRejList=bondRejList, constrainTop=constrainTop)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
                 kid = tmpKid.copy()
             if mutType == 'leach':
                 ## TODO: detecting existing fragment species
@@ -354,8 +356,16 @@ class PopulationGrandCanonicalPoly:
                 kid.leachMut_frag([myFrag])
                 # the grow step needs info of the constraints
                 # otherwise very prone to dead loop!
-                kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+                # kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
+                #                 bondRejList=bondRejList, constrainTop=constrainTop)
+                tmpKid = None
+                while tmpKid is None:
+                    tmpKid = kid.copy()
+                    # # growMut_box_frag() is messed up -- needs fixing
+                    # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    #             bondRejList=bondRejList, constrainTop=constrainTop)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
+                kid = tmpKid.copy()
             if mutType == 'permute':
                 kid.permuteMut_frag()
             if mutType == 'translate':
