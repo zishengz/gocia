@@ -55,7 +55,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             print(f'Optimization step: {counter}')
             os.system(f'cp ../INCAR-{counter} INCAR')
             if addU:
-                add_hubbard(get_elems(poscar), UDict)
+                add_hubbard(get_elems(poscar), incar='INCAR', UDict=UDict)
             pos2pot(potPath, poscar=poscar, potDict=potDict)
             os.system(vasp_cmd)
             if not is_vaspSuccess():
