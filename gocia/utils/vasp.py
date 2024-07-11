@@ -29,7 +29,7 @@ def add_hubbard(elems, incar='INCAR', UDict=None):
     ldauu = [f"{UDict[elem]['U']:.3f}" for elem in elems]
     ldauj = [f"{UDict[elem]['J']:.3f}" for elem in elems]
 
-    with open(incar, 'w') as f:
+    with open(incar, 'a') as f:
         f.write("LDAU = .TRUE.\n")
         f.write("LDAUL = " + " ".join(ldaul) + "\n")
         f.write("LDAUU = " + " ".join(ldauu) + "\n")
