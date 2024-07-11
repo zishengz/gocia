@@ -24,13 +24,28 @@ def pos2pot(potPath, poscar='POSCAR', potDict=None):
     gen_POTCAR(potPath, get_elems(poscar, potDict))
 
 
+def add_hubbard(elems, incar='INCAR', UDict=None):
+    ldaul = [str(UDict[elem]['L']) for elem in elems]
+    ldauu = [f"{UDict[elem]['U']:.3f}" for elem in elems]
+    ldauj = [f"{UDict[elem]['J']:.3f}" for elem in elems]
+
+    with open(incar, 'w') as f:
+        f.write("LDAU = .TRUE.\n")
+        f.write("LDAUL = " + " ".join(ldaul) + "\n")
+        f.write("LDAUU = " + " ".join(ldauu) + "\n")
+        f.write("LDAUJ = " + " ".join(ldauj) + "\n")
+        f.write("LDAUPRINT = 0\n")
+        f.write("LDAUTYPE = 2\n")
+        f.write("LMAXMIX = 4\n")
+
+
 def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
 # TODO: DECOUPLE THE GEOMETRY CHECKER & MULTI_STEP OPT?
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[], addU=False, UDict=None,):
     if read_frag(fn=fn_frag) is not None:
         has_fragList = True
     continueRunning = True
@@ -39,6 +54,8 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
         if continueRunning:
             print(f'Optimization step: {counter}')
             os.system(f'cp ../INCAR-{counter} INCAR')
+            if addU:
+                add_hubbard(get_elems(poscar), UDict)
             pos2pot(potPath, poscar=poscar, potDict=potDict)
             os.system(vasp_cmd)
             if not is_vaspSuccess():
