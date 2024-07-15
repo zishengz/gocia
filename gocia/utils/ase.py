@@ -7,7 +7,7 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
+def geomopt_simple(atoms, my_calc, fmax=0.1, relax_steps=100000000, label=None, optimizer='LBFGS'):
     atoms.calc = my_calc
 
     if label is not None:
@@ -26,14 +26,14 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
         print(f'Optimizing {atoms.get_chemical_formula()}')
     else:
         print(f'Optimizing {atoms.get_chemical_formula()} in {label}')
-    dyn.run(fmax=fmax)
+    dyn.run(fmax=fmax, steps=relax_steps)
 
     if label is not None:
         os.chdir(cwd)
     return atoms
 
 
-def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', relax_steps=100000000, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
     if fn_frag in os.listdir():
         if read_frag(fn=fn_frag) is not None:
@@ -44,7 +44,7 @@ def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chk
     my_atoms = atoms.copy()
     while continueRunning:
             print(f'Optimization cycle: {counter}')
-            opt_atoms = geomopt_simple(my_atoms, my_calc, fmax=fmax, label=label, optimizer=optimizer)
+            opt_atoms = geomopt_simple(my_atoms, my_calc, fmax=fmax, relax_steps=relax_steps, label=label, optimizer=optimizer)
             counter += 1
 
             # REMOVE BROKEN FRAGMENTS
