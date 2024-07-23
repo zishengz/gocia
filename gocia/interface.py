@@ -63,7 +63,9 @@ class Interface:
 
         self.cellParam  = self.subAtoms.get_cell()
         self.pbcParam   = self.subAtoms.get_pbc()            
-        
+        self.allAtoms.set_cell(self.cellParam)
+        self.allAtoms.set_pbc(self.pbcParam)
+
         if zLim is None:
             allPos = self.allAtoms.get_positions()
             self.zLim = [min(allPos[:,2][self.bufList]) + 0.1,
@@ -308,6 +310,9 @@ class Interface:
 
     def get_allDistances(self):
         return self.get_allAtoms().get_all_distances(mic=True)
+    
+    def get_distances(self, my_ind, list_ind):
+        return self.get_allAtoms().get_distances(my_ind, list_ind, mic=True)
 
     def has_outsideBox(self):
         tmp = []
@@ -859,7 +864,7 @@ class Interface:
         tmpInterfc.growMut_frag([myFrag])
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_box(self, elemList, xyzLims=None, bondRejList = None, constrainTop=False):
+    def growMut_box(self, elemList, xyzLims=None, bondRejList = None, bondMustList = None, constrainTop=False):
         if xyzLims is None:
             xyzLims = self.get_sampling_box()
         print(' |- Growth mutation:', end = '\t')
@@ -872,6 +877,7 @@ class Interface:
             [myElem],
             xyzLims=xyzLims,
             bondRejList=bondRejList,
+            bondMustList=bondMustList,
             constrainTop=constrainTop
         )
         if tmpInterfc is not None:

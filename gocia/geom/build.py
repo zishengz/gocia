@@ -260,8 +260,8 @@ def boxSample_adatom(
     interfc, addElemList,
     xyzLims,
     toler_BLmax=0,
-    toler_BLmin=-0.2,
-    toler_CNmax=4,
+    toler_BLmin=-0.5,
+    toler_CNmax=8,
     toler_CNmin=1,
     bondRejList=None,
     bondMustList=None,
@@ -281,45 +281,58 @@ def boxSample_adatom(
         tmpInterfc.rattle(rattleStdev, zEnhance=rattleZEnhance)
     while len(tmpInterfc) < len(interfc) + numAds and ind_curr < len(addElemList):
         n_attempts += 1
-        optList = tmpInterfc.get_optList()
         testInterfc = tmpInterfc.copy()
         # get the current bond pairs
 #        mySymb = testInterfc.get_chemical_symbols()
-        if bondMustList is not None:
+        if bondRejList is not None or bondMustList is not None:
             myBPs_old = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
             myBPs_old = [[i[0], i[1]] for i in myBPs_old]
 #        myBPs_old = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
         # add adsorbate
         newAdsCoord = geom.rand_point_box(xyzLims)
+
+        a_probe = Atoms('X', [newAdsCoord])
+        surf_probe = testInterfc.get_allAtoms()
+        surf_probe.extend(a_probe)
+        if not (2.5 > min(surf_probe.get_distances(len(surf_probe)-1, range(len(surf_probe)-1), mic=True)) > 0.5):
+            continue
+        
         testInterfc.merge_adsorbate(
             Atoms(addElemList[ind_curr], [newAdsCoord]))
-        myContact = testInterfc.get_contactMat()[-1][:-1]
-        myDist = testInterfc.get_allDistances()[-1][:-1]
+        myCovRad = testInterfc.get_covalRadii()
+        myContact = np.array([myCovRad[i]+myCovRad[-1] for i in range(len(testInterfc)-1)])
+        myDist = testInterfc.get_distances(len(testInterfc)-1, range(len(testInterfc)-1))
         bondDiff = myDist - myContact  # actual distance - ideal covalent BL
         myBond = bondDiff[bondDiff > toler_BLmin]
         myBond = myBond[myBond < toler_BLmax]
+       # print(len(bondDiff[bondDiff < toler_BLmin]) == 0 , len(myBond))
         if len(bondDiff[bondDiff < toler_BLmin]) == 0 and toler_CNmin <= len(myBond) <= toler_CNmax:
             goodStruc = True
             if bondRejList is not None or bondMustList is not None:
                 mySymb = testInterfc.get_chemical_symbols()
                 myBPs_now = get_bondpairs(testInterfc.get_allAtoms(), bondCutoff)
+                myBPs = [[i[0], i[1]] for i in myBPs_now]
+                myBPs = [i for i in myBPs if i not in myBPs_old]
+                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+               # print(myBPs)
             if bondRejList is not None:
-                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs_now]
+                #myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs_now]
+                
                 for rj in bondRejList:
                     if rj in myBPs or [rj[1], rj[0]] in myBPs:
+                        #print('!has rej bond', myBPs)
                         goodStruc = False
                         break
             if bondMustList is not None and goodStruc:
-                myBPs = [[i[0], i[1]] for i in myBPs_now]
-                myBPs = [i for i in myBPs if i not in myBPs_old]
                 if len(myBPs) == 0:
+                 #   print('!has no bond')
                     goodStruc = False
                     #break
                 else:
-                    myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
-                    #print(myBPs)
+                    # print(myBPs)
                     #print(any(x in myBPs for x in bondMustList))
-                    if not any(x in myBPs for x in bondMustList):
+                    if not any(x in myBPs or [x[1], x[0]] in myBPs for x in bondMustList):
+                   #     print('!has no must bond')
                         goodStruc = False
                         #break
             if constrainTop:
@@ -333,21 +346,20 @@ def boxSample_adatom(
                 tmpInterfc = testInterfc
                 ind_curr += 1
         # prevent dead loop
-        if ind_curr == 0 and n_attempts >= 200:
+        if ind_curr == 0 and n_attempts >= 500:
             print(
                 'BAD STARTING STRUCTURE! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
-        if n_attempts >= 100 * numAds:
+        if n_attempts >= 250 * numAds:
             print(
                 'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
-    tmpInterfc.sort()
+    #tmpInterfc.sort() #DO NOT SORT BY DEFAULT
     #print('%i\tplacements' % (n_attempts))
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
 
-    
 def boxSample_frag(
     interfc,
     growList,
@@ -451,8 +463,7 @@ def boxSample_frag(
                 else:
                     myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
                     print(myBPs)
-                    print(any(x in myBPs for x in bondMustList))
-                    if not any(x in myBPs for x in bondMustList):
+                    if not any(x in myBPs or [x[1], x[0]] in myBPs for x in bondMustList):
                         goodStruc = False
             # Or constrained to adding on top
             if constrainTop:
@@ -474,6 +485,124 @@ def boxSample_frag(
     if ljopt:
         tmpInterfc.preopt_lj(stepsize=ljstepsize, nsteps=ljnsteps)
     return tmpInterfc
+
+def boxSample_mol(interfc,
+    addMolList,
+    xyzLims,
+    solvMode = False,
+    bindDict = None,
+    bondRejList=None,
+    bondMustList=None,
+    doShuffle=True,
+    bondCutoff = 0.8
+):
+    numAds = len(addMolList)
+    if doShuffle:
+        random.shuffle(addMolList)
+    n_added = 0
+    n_attempts = 0
+    tmpInterfc = interfc.copy()
+
+    trj = []
+
+    while n_added < len(addMolList):
+        n_attempts += 1
+        testInterfc = tmpInterfc.copy()
+
+        centreCoord = geom.rand_point_box(xyzLims)
+
+        a_probe = Atoms('X', [centreCoord])
+        surf_probe = testInterfc.get_allAtoms()
+        surf_probe.extend(a_probe)
+        if not (2.5 > min(surf_probe.get_distances(len(surf_probe)-1, range(len(surf_probe)-1), mic=True)) > 0.5):
+            continue
+        
+        tmpAds = addMolList[n_added].copy()
+        pos_ads = tmpAds.get_positions()
+        # rotate along z
+        rot = R.from_rotvec(- random.random()*np.pi * np.array([0, 0, 1]))
+        pos_ads = rot.apply(pos_ads)
+        # rotate randomly a bit
+        rot_axis = geom.rand_direction()
+        rot_angle = random.random()*np.pi/2
+        rot = R.from_rotvec(- rot_angle * rot_axis)
+        pos_ads = rot.apply(pos_ads)
+
+
+        pos_ads_test = pos_ads + centreCoord
+
+        tmpAds_test = tmpAds.copy()
+        tmpAds_test.set_positions(pos_ads_test)
+        testInterfc.merge_adsorbate(tmpAds_test)
+
+        if testInterfc.has_badContact(2*(1-bondCutoff)):
+            continue
+
+        bps_all = geom.get_bondpairs(testInterfc.get_allAtoms(), scale=bondCutoff)
+        list_coords = []
+        for ind in range(len(testInterfc)-len(tmpAds_test), len(testInterfc)):
+            list_tmp = []
+            for j in geom.get_coordList(ind, bps_all):
+                if j not in range(len(testInterfc)-len(tmpAds_test), len(testInterfc)):
+                    list_tmp.append(j)
+            list_coords.append(list_tmp)
+     
+
+        trj.append(testInterfc.get_allAtoms())
+
+
+        if sum([len(c) for c in list_coords]) > 0:
+            goodStruc = True
+            if bondRejList is not None or bondMustList is not None:
+                mySymb = testInterfc.get_chemical_symbols()
+                myBPs = []
+                for j in range(len(list_coords)):
+                    c = list_coords[j]
+                    myBPs += [[len(testInterfc)-len(tmpAds_test)+j, a] for a in c]
+                myBPs = [[mySymb[bp[0]], mySymb[bp[1]]] for bp in myBPs]
+                
+
+            if bondRejList is not None:                
+                for rj in bondRejList:
+                    if rj in myBPs or [rj[1], rj[0]] in myBPs:
+                        #print('!has rej bond', myBPs)
+                        goodStruc = False
+                        break
+            if bondMustList is not None and goodStruc:
+                if len(myBPs) == 0:
+                 #   print('!has no bond')
+                    goodStruc = False
+                    #break
+                else:
+                    # print(myBPs)
+                    #print(any(x in myBPs for x in bondMustList))
+                    if not any(x in myBPs or [x[1], x[0]] in myBPs for x in bondMustList):
+                        #print('!has no must bond')
+                        goodStruc = False
+                        #break
+            if goodStruc:
+                print('Bonds:', myBPs)
+                print(f'# Progress: {n_added+1}/{numAds}\t@attempt {n_attempts}')
+                tmpInterfc = testInterfc
+                n_added += 1
+
+        write('test.xyz', trj)
+
+        # prevent dead loop
+        if n_added == 0 and n_attempts >= 1000:
+            print(
+                'BAD STARTING STRUCTURE! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            return None
+        if n_attempts >= 500 * numAds:
+            print(
+                'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
+            return None
+    #tmpInterfc.sort() #DO NOT SORT BY DEFAULT
+    #print('%i\tplacements' % (n_attempts))
+    return tmpInterfc
+
+
+
 
 # Below are for symmetric cell construction
 def split_sym_mirror(atoms, z_mirror, z_range=0.5):
