@@ -210,6 +210,49 @@ def lmp2db(nameKey='', excludeBAD=False):
             count_fin += 1
     print('\n %i candidates writen to lmp-%s.db' % (count_fin, get_projName()))
 
+def cp2k2db(list_dirs=None, pos_key=None, out_key=None, excludeBAD=False):
+    print(' --- Collecting CP2K results ---')
+    if list_dirs is None or pos_key is None or out_key is None:
+        print('Please provide the list_dirs, pos_key, and out_key in the argument!')
+        exit
+    count_fin = 0
+    with connect('cp2k-%s.db' % get_projName(), append=False) as myDb:
+        for d in list_dirs:
+            print('%s' % d, end='')
+            if excludeBAD:
+                if 'BADSTRUCTURE' in os.listdir(d):
+                    print('-X', end='\t')
+                    continue
+            if os.path.isfile(d+f'/{out_key}.out') and os.path.isfile(d+f'/{pos_key}.xyz'):
+                cp2k_out = open(d+f'/{out_key}.out', 'r').read()
+                if 'ABORT' in cp2k_out:
+                    print('-X', end='\t')
+                    continue
+                cp2k_out = cp2k_out.split('\n')
+
+                s = read(d+f'/{pos_key}.xyz')
+                eV = eval([l for l in cp2k_out if 'ENERGY' in l][-1].split()[-1]) * 27.2114
+                # if 'mag' in cp2k_out:
+                #     mag = eval(oszicar_tail.split()[-1])
+                # else:
+                #     mag = 0
+                if 'fragments' in os.listdir(d):
+                    fragments = open(d+'/fragments', 'r').readlines()[0].rstrip('\n')
+                else:
+                    fragments = '[]'
+                myDb.write(
+                    s,
+                    eV=eV,
+                    mag=0,  #TODO: read spin polarized calc
+                    done=1,
+                    adsFrags=fragments,
+                )
+                print('-O', end='\t')
+                count_fin += 1
+            else:
+                print('-X', end='\t')
+    print('\n %i candidates writen to cp2k-%s.db' %
+          (count_fin, get_projName()))
 
 def db2vasp(dbName):
     traj = read(dbName, index=':')
