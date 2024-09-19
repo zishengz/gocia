@@ -8,7 +8,7 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
+def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
     atoms.calc = my_calc
 
     if label is not None:
@@ -20,7 +20,7 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
         os.chdir(label)
 
     if optimizer is None:
-        print('We assume that an internal optimizer is used!')
+        print('OPTIMIZER OR FMAX NOT PROVIDED!\n -- We assume that an internal optimizer is used!')
         atoms.get_potential_energy()
     else:
         print(f'Local optimization with {optimizer}')
@@ -39,20 +39,24 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
     return atoms
 
 
-def geomopt_multi(atoms, list_calc, list_fmax, label=None, optimizer='LBFGS'):
-    if optimizer is not None and len(list_calc) != len(list_fmax):
-        print('#calculators is inconsistent with #fmax!')
-        exit()
-
+def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=None):
     atoms_opt = atoms.copy()
-    for i_step in range(len(list_calc)):
-        print(f'STEP {i_step+1}')
-        atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], list_fmax[i_step], label=label, optimizer=optimizer)
+    if optimizer is not None and list_fmax is not None:
+        if len(list_calc) != len(list_fmax):
+            print('#calculators is inconsistent with #fmax!')
+            exit()
+        for i_step in range(len(list_calc)):
+            print(f'STEP {i_step+1}')
+            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, list_fmax[i_step], label=label)
+    else:
+        for i_step in range(len(list_calc)):
+            print(f'STEP {i_step+1}')
+            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, label=label)
 
     return atoms_opt
 
 
-def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
     if fn_frag in os.listdir():
         if read_frag(fn=fn_frag) is not None:
@@ -63,16 +67,19 @@ def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chk
     my_atoms = atoms.copy()
     while continueRunning:
             print(f'Optimization cycle: {counter + 1}')
-            if type(my_calc) is list and optimizer is None:
-                opt_atoms = geomopt_multi(my_atoms, my_calc, label=label, optimizer=optimizer)
-            elif type(my_calc) is not list and optimizer is None:
-                opt_atoms = geomopt_simple(my_atoms, my_calc, label=label, optimizer=optimizer)
-            elif type(my_calc) is list and type(fmax) is list:
-                opt_atoms = geomopt_multi(my_atoms, my_calc, fmax, label=label, optimizer=optimizer)
-            elif type(my_calc) is not list and type(fmax) is not list:
-                opt_atoms = geomopt_simple(my_atoms, my_calc, fmax, label=label, optimizer=optimizer)
+            if optimizer is not None and fmax is not None:
+                if type(my_calc) is list and type(fmax) is list:
+                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, fmax, label=label)
+                elif type(my_calc) is not list and type(fmax) is not list:
+                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, fmax, label=label)
+                else:
+                    print('Inconsistent #fmax and #calc\\ -- they should either be both lists ot both single objects/variables.')
             else:
-                print('Inconsistent #fmax and #calc\\ -- they should either be both lists ot both single objects/variables.')
+                if type(my_calc) is list:
+                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, label=label)
+                elif type(my_calc) is not list:
+                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, label=label)
+                
             counter += 1
 
             # REMOVE BROKEN FRAGMENTS
@@ -133,9 +140,10 @@ def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chk
             # REMOVE FREE MOLECULES DESORBED FROM THE SURFACE
             if chkMol:
                 geom_tmp, list_del = del_freeMol(opt_atoms, list_keep=list_keep)
-                opt_atoms = geom_tmp
-                if has_fragList and len(list_del) > 0:
-                    update_frag_del(list_del, fn=fn_frag)
+                if len(geom_tmp) < len(opt_atoms):
+                    opt_atoms = geom_tmp
+                    if has_fragList and len(list_del) > 0:
+                        update_frag_del(list_del, fn=fn_frag)
 
             # REMOVE ATOMS OUTSIDE THE SAMPLING BOX
             if zLim is not None:
