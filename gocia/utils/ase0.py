@@ -19,7 +19,7 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
             pass
         os.chdir(label)
 
-    if optimizer == None:
+    if optimizer is None:
         print('We assume that an internal optimizer is used!')
         atoms.get_potential_energy()
     else:
@@ -40,7 +40,7 @@ def geomopt_simple(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS'):
 
 
 def geomopt_multi(atoms, list_calc, list_fmax, label=None, optimizer='LBFGS'):
-    if len(list_calc) != len(list_fmax):
+    if optimizer is not None and len(list_calc) != len(list_fmax):
         print('#calculators is inconsistent with #fmax!')
         exit()
 
@@ -63,7 +63,11 @@ def geomopt_iterate(atoms, my_calc, fmax=0.1, label=None, optimizer='LBFGS', chk
     my_atoms = atoms.copy()
     while continueRunning:
             print(f'Optimization cycle: {counter + 1}')
-            if type(my_calc) is list and type(fmax) is list:
+            if type(my_calc) is list and optimizer is None:
+                opt_atoms = geomopt_multi(my_atoms, my_calc, label=label, optimizer=optimizer)
+            elif type(my_calc) is not list and optimizer is None:
+                opt_atoms = geomopt_simple(my_atoms, my_calc, label=label, optimizer=optimizer)
+            elif type(my_calc) is list and type(fmax) is list:
                 opt_atoms = geomopt_multi(my_atoms, my_calc, fmax, label=label, optimizer=optimizer)
             elif type(my_calc) is not list and type(fmax) is not list:
                 opt_atoms = geomopt_simple(my_atoms, my_calc, fmax, label=label, optimizer=optimizer)
