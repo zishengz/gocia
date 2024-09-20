@@ -27,6 +27,34 @@ def get_projName():
     return os.getcwd().split('/')[-1]
 
 
+def merge_db(list_dbname, fn_merged='merged.db'):
+    if fn_merged in os.listdir():
+        print(f'REMOVING OLD {fn_merged}')
+        os.remove(fn_merged)
+    with connect(fn_merged) as db_out:
+        for fn in list_dbname:
+            print(f'MERGING {fn} to {fn_merged}')
+            with connect(fn) as db_in:
+                for r in db_in.select():
+                    db_out.write(r)
+
+def ase2db_json(namekey=''):
+    print(' --- Collecting ASE (json) results --- ')
+    list_out = [f for f in os.listdir('.') if '.json' in f and namekey in f]
+    with connect('ase-%s.db' % get_projName(), append=False) as myDb:
+        for i in range(len(list_out)):
+            s = read(list_out[i])
+            myDb.write(
+                s,
+                eV=s.get_potential_energy(),
+                mag=s.get_magnetic_moments().sum(),
+                done=1,
+            )
+    print('\n %i candidates writen to ase-%s.db' %
+          (len(list_out), get_projName()))
+
+
+
 def calypso2db():
     print(' --- Collecting CALYPSO results --- ')
     os.system('cd results;cak.py -n 9999 --vasp')
