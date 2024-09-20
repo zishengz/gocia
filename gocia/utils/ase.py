@@ -54,11 +54,11 @@ def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=Non
             print(f'STEP {i_step+1}')
             atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, label=label)
             if fn_bkup is not None:
-                os.rename(fn_bkup, f'opt{i_step+1}-{fn_bkup}')
+                os.rename(fn_bkup, f'opt{i_step+1}__{fn_bkup}')
     return atoms_opt
 
 
-def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
+def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[], fn_bkup=None):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
     if fn_frag in os.listdir():
         if read_frag(fn=fn_frag) is not None:
@@ -71,16 +71,22 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
             print(f'Optimization cycle: {counter + 1}')
             if optimizer is not None and fmax is not None:
                 if type(my_calc) is list and type(fmax) is list:
-                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, fmax, label=label)
+                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
                 elif type(my_calc) is not list and type(fmax) is not list:
-                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, fmax, label=label)
+                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
                 else:
                     print('Inconsistent #fmax and #calc\\ -- they should either be both lists ot both single objects/variables.')
+                for fb in [f for f in os.listdir('.') if f[:3] == 'opt' and f[5:]=='.traj']:
+                    os.rename(fb, f'cyc{str(counter).zfill(2)}__{fb}')
             else:
                 if type(my_calc) is list:
-                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, label=label)
+                    opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
                 elif type(my_calc) is not list:
-                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, label=label)
+                    opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
+                # back up files
+                if fn_bkup is not None:
+                    for fb in [f for f in os.listdir('.') if f[:3] == 'opt' and fn_bkup in f]:
+                        os.rename(fb, f'cyc{str(counter).zfill(2)}__{fb}')
                 
             counter += 1
 
