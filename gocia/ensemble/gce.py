@@ -1,6 +1,10 @@
 
 import numpy as np
+from ase.io import read, write
 from ase.formula import Formula
+from ase.units import kB
+
+k_B = 8.61733E-05 #eV/K
 
 class GCE:
     # every Atoms object in here MUST have ase calculator and results
@@ -26,6 +30,8 @@ class GCE:
     def get_gcfe(self, atoms_sub, dict_mu, indices=None):
         if indices is None:
             indices = range(len(self.epots))
+        if type(atoms_sub) is str:
+            atoms_sub = read(atoms_sub)
         elems_gc = list(dict_mu)
         list_gcfe = []
         for i in indices:
@@ -63,7 +69,45 @@ class GCE:
         else:
             tmp = [self.epots[m] for m in grp]
             return self.epots.index(min(tmp))
+        
+    def get_pop(self, energy, grp, T=298.15):
+        # a single energy value for each structure
+        # TODO: X-dependent energy
+        if len(energy) != len(grp):
+            print('The lengths of energy and indices lists must be consistent!')
+        if type(energy) is list:
+            energy_zeroed = np.array(energy) - min(energy)
+        elif type(energy) is np.ndarray:
+            energy_zeroed = energy - energy.min()
+        else:
+            print('BAD ENERGY! it should be either a list or array')
+        
+        pop = np.exp(-energy_zeroed / k_B / T)
+        pop /= pop.sum(axis=0).T
+        return pop
+    
+    def get_pop_1d(self, energy, grp, T=298.15):
+        # a single energy value for each structure
+        # TODO: X-dependent energy
+        if len(energy) != len(grp):
+            print('The lengths of energy and indices lists must be consistent!')
+        if type(energy) is list:
+            energy_zeroed = np.array(energy) - min(energy)
+        elif type(energy) is np.ndarray:
+            energy_zeroed = energy - energy.min()
+        else:
+            print('BAD ENERGY! it should be either a list or array')
+        
+        pop = np.exp(-energy_zeroed / k_B / T)
+        pop /= pop.sum(axis=0).T
+        return pop
+    
+    
 
+
+
+
+        
 
 #    def get LELM and sort
 
