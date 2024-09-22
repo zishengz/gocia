@@ -8,7 +8,7 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
+def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None, fn_bkup=None):
     atoms_opt = atoms.copy()
     atoms_opt.calc = my_calc
 
@@ -21,10 +21,12 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
         os.chdir(label)
 
     if optimizer is None:
-        print('OPTIMIZER OR FMAX NOT PROVIDED!\n -- We assume that an internal optimizer is used!')
+        print('LOCAL OPTIMIZATION w/ built-in optimizer!')
         atoms_opt.get_potential_energy()
+        if fn_bkup is not None:
+            os.rename(f'{fn_bkup}', f'opt__{fn_bkup}')
     else:
-        print(f'Local optimization with {optimizer}')
+        print(f'LOCAL OPTIMIZATION w/ {optimizer}')
         if optimizer == 'LBFGS':
             from ase.optimize import LBFGS
             dyn = LBFGS(atoms_opt, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
@@ -38,10 +40,12 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
     if label is not None:
         os.chdir(cwd)
 
+
     return atoms_opt
 
 
 def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=None, fn_bkup=None):
+
     atoms_opt = atoms.copy()
     if optimizer is not None and list_fmax is not None:
         if len(list_calc) != len(list_fmax):
@@ -75,7 +79,7 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
     
     opt_atoms = atoms.copy()
     while continueRunning:
-        print(f'Optimization cycle: {counter + 1}')
+        print(f'ITERATIVE OPTIMIZATION -- CYCLE: {counter + 1}')
         if optimizer is not None and fmax is not None:
             if type(my_calc) is list and type(fmax) is list:
                 opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
@@ -215,6 +219,7 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
 
         natoms_new = len(opt_atoms)
 
+        print('BEFORE CHECK', opt_atoms.calc.results)
         natoms_removed = natoms_old - natoms_new
         if natoms_removed > 0:
             print(f'Redo the last opt step due to removal of {natoms_removed} atoms')
@@ -223,7 +228,10 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
         elif natoms_removed == 0:
             print('The geometry is good! CONVERGED!')
             continueRunning = False
-        
-    if opt_atoms.calc is not None:
+
+    # it still does not return a "good" calculator attribute
+    # need to look more into this.
+    if opt_atoms.calc.results is not None:
+        # write(f'{label}_inner.json', opt_atoms)
         return opt_atoms
 
