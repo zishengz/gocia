@@ -9,7 +9,8 @@ from gocia.interface import Interface
 from gocia.geom.frag import *
 
 def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
-    atoms.calc = my_calc
+    atoms_opt = atoms.copy()
+    atoms_opt.calc = my_calc
 
     if label is not None:
         cwd = os.getcwd()
@@ -21,22 +22,23 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None):
 
     if optimizer is None:
         print('OPTIMIZER OR FMAX NOT PROVIDED!\n -- We assume that an internal optimizer is used!')
-        atoms.get_potential_energy()
+        atoms_opt.get_potential_energy()
     else:
         print(f'Local optimization with {optimizer}')
         if optimizer == 'LBFGS':
             from ase.optimize import LBFGS
-            dyn = LBFGS(atoms, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
+            dyn = LBFGS(atoms_opt, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
 
         if label is None:
-            print(f'Optimizing {atoms.get_chemical_formula()}')
+            print(f'Optimizing {atoms_opt.get_chemical_formula()}')
         else:
-            print(f'Optimizing {atoms.get_chemical_formula()} in {label}')
+            print(f'Optimizing {atoms_opt.get_chemical_formula()} in {label}')
         dyn.run(fmax=fmax)
 
     if label is not None:
         os.chdir(cwd)
-    return atoms
+
+    return atoms_opt
 
 
 def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=None, fn_bkup=None):
@@ -70,31 +72,33 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
         
     continueRunning = True
     counter = 0
-    my_atoms = atoms.copy()
+    
+    opt_atoms = atoms.copy()
     while continueRunning:
         print(f'Optimization cycle: {counter + 1}')
         if optimizer is not None and fmax is not None:
             if type(my_calc) is list and type(fmax) is list:
-                opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
             elif type(my_calc) is not list and type(fmax) is not list:
-                opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
             else:
                 print('Inconsistent #fmax and #calc\\ -- they should either be both lists ot both single objects/variables.')
 
             for fb in [f for f in os.listdir('.') if f[:3] == 'opt' and f[5:]=='.traj']:
-                os.rename(fb, f'cyc{str(counter).zfill(2)}__{fb}')
+                os.rename(fb, f'cyc{str(counter+1).zfill(2)}__{fb}')
         else:
             if type(my_calc) is list:
-                opt_atoms = geomopt_multi(my_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
             elif type(my_calc) is not list:
-                opt_atoms = geomopt_simple(my_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
             # back up files
             if fn_bkup is not None:
                 if label is None:
                     label = '.'
                 for fb in [f for f in os.listdir(label) if f[:3] == 'opt' and fn_bkup in f]:
-                    os.rename(f'{label}/{fb}', f'{label}/cyc{str(counter).zfill(2)}__{fb}')
-            
+                    os.rename(f'{label}/{fb}', f'{label}/cyc{str(counter+1).zfill(2)}__{fb}')
+
+        natoms_old = len(opt_atoms)
         counter += 1
 
         # REMOVE BROKEN FRAGMENTS
@@ -209,13 +213,17 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
                 del struct[list_del]
                 opt_atoms = struct
 
-        natoms_removed = len(my_atoms) - len(opt_atoms)
-        my_atoms = opt_atoms
+        natoms_new = len(opt_atoms)
+
+        natoms_removed = natoms_old - natoms_new
         if natoms_removed > 0:
             print(f'Redo the last opt step due to removal of {natoms_removed} atoms')
+            opt_atoms = opt_atoms.copy()
             continue
         elif natoms_removed == 0:
             print('The geometry is good! CONVERGED!')
             continueRunning = False
-            break
-    return my_atoms
+        
+    if opt_atoms.calc is not None:
+        return opt_atoms
+
