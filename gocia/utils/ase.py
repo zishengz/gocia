@@ -219,7 +219,7 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
 
         natoms_new = len(opt_atoms)
 
-        print('BEFORE CHECK', opt_atoms.calc.results)
+
         natoms_removed = natoms_old - natoms_new
         if natoms_removed > 0:
             print(f'Redo the last opt step due to removal of {natoms_removed} atoms')
