@@ -73,6 +73,11 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
     if fn_frag in os.listdir():
         if read_frag(fn=fn_frag) is not None:
             has_fragList = True
+
+    if type(substrate) is str:
+        my_subs = read(substrate)
+    else:
+        my_subs = substrate
         
     continueRunning = True
     counter = 0
@@ -129,7 +134,7 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
         if has_fragList and has_fragSurfBond:
             my_fragList = read_frag(fn=fn_frag)
             struct = opt_atoms.copy()
-            list1 = list(range(len(read(substrate))))
+            list1 = list(range(len(my_subs)))
             list_del = []
             for i in range(len(my_fragList)):
                 if not is_bonded(struct, list1, my_fragList[i]):
@@ -172,7 +177,7 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
         if zLim is not None:
             surf = Interface(
                 opt_atoms,
-                substrate,
+                my_subs,
                 zLim = zLim
             )
             if surf.has_outsideBox():

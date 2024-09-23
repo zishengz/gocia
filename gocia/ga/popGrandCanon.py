@@ -439,7 +439,7 @@ class PopulationGrandCanonical:
                     label=myLabel
                 )
 
-    def add_aseResult(self, atoms, workdir='.', isAlive=1):
+    def add_aseResult_old(self, atoms, workdir='.', isAlive=1):
         ene_eV = atoms.get_potential_energy()
         grndPot = self.calc_grandPot(atoms, ene_eV)
         myLabel = open(f'{workdir}/label', 'r').read()
@@ -467,6 +467,47 @@ class PopulationGrandCanonical:
                 atoms,
                 name=workdir,
                 mag=0,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=0,
+                label=myLabel
+            )
+
+    def add_aseResult(self, atoms, workdir='.', isAlive=1):
+        ene_eV = atoms.get_potential_energy()
+        grndPot = self.calc_grandPot(atoms, ene_eV)
+        try:
+            mag = atoms.get_magnetic_moments().sum()
+        except:
+            mag = 0
+
+        myLabel = open(f'label', 'r').read()
+        print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+            workdir, grndPot, myLabel))
+        if self.is_uniqueInAll(atoms, grndPot):
+            if grndPot < self.get_GMrow()['grandPot']:
+                print(f' |- {workdir} is the new GM!')
+                with open('gmid', 'w') as f:
+                    f.write(str(len(self)))
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=mag,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=isAlive,
+                label=myLabel
+            )
+        else:
+            print(f' |- {workdir} is a duplicate!')
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=mag,
                 eV=ene_eV,
                 grandPot=grndPot,
                 mated=0,
