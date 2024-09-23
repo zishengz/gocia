@@ -44,10 +44,14 @@ def ase2db_json(namekey=''):
     with connect('ase-%s.db' % get_projName(), append=False) as myDb:
         for i in range(len(list_out)):
             s = read(list_out[i])
+            try:
+                my_mag = s.get_magnetic_moments().sum()
+            except:
+                my_mag = 0
             myDb.write(
                 s,
                 eV=s.get_potential_energy(),
-                mag=s.get_magnetic_moments().sum(),
+                mag=my_mag,
                 done=1,
             )
     print('\n %i candidates writen to ase-%s.db' %
