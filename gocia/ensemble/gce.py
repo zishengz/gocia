@@ -91,12 +91,10 @@ class GCE:
         # TODO: X-dependent energy
         if len(energy) != len(grp):
             print('The lengths of energy and indices lists must be consistent!')
-        if type(energy) is list:
-            energy_zeroed = np.array(energy) - min(energy)
-        elif type(energy) is np.ndarray:
-            energy_zeroed = energy - energy.min()
+        if type(energy) is np.ndarray:
+            energy_zeroed = np.array(energy) - energy.min(axis=0)
         else:
-            print('BAD ENERGY! it should be either a list or array')
+            print('BAD ENERGY! it should be either a 2d array')
         
         pop = np.exp(-energy_zeroed / k_B / T)
         pop /= pop.sum(axis=0).T
