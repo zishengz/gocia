@@ -489,7 +489,7 @@ class PopulationGrandCanonical:
         if self.is_uniqueInAll(atoms, grndPot):
             if grndPot < self.get_GMrow()['grandPot']:
                 print(f' |- {workdir} is the new GM!')
-                with open('gmid', 'w') as f:
+                with open('../gmid', 'w') as f:
                     f.write(str(len(self)))
             self.gadb.write(
                 atoms,
