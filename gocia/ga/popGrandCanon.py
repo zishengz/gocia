@@ -487,7 +487,7 @@ class PopulationGrandCanonical:
         print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
             workdir, grndPot, myLabel))
         if self.is_uniqueInAll(atoms, grndPot):
-            if grndPot < self.get_GMrow()['grandPot']:
+            if grndPot < self.get_GMrow()['grandPot'] and isAlive == 1:
                 print(f' |- {workdir} is the new GM!')
                 with open('../gmid', 'w') as f:
                     f.write(str(len(self)))
