@@ -36,7 +36,10 @@ def merge_db(list_dbname, fn_merged='merged.db'):
             print(f'MERGING {fn} to {fn_merged}')
             with connect(fn) as db_in:
                 for r in db_in.select():
-                    db_out.write(r)
+                    try:
+                        db_out.write(r)
+                    except:
+                        pass
 
 def ase2db_json(namekey=''):
     print(' --- Collecting ASE (json) results --- ')
