@@ -70,7 +70,7 @@ def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=Non
 
 def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[], fn_bkup=None):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
-    if fn_frag in os.listdir():
+    if os.path.isfile(fn_frag):
         if read_frag(fn=fn_frag) is not None:
             has_fragList = True
 

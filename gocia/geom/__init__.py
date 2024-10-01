@@ -143,7 +143,7 @@ def rand_point_box(xyzLims):
     tmpRand = np.random.rand(3)
     return tmpRand * (xyzLims[:,1]-xyzLims[:,0]) + xyzLims[:,0]
 
-def get_bondpairs(atoms, scale=1.1):
+def get_bondpairs(atoms, scale=1.0):
     """Get all pairs of bonding atoms
 
     Return all pairs of atoms which are closer than radius times the
