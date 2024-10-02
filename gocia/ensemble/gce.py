@@ -9,7 +9,7 @@ k_B = 8.61733E-05 #eV/K
 class GCE:
     # every Atoms object in here MUST have ase calculator and results
 
-    def __init__(self, traj):
+    def __init__(self, traj, epots=None):
         self.traj = traj
 
         elems = []
@@ -25,17 +25,25 @@ class GCE:
             elem_counts[self.elems[i]] = list_tmp
         self.elem_counts = elem_counts
 
-        self.epots = [a.get_potential_energy() for a in self.traj]
+        if epots is None:
+            self.epots = [a.get_potential_energy() for a in self.traj]
+        else:
+            if len(epots) == len(traj):
+                self.epots = epots
 
-    def get_gcfe(self, atoms_sub, dict_mu, indices=None):
+    def get_gcfe(self, atoms_sub, dict_mu, indices=None, e_subs = None):
         if indices is None:
             indices = range(len(self.epots))
         if type(atoms_sub) is str:
             atoms_sub = read(atoms_sub)
+
+        if e_subs is None:
+            e_subs = atoms_sub.get_potential_energy()
+            
         elems_gc = list(dict_mu)
         list_gcfe = []
         for i in indices:
-            tmp = self.epots[i] - atoms_sub.get_potential_energy()
+            tmp = self.epots[i] - e_subs
             for e in elems_gc:
                 tmp -= (self.elem_counts[e][i]-atoms_sub.get_chemical_symbols().count(e))*dict_mu[e]
             list_gcfe.append(tmp)
