@@ -552,7 +552,7 @@ class PopulationGrandCanonicalPoly:
         
 
         ene_eV = atoms.get_potential_energy()
-        grndPot = self.calc_grandPot(atoms, ene_eV)
+        grndPot = self.calc_grandPot(atoms, ene_eV, myInfo)
         try:
             mag = atoms.get_magnetic_moments().sum()
         except:

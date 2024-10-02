@@ -60,7 +60,37 @@ def ase2db_json(namekey=''):
     print('\n %i candidates writen to ase-%s.db' %
           (len(list_out), get_projName()))
 
+def ase2db_json_poly(namekey='', has_frag=False):
+    print(' --- Collecting ASE (json) results --- ')
+    list_out = [f for f in os.listdir('.') if '.json' in f and namekey in f]
 
+    if len(list_out) == 0:
+        list_out = [d[:-1]
+             for d in os.popen(f'ls *{namekey}*/*.json').readlines()]
+        
+    with connect('ase-%s.db' % get_projName(), append=False) as myDb:
+        for i in range(len(list_out)):
+            s = read(list_out[i])
+            try:
+                my_mag = s.get_magnetic_moments().sum()
+            except:
+                my_mag = 0
+
+            if has_frag:
+                try:
+                    fragments = open(list_out[i].split('/')[0]+'/fragments', 'r').readlines()[0].rstrip('\n')
+                except:
+                    fragments = '[]'
+
+            myDb.write(
+                s,
+                eV=s.get_potential_energy(),
+                mag=my_mag,
+                done=1,
+                adsFrags=fragments,
+            )
+    print('\n %i candidates writen to ase-%s.db' %
+          (len(list_out), get_projName()))
 
 def calypso2db():
     print(' --- Collecting CALYPSO results --- ')
