@@ -221,8 +221,8 @@ def make_surfChrg_sp(nelect):
         f.write(f'NELECT={nelect}')
     os.chdir(homedir)
 
-def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0):
-    pos2pot(pp_path)
+def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
