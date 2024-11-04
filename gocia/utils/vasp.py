@@ -251,7 +251,7 @@ def update_SC_inner(nelect, vasp_cmd, u_ref=4.44, shift=0):
     os.chdir(homedir)
     USHE, G
 
-def update_SC(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
+def update_SC(list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
@@ -259,8 +259,8 @@ def update_SC(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
         with open('sc.dat', 'a') as f:
             f.write(f'{d}\t{ushe}\t{g}\n')
 
-def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
-    pos2pot(pp_path)
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
