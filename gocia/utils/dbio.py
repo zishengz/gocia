@@ -27,6 +27,71 @@ def get_projName():
     return os.getcwd().split('/')[-1]
 
 
+def merge_db(list_dbname, fn_merged='merged.db'):
+    if fn_merged in os.listdir():
+        print(f'REMOVING OLD {fn_merged}')
+        os.remove(fn_merged)
+    with connect(fn_merged) as db_out:
+        for fn in list_dbname:
+            print(f'MERGING {fn} to {fn_merged}')
+            with connect(fn) as db_in:
+                for r in db_in.select():
+                    try:
+                        db_out.write(r)
+                    except:
+                        pass
+
+def ase2db_json(namekey=''):
+    print(' --- Collecting ASE (json) results --- ')
+    list_out = [f for f in os.listdir('.') if '.json' in f and namekey in f]
+    with connect('ase-%s.db' % get_projName(), append=False) as myDb:
+        for i in range(len(list_out)):
+            s = read(list_out[i])
+            try:
+                my_mag = s.get_magnetic_moments().sum()
+            except:
+                my_mag = 0
+            myDb.write(
+                s,
+                eV=s.get_potential_energy(),
+                mag=my_mag,
+                done=1,
+            )
+    print('\n %i candidates writen to ase-%s.db' %
+          (len(list_out), get_projName()))
+
+def ase2db_json_poly(namekey='', has_frag=False):
+    print(' --- Collecting ASE (json) results --- ')
+    list_out = [f for f in os.listdir('.') if '.json' in f and namekey in f]
+
+    if len(list_out) == 0:
+        list_out = [d[:-1]
+             for d in os.popen(f'ls *{namekey}*/*.json').readlines()]
+        
+    with connect('ase-%s.db' % get_projName(), append=False) as myDb:
+        for i in range(len(list_out)):
+            s = read(list_out[i])
+            try:
+                my_mag = s.get_magnetic_moments().sum()
+            except:
+                my_mag = 0
+
+            if has_frag:
+                try:
+                    fragments = open(list_out[i].split('/')[0]+'/fragments', 'r').readlines()[0].rstrip('\n')
+                except:
+                    fragments = '[]'
+
+            myDb.write(
+                s,
+                eV=s.get_potential_energy(),
+                mag=my_mag,
+                done=1,
+                adsFrags=fragments,
+            )
+    print('\n %i candidates writen to ase-%s.db' %
+          (len(list_out), get_projName()))
+
 def calypso2db():
     print(' --- Collecting CALYPSO results --- ')
     os.system('cd results;cak.py -n 9999 --vasp')
@@ -210,6 +275,49 @@ def lmp2db(nameKey='', excludeBAD=False):
             count_fin += 1
     print('\n %i candidates writen to lmp-%s.db' % (count_fin, get_projName()))
 
+def cp2k2db(list_dirs=None, pos_key=None, out_key=None, excludeBAD=False):
+    print(' --- Collecting CP2K results ---')
+    if list_dirs is None or pos_key is None or out_key is None:
+        print('Please provide the list_dirs, pos_key, and out_key in the argument!')
+        exit
+    count_fin = 0
+    with connect('cp2k-%s.db' % get_projName(), append=False) as myDb:
+        for d in list_dirs:
+            print('%s' % d, end='')
+            if excludeBAD:
+                if 'BADSTRUCTURE' in os.listdir(d):
+                    print('-X', end='\t')
+                    continue
+            if os.path.isfile(d+f'/{out_key}.out') and os.path.isfile(d+f'/{pos_key}.xyz'):
+                cp2k_out = open(d+f'/{out_key}.out', 'r').read()
+                if 'ABORT' in cp2k_out:
+                    print('-X', end='\t')
+                    continue
+                cp2k_out = cp2k_out.split('\n')
+
+                s = read(d+f'/{pos_key}.xyz')
+                eV = eval([l for l in cp2k_out if 'ENERGY' in l][-1].split()[-1]) * 27.2114
+                # if 'mag' in cp2k_out:
+                #     mag = eval(oszicar_tail.split()[-1])
+                # else:
+                #     mag = 0
+                if 'fragments' in os.listdir(d):
+                    fragments = open(d+'/fragments', 'r').readlines()[0].rstrip('\n')
+                else:
+                    fragments = '[]'
+                myDb.write(
+                    s,
+                    eV=eV,
+                    mag=0,  #TODO: read spin polarized calc
+                    done=1,
+                    adsFrags=fragments,
+                )
+                print('-O', end='\t')
+                count_fin += 1
+            else:
+                print('-X', end='\t')
+    print('\n %i candidates writen to cp2k-%s.db' %
+          (count_fin, get_projName()))
 
 def db2vasp(dbName):
     traj = read(dbName, index=':')

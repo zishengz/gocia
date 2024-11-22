@@ -238,8 +238,8 @@ def make_surfChrg_sp(nelect):
         f.write(f'NELECT={nelect}')
     os.chdir(homedir)
 
-def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0):
-    pos2pot(pp_path)
+def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
@@ -261,9 +261,23 @@ def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44, shift=0):
     os.chdir(homedir)
     return USHE, G
 
+def update_SC_inner(nelect, vasp_cmd, u_ref=4.44, shift=0):
+    homedir = os.getcwd()
+    val, nelect, ene, efermi, shftfermi = extractVASPsol(shift=shift)
+    USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi, u_ref=u_ref)
+    os.chdir(homedir)
+    USHE, G
 
-def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
-    pos2pot(pp_path)
+def update_SC(list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
+    nelect_neu = get_neu_nelect(shift=shift)
+    for d in list_deltaCharge:
+        nelect_tmp = nelect_neu + d
+        ushe, g = update_SC_inner(nelect_tmp, vasp_cmd, u_ref=u_ref, shift=shift)
+        with open('sc.dat', 'a') as f:
+            f.write(f'{d}\t{ushe}\t{g}\n')
+
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d

@@ -2,7 +2,7 @@
 import os
 
 def read_frag(fn='fragments'):
-    if fn in os.listdir():
+    if os.path.isfile(fn):
         return eval(open(fn, 'r').read())
     else:
         print('Could not find the \"fragments\" file')
