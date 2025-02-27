@@ -8,7 +8,7 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None, fn_bkup=None):
+def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, relax_steps=100000000, label=None, fn_bkup=None):
     atoms_opt = atoms.copy()
     atoms_opt.calc = my_calc
 
@@ -35,7 +35,7 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None, fn_b
             print(f'Optimizing {atoms_opt.get_chemical_formula()}')
         else:
             print(f'Optimizing {atoms_opt.get_chemical_formula()} in {label}')
-        dyn.run(fmax=fmax)
+        dyn.run(fmax=fmax, steps=relax_steps)
 
     if label is not None:
         os.chdir(cwd)
@@ -44,7 +44,7 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, label=None, fn_b
     return atoms_opt
 
 
-def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=None, fn_bkup=None):
+def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, relax_steps=100000000, label=None, fn_bkup=None):
 
     atoms_opt = atoms.copy()
     if optimizer is not None and list_fmax is not None:
@@ -53,14 +53,14 @@ def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=Non
             exit()
         for i_step in range(len(list_calc)):
             print(f'STEP {i_step+1}')
-            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, list_fmax[i_step], label=label)
+            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, list_fmax[i_step], relax_steps=relax_steps, label=label)
             if label is None:
                 label = '.'
             os.rename(f'{label}/opt.traj', f'{label}/opt{i_step+1}.traj')
     else:
         for i_step in range(len(list_calc)):
             print(f'STEP {i_step+1}')
-            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, label=label)
+            atoms_opt = geomopt_simple(atoms_opt, list_calc[i_step], optimizer, relax_steps=relax_steps, label=label)
             if fn_bkup is not None:
                 if label is None:
                     label = '.'
@@ -68,7 +68,7 @@ def geomopt_multi(atoms, list_calc, optimizer='LBFGS', list_fmax=None, label=Non
     return atoms_opt
 
 
-def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[], fn_bkup=None):
+def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', relax_steps=100000000, fmax=None, label=None, chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[], fn_bkup=None):
     # FRAGMENT-RELATED FUNCTIONS ARE NOT FINISHED YET
     if os.path.isfile(fn_frag):
         if read_frag(fn=fn_frag) is not None:
@@ -87,9 +87,9 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
         print(f'ITERATIVE OPTIMIZATION -- CYCLE: {counter + 1}')
         if optimizer is not None and fmax is not None:
             if type(my_calc) is list and type(fmax) is list:
-                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, fmax, relax_steps=relax_steps, label=label, fn_bkup=fn_bkup)
             elif type(my_calc) is not list and type(fmax) is not list:
-                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, fmax, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, fmax, relax_steps=relax_steps, label=label, fn_bkup=fn_bkup)
             else:
                 print('Inconsistent #fmax and #calc\\ -- they should either be both lists ot both single objects/variables.')
 
@@ -97,9 +97,9 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', fmax=None, label=None, ch
                 os.rename(fb, f'cyc{str(counter+1).zfill(2)}__{fb}')
         else:
             if type(my_calc) is list:
-                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_multi(opt_atoms, my_calc, optimizer, relax_steps=relax_steps, label=label, fn_bkup=fn_bkup)
             elif type(my_calc) is not list:
-                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, label=label, fn_bkup=fn_bkup)
+                opt_atoms = geomopt_simple(opt_atoms, my_calc, optimizer, relax_steps=relax_steps, label=label, fn_bkup=fn_bkup)
             # back up files
             if fn_bkup is not None:
                 if label is None:
