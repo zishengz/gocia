@@ -10,7 +10,7 @@ Copyright © 2020 Zisheng Zhang
 
 Please CITE the following paper if you use any part of this repo:
 
-> Zhang, Z.; Wei, Z.; Sautet, P.; Alexandrova, A. N., Hydrogen-induced Restructuring of a Cu(100) Electrode in Electroreduction Conditions. J. Am. Chem. Soc., 2022, doi:[10.1021/jacs.2c06188](https://doi.org/10.1021/jacs.2c06188). -> [PDF DOWNLOAD](https://zishengz.github.io/docs/2022jacs.pdf)
+> Zhang, Z.; Alexandrova, A. N., GOCIA: a grand canonical global optimizer for clusters, interfaces, and adsorbates. Phys. Chem. Chem. Phys., 2025,27, 696-706. doi:[10.1039/D4CP03801K](https://doi.org/10.1039/D4CP03801K). -> [PDF DOWNLOAD](https://chemrxiv.org/engage/api-gateway/chemrxiv/assets/orp/resource/item/66fe375651558a15efeab3a6/original/gocia-grand-canonical-global-optimizer-for-clusters-interfaces-and-adsorbates.pdf)
 
 [TOC]
 
