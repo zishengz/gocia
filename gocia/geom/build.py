@@ -127,16 +127,23 @@ def grow_frag(
     # Atoms object MUST list atom connecting fragment to substrate at origin first (called the 'bridle' atom as steers whole fragment)
     frags_to_add = []
     for fragName in growList:
-        if fragName == 'CO':
-            frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
-        elif fragName == 'H':
-            frags_to_add.append(Atoms('H',[(0,0,0)]))
-        elif fragName =='H2O':
-            frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
-        elif fragName == 'HO':
-            frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
+        if type(fragName) is str:
+            if fragName == 'CO':
+                frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
+            elif fragName == 'H':
+                frags_to_add.append(Atoms('H',[(0,0,0)]))
+            elif fragName =='H2O':
+                frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
+            elif fragName == 'HO':
+                frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
+            elif fragName == 'N2':
+                frags_to_add.append(Atoms('N2',[(0,0,0), (0,0,1.2)]))
+            else:
+                print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
+        elif type(fragName) is Atoms:
+            frags_to_add.append(fragName)
         else:
-            print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
+            print('Neither a string nor a Atoms object...')
 
     # Initialize variables to track adding fragment until successful
     tmpInterfc = interfc.copy()
@@ -382,16 +389,26 @@ def boxSample_frag(
     # Atoms object MUST list atom connecting fragment to substrate at origin first (called the 'bridle' atom as steers whole fragment)
     frags_to_add = []
     for fragName in growList:
-        if fragName == 'CO':
-            frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
-        elif fragName == 'H':
-            frags_to_add.append(Atoms('H',[(0,0,0)]))
-        elif fragName =='H2O':
-            frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
-        elif fragName == 'HO':
-            frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
+        if type(fragName) is str:
+            if fragName == 'CO':
+                frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
+            elif fragName == 'H':
+                frags_to_add.append(Atoms('H',[(0,0,0)]))
+            elif fragName =='H2O':
+                frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
+            elif fragName == 'HO':
+                frags_to_add.append(Atoms('OH',[(0,0,0), (0,0,0.9)]))
+            elif fragName == 'N2':
+                frags_to_add.append(Atoms('N2',[(0,0,0), (0,0,1.2)]))
+            else:
+                print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
+        elif type(fragName) is Atoms:
+            frags_to_add.append(fragName)
         else:
-            print('Unknown fragment: must add option to grow {} in grow_adFrag() in build.py'.format(fragName))
+            print('Neither a string nor a Atoms object...')
+
+
+
 
     # Initialize variables to track adding fragment until successful
     tmpInterfc = interfc.copy()
@@ -434,7 +451,7 @@ def boxSample_frag(
         myBond = bondDiff[bondDiff > 1-toler_BLmin]
         myBond = myBond[myBond < toler_BLmax]
 
-        print(len(bondDiff[bondDiff < 1-toler_BLmin]), len(myBond), end=' | ')
+        print(len(bondDiff[bondDiff < 1-toler_BLmin]), len(myBond), len(bondDiff[bondDiff > 1-toler_BLmin]), end=' | ')
 
 
         # Considered good structure if no atoms are too close and if proper number of bonds
