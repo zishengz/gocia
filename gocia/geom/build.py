@@ -129,6 +129,12 @@ def grow_frag(
     for fragName in growList:
         if fragName == 'CO':
             frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
+         elif fragName == 'O':
+            frags_to_add.append(Atoms('O',[(0,0,0)]))
+        elif fragName == 'Rh':
+            frags_to_add.append(Atoms('Rh',[(0,0,0)]))
+        elif fragName == 'Ti':
+            frags_to_add.append(Atoms('Ti',[(0,0,0)]))
         elif fragName == 'H':
             frags_to_add.append(Atoms('H',[(0,0,0)]))
         elif fragName =='H2O':
@@ -211,6 +217,9 @@ def grow_frag(
                 #print(i, tmpInterfc.get_pos()[i])
                 n_place += 1
                 #print(coord, xLim, yLim, zLim, geom.is_withinPosLim(coord, xLim, yLim, zLim))
+                if n_place == 10000:
+                    print('Dead Loop located line 223 in build.py -> change zLim!!')
+                    print(f'Your zLim={zLim} ... coord={coord}')
 
             # Might want to use other way to randomly rotate positiosn
             #fragAtms.rotate(random.random()*np.pi/2,geom.rand_direction(),center=(0,0,0))
@@ -386,6 +395,12 @@ def boxSample_frag(
             frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
         elif fragName == 'H':
             frags_to_add.append(Atoms('H',[(0,0,0)]))
+        elif fragName == 'O':
+            frags_to_add.append(Atoms('O',[(0,0,0)]))
+        elif fragName == 'Rh':
+            frags_to_add.append(Atoms('Rh',[(0,0,0)]))
+        elif fragName == 'Ti':
+            frags_to_add.append(Atoms('Ti',[(0,0,0)]))
         elif fragName =='H2O':
             frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
         elif fragName == 'HO':
