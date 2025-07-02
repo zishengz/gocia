@@ -844,7 +844,13 @@ class Interface:
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_frag
         tmpInterfc = self.copy()
-        myFrag = np.random.choice(fragPool, size=1)[0]
+        
+        # Pick the fragment to grow
+        if growProb == None:
+            myFrag = np.random.choice(fragPool, size=1)[0]
+        else:
+            myFrag = np.random.choice(fragPool, size=1, p=growProb)[0]
+        
         print(myFrag, end='\t')
         tmpInterfc = grow_frag(
             tmpInterfc,
