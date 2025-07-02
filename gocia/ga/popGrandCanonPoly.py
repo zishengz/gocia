@@ -294,7 +294,7 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], growProb = None):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -331,19 +331,27 @@ class PopulationGrandCanonicalPoly:
             print('Mutation operator list: ', mutList)
 
             mutType = np.random.choice(mutList)
+
+            # This prevents move or leach mutations on bare surfaces
+            while (len(kid.get_fragList()) == 0 and (mutType == 'leach' or mutType == 'move')):
+                mutType = np.random.choice(mutList)
+            
             if mutType == 'rattle':
+                print('rattle mutation started')
                 kid.rattleMut_frag()
                 kid.rattleMut_buffer()
             if mutType == 'grow':
+                print('grow mutation started')
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
                     # # growMut_box_frag() is messed up -- needs fixing
                     # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                     #             bondRejList=bondRejList, constrainTop=constrainTop)
-                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList, growProb=growProb)
                 kid = tmpKid.copy()
             if mutType == 'leach':
+                print('leach mutation started')
                 ## TODO: detecting existing fragment species
                 ##       and only allow one of them ot be removed
                 # species_kid = kid.get_fragList()
@@ -351,8 +359,14 @@ class PopulationGrandCanonicalPoly:
                 # kid.leachMut([l for l in self.chemPotDict if l in species_kid])
                 kid.leachMut_frag([l for l in self.chemPotDict])
             if mutType == 'move':
+                print('move mutation started')
                 #kid.moveMut_frag([l for l in self.chemPotDict])
                 myFrag = np.random.choice([l for l in self.chemPotDict], size=1)[0]
+                
+                # This prevents picking a fragment that is not on the surface
+                while myFrag not in kid.get_fragNames():
+                    myFrag = np.random.choice([l for l in self.chemPotDict], size=1)[0]
+                
                 kid.leachMut_frag([myFrag])
                 # the grow step needs info of the constraints
                 # otherwise very prone to dead loop!
@@ -364,11 +378,13 @@ class PopulationGrandCanonicalPoly:
                     # # growMut_box_frag() is messed up -- needs fixing
                     # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
                     #             bondRejList=bondRejList, constrainTop=constrainTop)
-                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList, growProb=growProb)
                 kid = tmpKid.copy()
             if mutType == 'permute':
+                print('permut mutation started')
                 kid.permuteMut_frag()
             if mutType == 'translate':
+                print('translate mutation started')
                 kid.transMut(transVec=transVec)
         if len(kid.get_adsList()) <= 1:
             mutType = 'init'
@@ -376,8 +392,8 @@ class PopulationGrandCanonicalPoly:
             kid = parent.copy()
             kid.rattleMut_buffer()
             kid.rattleMut_frag()
-            kid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+            #Problems occur while using growMut_box_frag and rattleMut_buffer together
+            #kid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims, bondRejList=bondRejList, constrainTop=constrainTop)
         open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
