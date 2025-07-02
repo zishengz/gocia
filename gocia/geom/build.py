@@ -129,7 +129,7 @@ def grow_frag(
     for fragName in growList:
         if fragName == 'CO':
             frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
-         elif fragName == 'O':
+        elif fragName == 'O':
             frags_to_add.append(Atoms('O',[(0,0,0)]))
         elif fragName == 'Rh':
             frags_to_add.append(Atoms('Rh',[(0,0,0)]))
