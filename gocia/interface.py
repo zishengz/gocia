@@ -33,6 +33,7 @@ class Interface:
                  bufList=None,
                  adsList=None,
                  fragList=None,
+                 clusterAtoms = None,
                  cellParam=None,
                  pbcParam=None,
                  zLim=None,
@@ -89,6 +90,11 @@ class Interface:
         else:
             self.fragList = None
 
+        if clusterAtoms is not None:
+            self.clusterAtoms = clusterAtoms
+        else:
+            self.clusterAtoms = None
+
     def __len__(self):
         return len(self.allAtoms)
 
@@ -99,7 +105,8 @@ class Interface:
             subAtoms=copy.deepcopy(self.subAtoms),
             allAtoms=copy.deepcopy(self.allAtoms),
             zLim=copy.deepcopy(self.zLim),
-            info=copy.deepcopy(self.info)
+            info=copy.deepcopy(self.info),
+            clusterAtoms=copy.deepcopy(self.clusterAtoms)
             )
         return myCopy
 
@@ -243,6 +250,37 @@ class Interface:
             return self.info['adsorbate_fragments']
         else:
             return []
+
+    # Function to find the indices of cluster atoms specified by the user
+    def get_clusterList(self):
+        atoms = self.get_allAtoms().get_chemical_symbols()
+        tmpclusterAtoms = self.clusterAtoms
+        indices = []
+        for i in range(len(atoms) - len(tmpclusterAtoms) + 1):
+            if atoms[i:i+len(tmpclusterAtoms)] == tmpclusterAtoms:
+                for j in range(len(tmpclusterAtoms)):
+                    indices.append([j+i])
+        return indices
+
+    # Function to find the indices of cluster atoms and surrounding fragments
+    def get_cluster_fragList(self, scale=1.2):
+        clusterList = self.get_clusterList()
+        neighbors = []
+
+        # Iterate over all atoms in the cluster to get neighboring atoms
+        for c in clusterList:
+            temp = geom.get_neighbors(self.get_allAtoms(), c[0], scale=scale)
+            neighbors.append(temp[0])
+        neighbors = [item for row in neighbors for item in row]
+        neighbors = list(set(neighbors))
+
+        # Identify which of those neighbors are fragments and return a list of cluster and fragment atoms
+        fragList = self.get_fragList()
+        indices = clusterList.copy()
+        for f in fragList:
+            if any(n in f for n in neighbors):
+                indices.append(f)
+        return indices
 
     # Bridle atom is atom that steers fragment behavior
     def get_bridList(self): # assumes for now that the first atom is bridle atom
@@ -869,6 +907,32 @@ class Interface:
         tmpInterfc.leachMut_frag([myFrag])
         tmpInterfc.growMut_frag([myFrag])
         self.set_allAtoms(tmpInterfc.get_allAtoms())
+
+     def moveMut_cluster(self):
+        print(' |- Cluster move mutation', end = '\n')
+        # Create temporary interface and get the cluster-frag list
+        tmpInterfc = self.copy()
+        if tmpInterfc.clusterAtoms == None:
+            return print('No cluster specified by user')
+        clusterList = tmpInterfc.get_cluster_fragList()
+        clusterList = [item for row in clusterList for item in row]
+        print(f'Cluster atoms: {[tmpInterfc.get_chemical_symbols()[j] for j in clusterList]}')
+
+        # Create an ase Atoms object of the cluster Atoms and move them to the origin
+        clusterAtom = Atoms()
+        for i in clusterList:
+            clusterAtom.extend(tmpInterfc.get_allAtoms()[i])
+        clusterAtom.set_positions(clusterAtom.get_positions() - clusterAtom.get_positions()[0])
+
+        # Use boxSample_mol to reposition the cluster-frag
+        from gocia.geom.build import boxSample_mol
+        newint = boxSample_mol(tmpInterfc,[clusterAtom],xyzLims=self.get_sampling_box())
+        coords = tmpInterfc.get_allAtoms().get_positions()
+        coords[clusterList,:] = newint.get_allAtoms().get_positions()[-len(clusterList):]
+        finalInterfc = tmpInterfc.get_allAtoms()
+        finalInterfc.set_positions(coords)
+
+        self.set_allAtoms(finalInterfc)
 
     def growMut_box(self, elemList, xyzLims=None, bondRejList = None, bondMustList = None, constrainTop=False):
         if xyzLims is None:
