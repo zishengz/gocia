@@ -908,7 +908,7 @@ class Interface:
         tmpInterfc.growMut_frag([myFrag])
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-     def moveMut_cluster(self):
+    def moveMut_cluster(self):
         print(' |- Cluster move mutation', end = '\n')
         # Create temporary interface and get the cluster-frag list
         tmpInterfc = self.copy()
