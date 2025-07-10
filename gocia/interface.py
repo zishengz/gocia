@@ -878,7 +878,7 @@ class Interface:
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_frag(self, fragPool,bondRejList=None):
+    def growMut_frag(self, fragPool, bondRejList=None, growProb):
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_frag
         tmpInterfc = self.copy()
