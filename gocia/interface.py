@@ -927,6 +927,8 @@ class Interface:
         # Use boxSample_mol to reposition the cluster-frag
         from gocia.geom.build import boxSample_mol
         newint = boxSample_mol(tmpInterfc,[clusterAtom],xyzLims=self.get_sampling_box())
+        if newint == None:
+            return print('Error: Problem with placing cluster, check build.boxSample_mol()')
         coords = tmpInterfc.get_allAtoms().get_positions()
         coords[clusterList,:] = newint.get_allAtoms().get_positions()[-len(clusterList):]
         finalInterfc = tmpInterfc.get_allAtoms()
