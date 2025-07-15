@@ -385,7 +385,7 @@ class PopulationGrandCanonicalPoly:
             if mutType == 'move cluster':
                 #print('move cluster mutation started')
                 #fragList = kid.get_fragList()
-                print(kid.clusterAtoms, kid.get_chemical_symbols())
+                #print(kid.clusterAtoms, kid.get_chemical_symbols())
                 kid.moveMut_cluster()
                 #kid.set_fragList(fragList)
             if mutType == 'permute':
