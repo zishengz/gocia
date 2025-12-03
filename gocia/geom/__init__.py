@@ -325,7 +325,7 @@ def get_fragments(atoms, scale = 1.0):
 
     return frags
 
-def del_freeMol(atoms, list_keep=[0], scale = 1.0):
+def del_freeMol(atoms, list_keep=[0], scale = 1.1):
     tmpAtoms = atoms.copy()
     myfrags = get_fragments(tmpAtoms, scale=scale)
     deadList = []

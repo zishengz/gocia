@@ -912,7 +912,7 @@ class Interface:
             trajectory=None,
             logfile=None
         )
-        geomOpt.run(fmax = 0.01, steps = nsteps)
+        geomOpt.run(fmax = 0.05, steps = nsteps)
         print(' - L-J pre-optimization: RMSD = %.3f Angstroms'%geom.RMSD(self.get_allAtoms(), tmpAtoms))
         self.set_allAtoms(tmpAtoms)
 
@@ -932,7 +932,7 @@ class Interface:
             trajectory=None,
             logfile=None
         )
-        geomOpt.run(fmax = 0.01, steps = nsteps)
+        geomOpt.run(fmax = 0.1, steps = nsteps)
         print(' - Hookean pre-optimization: RMSD = %.3f Angstroms'%geom.RMSD(self.get_allAtoms(), tmpAtoms))
         self.set_allAtoms(tmpAtoms)
 

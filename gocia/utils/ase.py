@@ -8,9 +8,10 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, relax_steps=100000000, label=None, fn_bkup=None):
+def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.05, label=None, fn_bkup=None):
     atoms_opt = atoms.copy()
     atoms_opt.calc = my_calc
+    write('ini.vasp', atoms)
 
     if label is not None:
         cwd = os.getcwd()
@@ -29,13 +30,18 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.1, relax_steps=1000
         print(f'LOCAL OPTIMIZATION w/ {optimizer}')
         if optimizer == 'LBFGS':
             from ase.optimize import LBFGS
-            dyn = LBFGS(atoms_opt, maxstep=0.05, trajectory=f'opt.traj', logfile=f'opt.log')
+            dyn = LBFGS(atoms_opt, maxstep=0.1, trajectory=f'opt.traj', logfile=f'opt.log')
 
         if label is None:
             print(f'Optimizing {atoms_opt.get_chemical_formula()}')
         else:
             print(f'Optimizing {atoms_opt.get_chemical_formula()} in {label}')
-        dyn.run(fmax=fmax, steps=relax_steps)
+            
+        for i in range(2000):
+            dyn.run(fmax=fmax, steps=1)
+            if atoms_opt.get_forces().max() > 1000:
+                print(f"Force exceeds threshold.")
+                return None    
 
     if label is not None:
         os.chdir(cwd)
@@ -84,6 +90,10 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', relax_steps=100000000, fm
     
     opt_atoms = atoms.copy()
     while continueRunning:
+        
+        if opt_atoms is None:
+            return None
+        
         print(f'ITERATIVE OPTIMIZATION -- CYCLE: {counter + 1}')
         if optimizer is not None and fmax is not None:
             if type(my_calc) is list and type(fmax) is list:
@@ -106,7 +116,10 @@ def geomopt_iterate(atoms, my_calc, optimizer='LBFGS', relax_steps=100000000, fm
                     label = '.'
                 for fb in [f for f in os.listdir(label) if f[:3] == 'opt' and fn_bkup in f]:
                     os.rename(f'{label}/{fb}', f'{label}/cyc{str(counter+1).zfill(2)}__{fb}')
-
+        
+        if opt_atoms is None:
+            return None
+        
         natoms_old = len(opt_atoms)
         counter += 1
 

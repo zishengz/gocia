@@ -11,7 +11,7 @@ def get_sim_srtDist(a1, a2):
     p2 = a2.get_all_distances(mic=True).flatten()
     p1, p2 = np.sort(p1), np.sort(p2)
     cum_diff = np.abs(p1 - p2)
-    total_cum_diff = cum_diff.sum() / ((p1 + p2).sum()/2)
+    total_cum_diff = cum_diff.sum() / ((p1.sum() + p2.sum())/2)
     max_diff = cum_diff.max()
     return total_cum_diff, max_diff
 
