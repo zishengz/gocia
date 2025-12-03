@@ -353,11 +353,11 @@ def boxSample_adatom(
                 tmpInterfc = testInterfc
                 ind_curr += 1
         # prevent dead loop
-        if ind_curr == 0 and n_attempts >= 500:
+        if ind_curr == 0 and n_attempts >= 5000:
             print(
                 'BAD STARTING STRUCTURE! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
-        if n_attempts >= 250 * numAds:
+        if n_attempts >= 2500 * numAds:
             print(
                 'DEAD LOOP! RESTARTING...\n(if you see this too often, try adjusting the params!)')
             return None
