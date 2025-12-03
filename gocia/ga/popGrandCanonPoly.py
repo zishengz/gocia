@@ -308,7 +308,7 @@ class PopulationGrandCanonicalPoly:
             patInfo = self.convertFragStrToInfo(patFragStr)
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
-            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, keepCluster=keepCluster)
+            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, keepCluster=keepCluster, bondRejList=bondRejList)
             parent = random.choice([surf1, surf2]).copy()
             print('PARENTS: %i and %i' % (mater, pater))
         print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
@@ -339,8 +339,10 @@ class PopulationGrandCanonicalPoly:
                 tmpKid = None
                 while tmpKid is None:
                     tmpKid = kid.copy()
-                    tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+                    # # growMut_box_frag() is messed up -- needs fixing
+                    # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    #             bondRejList=bondRejList, constrainTop=constrainTop)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
                 kid = tmpKid.copy()
             if mutType == 'leach':
                 ## TODO: detecting existing fragment species
@@ -355,8 +357,16 @@ class PopulationGrandCanonicalPoly:
                 kid.leachMut_frag([myFrag])
                 # the grow step needs info of the constraints
                 # otherwise very prone to dead loop!
-                kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+                # kid.growMut_box_frag([myFrag], xyzLims=xyzLims,
+                #                 bondRejList=bondRejList, constrainTop=constrainTop)
+                tmpKid = None
+                while tmpKid is None:
+                    tmpKid = kid.copy()
+                    # # growMut_box_frag() is messed up -- needs fixing
+                    # tmpKid.growMut_box_frag([l for l in self.chemPotDict], xyzLims=xyzLims,
+                    #             bondRejList=bondRejList, constrainTop=constrainTop)
+                    tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList)
+                kid = tmpKid.copy()
             if mutType == 'permute':
                 kid.permuteMut_frag()
             if mutType == 'translate':
@@ -522,3 +532,64 @@ class PopulationGrandCanonicalPoly:
                     label=myLabel,
                     adsFrags=myFragList 
                 )
+
+    def add_aseResult(self, atoms, workdir='.', fn_frag=None, isAlive=1):
+        # read or detect the fragment list
+        try:
+            myFragList = eval(open(fn_frag, 'r').readlines()[0].rstrip('\n'))
+            if max([i for f in myFragList for i in f]) >= len(atoms):
+                print('Bad fragList! Detecting from connectivity...')
+                myFragList = None
+        except:
+            print('No fragList! Detecting from connectivity...')
+            myFragList = None
+        if myFragList == None:
+            surf_tmp = Interface(atoms, self.substrate)
+            myFragList = surf_tmp.detect_fragList()
+            del surf_tmp
+        atoms.info['adsFrag']=myFragList
+        myInfo = self.convertFragListToInfo(myFragList)
+        myFragList = str(myFragList)
+        
+
+        ene_eV = atoms.get_potential_energy()
+        grndPot = self.calc_grandPot(atoms, ene_eV, myInfo)
+        try:
+            mag = atoms.get_magnetic_moments().sum()
+        except:
+            mag = 0
+
+        myLabel = open(f'label', 'r').read()
+        print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
+            workdir, grndPot, myLabel))
+        if self.is_uniqueInAll(atoms, grndPot):
+            if grndPot < self.get_GMrow()['grandPot'] and isAlive == 1:
+                print(f' |- {workdir} is the new GM!')
+                with open('../gmid', 'w') as f:
+                    f.write(str(len(self)))
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=mag,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=isAlive,
+                label=myLabel,
+                adsFrags=myFragList 
+            )
+        else:
+            print(f' |- {workdir} is a duplicate!')
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=mag,
+                eV=ene_eV,
+                grandPot=grndPot,
+                mated=0,
+                done=1,
+                alive=0,
+                label=myLabel,
+                adsFrags=myFragList 
+            )

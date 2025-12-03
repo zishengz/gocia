@@ -7,8 +7,10 @@ def BLDA(elem1, elem2, sigma = 0.1, scale = 1):
     '''
     From BLDA based on covalent radii of two atoms.
     '''
-    if type(elem1) is str:
+    if type(elem1) is str and type(elem2) is str:
         elem1, elem2 = atomNum[elem1], atomNum[elem2]
+    else:
+        print(f'ERROR: elem1 and elem2 need to be str! now: {type(elem2)} and {type(elem2)}')
     covalBl = (covalRadii[elem1] + covalRadii[elem2])
     return np.random.normal(covalBl, sigma) * scale
 
@@ -35,6 +37,87 @@ def rand_direction():
         1 - 2 * (x1**2 + x2**2)
     ])
 
+def align_vectors(R, V1, V2):
+    # Ensure V1 and V2 are unit vectors
+    V1 = V1 / np.linalg.norm(V1)
+    V2 = V2 / np.linalg.norm(V2)
+    
+    # Calculate the cross product and dot product of V1 and V2
+    cross_prod = np.cross(V1, V2)
+    dot_prod = np.dot(V1, V2)
+    
+    # Calculate the angle of rotation
+    angle = np.arccos(dot_prod)
+    
+    # If the vectors are already aligned, return the original coordinates
+    if np.isclose(angle, 0):
+        return R
+    
+    # Calculate the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -cross_prod[2], cross_prod[1]],
+                  [cross_prod[2], 0, -cross_prod[0]],
+                  [-cross_prod[1], cross_prod[0], 0]])
+    
+    I = np.eye(3)
+    R_mat = I + np.sin(angle) * K + (1 - np.cos(angle)) * np.dot(K, K)
+    
+    # Rotate the set of coordinates
+    R_rotated = np.dot(R, R_mat.T)
+    
+    return R_rotated
+
+def rotate_around_vector(R, V2, A):
+    # Ensure V2 is a unit vector
+    V2 = V2 / np.linalg.norm(V2)
+    
+    # Compute the components of Rodrigues' rotation formula
+    K = np.array([[0, -V2[2], V2[1]],
+                  [V2[2], 0, -V2[0]],
+                  [-V2[1], V2[0], 0]])
+    
+    I = np.eye(3)
+    R_mat = I + np.sin(A) * K + (1 - np.cos(A)) * np.dot(K, K)
+    
+    # Rotate the set of coordinates
+    R_rotated = np.dot(R, R_mat.T)
+    
+    return R_rotated
+
+def rotate_around_point(R, P, V1, V2):
+    # Ensure V1 and V2 are unit vectors
+    V1 = V1 / np.linalg.norm(V1)
+    V2 = V2 / np.linalg.norm(V2)
+    
+    # Calculate the cross product and dot product of V1 and V2
+    cross_prod = np.cross(V1, V2)
+    dot_prod = np.dot(V1, V2)
+    
+    # Calculate the angle of rotation
+    angle = np.arccos(dot_prod)
+    
+    # If the vectors are already aligned, return the original coordinates
+    if np.isclose(angle, 0):
+        return R
+    
+    # Calculate the rotation matrix using Rodrigues' rotation formula
+    K = np.array([[0, -cross_prod[2], cross_prod[1]],
+                  [cross_prod[2], 0, -cross_prod[0]],
+                  [-cross_prod[1], cross_prod[0], 0]])
+    
+    I = np.eye(3)
+    R_mat = I + np.sin(angle) * K + (1 - np.cos(angle)) * np.dot(K, K)
+    
+    # Translate the points so that P is the origin
+    R_translated = R - P
+    
+    # Rotate the translated points
+    R_rotated = np.dot(R_translated, R_mat.T)
+    
+    # Translate the points back
+    R_rotated += P
+    
+    return R_rotated
+
 def is_withinPosLim(vec, xLim=None, yLim=None, zLim=None):
     if xLim is None: xLim = [-999, 999]
     if yLim is None: yLim = [-999, 999]
@@ -60,7 +143,7 @@ def rand_point_box(xyzLims):
     tmpRand = np.random.rand(3)
     return tmpRand * (xyzLims[:,1]-xyzLims[:,0]) + xyzLims[:,0]
 
-def get_bondpairs(atoms, scale=1.1):
+def get_bondpairs(atoms, scale=1.0):
     """Get all pairs of bonding atoms
 
     Return all pairs of atoms which are closer than radius times the
@@ -242,7 +325,7 @@ def get_fragments(atoms, scale = 1.0):
 
     return frags
 
-def del_freeMol(atoms, list_keep=[0], scale = 1.0):
+def del_freeMol(atoms, list_keep=[0], scale = 1.1):
     tmpAtoms = atoms.copy()
     myfrags = get_fragments(tmpAtoms, scale=scale)
     deadList = []
@@ -256,6 +339,7 @@ def del_freeMol(atoms, list_keep=[0], scale = 1.0):
 
 
 def detect_bond_between_adsFrag(atoms, fragList):
+    # returns: [3, 8, [{1, 2}, {1, 3}]]
     fragAtoms = [atoms[f] for f in fragList]
     bondList = []
     for i in range(len(fragAtoms)):
@@ -289,4 +373,20 @@ def get_contactMat(atoms, scale=1.0):
 def has_badContact(atoms, tolerance=0):
     diff = atoms.get_all_distances(mic=True) - get_contactMat(atoms, scale=1-tolerance)
     return diff.min() < 0
+
+def is_bonded(atoms, list1, list2, scale=1.1):
+    flag = False
+    cvRad = get_covalRadii(atoms)
+    for i in list1:
+        for j in list2:
+            if atoms.get_distance(i, j, mic=True) <= scale * (cvRad[i] + cvRad[j]):
+                flag = True
+                break
+        if flag == True:
+            break
+    return flag
+
+
+
+
 

@@ -63,7 +63,9 @@ class Interface:
 
         self.cellParam  = self.subAtoms.get_cell()
         self.pbcParam   = self.subAtoms.get_pbc()            
-        
+        self.allAtoms.set_cell(self.cellParam)
+        self.allAtoms.set_pbc(self.pbcParam)
+
         if zLim is None:
             allPos = self.allAtoms.get_positions()
             self.zLim = [min(allPos[:,2][self.bufList]) + 0.1,
@@ -202,6 +204,13 @@ class Interface:
 
     def get_cell(self):
         return self.cellParam.copy()
+    
+    def get_sampling_box(self):
+        return np.array([
+            [0, self.get_cell()[0][0]],
+            [0, self.get_cell()[1][1]],
+            self.zLim
+        ])
 
     def get_pbc(self):
         return self.pbcParam.copy()
@@ -301,6 +310,9 @@ class Interface:
 
     def get_allDistances(self):
         return self.get_allAtoms().get_all_distances(mic=True)
+    
+    def get_distances(self, my_ind, list_ind):
+        return self.get_allAtoms().get_distances(my_ind, list_ind, mic=True)
 
     def has_outsideBox(self):
         tmp = []
@@ -356,6 +368,13 @@ class Interface:
         list_del = self.get_outsideBox()
         if len(list_del) > 0:
             print(f'Out-of-box atoms: {list_del}')
+            list_del_full = []
+            for f in read_frag(fn_frag):
+                for d in list_del:
+                    if d in f:
+                        list_del_full += f
+            list_del = list(set(list_del_full))
+            print(f'After including full fragments: {list_del}')
             update_frag_del(list_del, fn=fn_frag)
             print('Delete ', list_del)
             all = self.get_allAtoms()
@@ -429,6 +448,17 @@ class Interface:
         allZ = self.get_pos()[:,2]
         return [a.index for a in self.allAtoms\
             if max(allZ) - allZ[a.index] <= depth]
+    
+    def get_topBufLayerList(self, depth = 3):
+        allZ = self.get_pos()[:,2]
+        bufZ = self.get_bufAtoms().positions[:,2]
+        return [a.index for a in self.allAtoms\
+            if 0 < max(bufZ) - allZ[a.index] <= depth and a.index in self.get_bufList()]
+    
+    # def get_topBufLayerList_ini(self, depth = 1):
+    #     allZ = self.get_subPos()[:,2]
+    #     return [a.index for a in self.allAtoms\
+    #         if 0 < max(allZ) - allZ[a.index] <= depth and a.index < len(self.get_subAtoms())]
 
     def wrap(self):
         tmpAtoms = self.get_allAtoms()
@@ -462,6 +492,8 @@ class Interface:
         fragList = []
         if 'adsorbate_fragments' in tmpAtoms.info:
             fragList = tmpAtoms.info['adsorbate_fragments']
+        if 'adsorbate_fragments' in self.info:
+            fragList = self.info['adsorbate_fragments']
         diff = list(set(newAdsList) - set(oldAdsList))
         # only append if not already in list as otherwise keep adding same fragment while badStructure
         if diff not in fragList:
@@ -611,6 +643,8 @@ class Interface:
                         fragTemp = Atoms('CO',[(0, 0, 0),(0, 0, 1.43)])
                     elif fragName == 'H':
                         fragTemp = Atoms('H',[(0,0,0)])
+                    elif fragName == 'HO':
+                        fragTemp = Atoms('HO',[(0,0,0), (0,0,0.9)])
                     elif fragName == 'H2O':
                         fragTemp = Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)])
                     else:
@@ -785,7 +819,7 @@ class Interface:
         nfrags = len(fragList)
         while len(self.get_fragList()) == nfrags:
             myDel = np.random.choice(list(range(nfrags)),size=1)[0]
-            print(self.get_fragNames()[myDel])
+            #print(self.get_fragNames()[myDel])
             if self.get_fragNames()[myDel] in fragPool:
                 print(self.get_fragNames()[myDel])
                 self.remove_adsFrag(fragList[myDel])
@@ -794,7 +828,10 @@ class Interface:
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_adatom
         tmpInterfc = self.copy()
-        myElem = np.random.choice(elemList, size=1)[0]
+        if type(elemList) is list:
+            myElem = random.choice(elemList)
+        else:
+            myElem = elemList
         print(myElem)
         tmpInterfc = grow_adatom(
             tmpInterfc,
@@ -803,15 +840,17 @@ class Interface:
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_frag(self, fragPool):
+    def growMut_frag(self, fragPool,bondRejList=None):
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import grow_frag
         tmpInterfc = self.copy()
         myFrag = np.random.choice(fragPool, size=1)[0]
+        print(myFrag, end='\t')
         tmpInterfc = grow_frag(
             tmpInterfc,
             [myFrag],
             zLim = self.zLim,
+            bondRejList=bondRejList
         )
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
@@ -825,7 +864,9 @@ class Interface:
         tmpInterfc.growMut_frag([myFrag])
         self.set_allAtoms(tmpInterfc.get_allAtoms())
 
-    def growMut_box(self, elemList, xyzLims, bondRejList = None, bondMustList = None,  constrainTop=False):
+    def growMut_box(self, elemList, xyzLims=None, bondRejList = None, bondMustList = None, constrainTop=False):
+        if xyzLims is None:
+            xyzLims = self.get_sampling_box()
         print(' |- Growth mutation:', end = '\t')
         from gocia.geom.build import boxSample_adatom
         tmpInterfc = self.copy()
@@ -833,10 +874,10 @@ class Interface:
         print(myElem)
         tmpInterfc = boxSample_adatom(
             tmpInterfc,
-            myElem,
+            [myElem],
             xyzLims=xyzLims,
             bondRejList=bondRejList,
-	    bondMustList=bondMustList,
+            bondMustList=bondMustList,
             constrainTop=constrainTop
         )
         if tmpInterfc is not None:
@@ -871,7 +912,7 @@ class Interface:
             trajectory=None,
             logfile=None
         )
-        geomOpt.run(fmax = 0.01, steps = nsteps)
+        geomOpt.run(fmax = 0.05, steps = nsteps)
         print(' - L-J pre-optimization: RMSD = %.3f Angstroms'%geom.RMSD(self.get_allAtoms(), tmpAtoms))
         self.set_allAtoms(tmpAtoms)
 
@@ -891,7 +932,7 @@ class Interface:
             trajectory=None,
             logfile=None
         )
-        geomOpt.run(fmax = 0.01, steps = nsteps)
+        geomOpt.run(fmax = 0.1, steps = nsteps)
         print(' - Hookean pre-optimization: RMSD = %.3f Angstroms'%geom.RMSD(self.get_allAtoms(), tmpAtoms))
         self.set_allAtoms(tmpAtoms)
 

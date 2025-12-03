@@ -1,7 +1,8 @@
 import os
 import numpy as np
+import random
 from ase.io import read, write
-from gocia.geom import get_fragments, del_freeMol
+from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_between_adsFrag
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
@@ -27,7 +28,9 @@ def is_vaspSuccess(jobdir='.'):
     return 'E0' in open(f'{jobdir}/OSZICAR').readlines()[-1]
 
 
-def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False):
+# TODO: DECOUPLE THE GEOMETRY CHECKER & MULTI_STEP OPT?
+
+def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='../substrate.vasp', fn_frag='fragments', list_keep=[0], potPath=None, poscar='POSCAR', potDict=None, has_fragList=False, has_fragSurfBond=False, check_rxn_frags=False, rmAtomsNotInBond=[]):
     if read_frag(fn=fn_frag) is not None:
         has_fragList = True
     continueRunning = True
@@ -47,30 +50,7 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
             atom_tmp = read('CONTCAR')
             counter += 1
 
-            if has_fragList:
-                my_fragList = read_frag(fn=fn_frag)
-                struct = read('POSCAR')
-                my_fragAtoms = [struct[f] for f in my_fragList]
-                # Check connectivity
-                list_del = []
-                for i in range(len(my_fragList)):
-                    if len(get_fragments(my_fragAtoms[i]))!=1:
-                        for i_del in my_fragList[i]:
-                            if i_del not in list_del:
-                                list_del.append(i_del)
-                if len(list_del) > 0:
-                    print('Remove broken fragments containing:', list_del)
-                    update_frag_del(list_del, fn=fn_frag)
-                    del struct[list_del]
-                    write('POSCAR', struct)
-
-            if chkMol:
-                geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
-                write('POSCAR', geom_tmp)
-                if has_fragList and len(list_del) > 0:
-                    update_frag_del(list_del, fn=fn_frag)
-                # Make sure the final structure has no free molecule
-
+            # REMOVE ATOMS OUTSIDE THE SAMPLING BOX
             if zLim is not None:
                 surf = Interface(
                     read('POSCAR'),
@@ -78,13 +58,13 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                     zLim = zLim
                 )
                 if surf.has_outsideBox():
-                    atom_tmp = read('POSCAR')
                     if has_fragList:
                         surf.del_outsideBox_frag(fn_frag)
                     else:
                         surf.del_outsideBox()
                     surf.write('POSCAR')
 
+            # REMOVE BROKEN FRAGMENTS
             if has_fragList:
                 my_fragList = read_frag(fn=fn_frag)
                 struct = read('POSCAR')
@@ -97,6 +77,91 @@ def do_multiStep_opt(step=3, vasp_cmd='', chkMol=False, zLim=None, substrate='..
                             if i_del not in list_del:
                                 list_del.append(i_del)
                 if len(list_del) > 0:
+                    list_del.sort()
+                    print('Remove broken fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
+
+            # REMOVE FRAGMENTS THAT DOES NOT BIND TO SURFACE ATOMS
+            # E.G. [SURF]-[C-O]-[C-O]
+            #      the latter CO is bonded to an adorbate but not the surface
+            if has_fragList and has_fragSurfBond:
+                my_fragList = read_frag(fn=fn_frag)
+                struct = read('POSCAR')
+                list1 = list(range(len(read(substrate))))
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if not is_bonded(struct, list1, my_fragList[i]):
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
+                    list_del.sort()
+                    print('Remove associated fragments containing:', list_del)
+                    update_frag_del(list_del, fn=fn_frag)
+                    del struct[list_del]
+                    write('POSCAR', struct)
+
+            # REMOVE FRAGMENTS THAT FROM BOND WITH OTHER FRAGMENTS
+            if has_fragList and check_rxn_frags:
+                my_fragList = read_frag(fn=fn_frag)
+                struct = read('POSCAR')
+                ads_bonds = detect_bond_between_adsFrag(struct, my_fragList)
+                if len(ads_bonds) > 0:
+                    list_del = []
+                    for b in ads_bonds:
+                        i = random.choice(b[0:2])
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                    if len(list_del) > 0:
+                        list_del.sort()
+                        print('Remove associated fragments containing:', list_del)
+                        update_frag_del(list_del, fn=fn_frag)
+                        del struct[list_del]
+                        write('POSCAR', struct)
+
+            # REMOVE FREE MOLECULES DESORBED FROM THE SURFACE
+            if chkMol:
+                geom_tmp, list_del = del_freeMol(read('POSCAR'), list_keep=list_keep)
+                write('POSCAR', geom_tmp)
+                if has_fragList and len(list_del) > 0:
+                    list_del.sort()
+                    update_frag_del(list_del, fn=fn_frag)
+
+            # REMOVE ATOMS THAT DO NOT FORM SPECIFIED BONDS
+            if len(rmAtomsNotInBond) > 0:
+                # e.g. if [['H', 'Pt']]
+                # 'H' will be removed if not in Pt-H
+                struct = read('POSCAR')
+                list_del = []
+                for p in rmAtomsNotInBond:
+                    list_a0 = [a.index for a in struct if a.symbol==p[0]]
+                    list_a1 = [a.index for a in struct if a.symbol==p[1]]
+                    for a0 in list_a0:
+                        if not is_bonded(struct, [a0], list_a1):
+                            list_del.append(a0)
+                if len(list_del) > 0:
+                    list_del.sort()
+                    print(f'Atoms {list_del} are removed becasue not in required bonds.')
+                    write('POSCAR', struct)
+                    del struct
+
+            # REMOVE BROKEN FRAGMENTS
+            if has_fragList:
+                my_fragList = read_frag(fn=fn_frag)
+                struct = read('POSCAR')
+                my_fragAtoms = [struct[f] for f in my_fragList]
+                # Check connectivity
+                list_del = []
+                for i in range(len(my_fragList)):
+                    if len(get_fragments(my_fragAtoms[i]))!=1:
+                        for i_del in my_fragList[i]:
+                            if i_del not in list_del:
+                                list_del.append(i_del)
+                if len(list_del) > 0:
+                    list_del.sort()
                     print('Remove broken fragments containing:', list_del)
                     update_frag_del(list_del, fn=fn_frag)
                     del struct[list_del]
@@ -156,8 +221,8 @@ def make_surfChrg_sp(nelect):
         f.write(f'NELECT={nelect}')
     os.chdir(homedir)
 
-def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0):
-    pos2pot(pp_path)
+def make_surfChrg_batch(pp_path, list_deltaCharge, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d
@@ -179,9 +244,23 @@ def do_surfChrg_sp(nelect, vasp_cmd, u_ref=4.44, shift=0):
     os.chdir(homedir)
     return USHE, G
 
+def update_SC_inner(nelect, vasp_cmd, u_ref=4.44, shift=0):
+    homedir = os.getcwd()
+    val, nelect, ene, efermi, shftfermi = extractVASPsol(shift=shift)
+    USHE, G = pb_calc(val, nelect, ene, efermi, shftfermi, u_ref=u_ref)
+    os.chdir(homedir)
+    USHE, G
 
-def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
-    pos2pot(pp_path)
+def update_SC(list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0):
+    nelect_neu = get_neu_nelect(shift=shift)
+    for d in list_deltaCharge:
+        nelect_tmp = nelect_neu + d
+        ushe, g = update_SC_inner(nelect_tmp, vasp_cmd, u_ref=u_ref, shift=shift)
+        with open('sc.dat', 'a') as f:
+            f.write(f'{d}\t{ushe}\t{g}\n')
+
+def do_surfChrg_batch(pp_path, list_deltaCharge, vasp_cmd, u_ref=4.44, shift=0, potDict=None):
+    pos2pot(pp_path, potDict=potDict)
     nelect_neu = get_neu_nelect(shift=shift)
     for d in list_deltaCharge:
         nelect_tmp = nelect_neu + d

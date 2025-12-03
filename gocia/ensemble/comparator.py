@@ -2,21 +2,29 @@ import gocia.utils.linalg as la
 import gocia.geom.fingerprint as fgp
 import numpy as np
 
-
-def srtDist_similar_zz(a1, a2, delta_rel=5e-4, d_max=0.25):
+def get_sim_srtDist(a1, a2):
+    # adapted from 10.1063/1.4886337
     if len(a1) != len(a2):
-        return False
+        print('they two sytems must be of the same size (#atoms)!')
+        exit()
     p1 = a1.get_all_distances(mic=True).flatten()
     p2 = a2.get_all_distances(mic=True).flatten()
     p1, p2 = np.sort(p1), np.sort(p2)
     cum_diff = np.abs(p1 - p2)
-    total_cum_diff = cum_diff.sum() / 2 / (p1 + p2).sum()
+    total_cum_diff = cum_diff.sum() / ((p1.sum() + p2.sum())/2)
     max_diff = cum_diff.max()
-#    print(total_cum_diff, max_diff)
-    if total_cum_diff < delta_rel and max_diff < d_max:
-        return True
-    else:
+    return total_cum_diff, max_diff
+
+def srtDist_similar_zz(a1, a2, delta_rel=5e-4, d_max=0.25):
+    if len(a1) != len(a2):
         return False
+    else:
+        total_cum_diff, max_diff = get_sim_srtDist(a1, a2)
+        
+        if total_cum_diff < delta_rel and max_diff < d_max:
+            return True
+        else:
+            return False
 
 
 def comp_srtDist_zz(a1, traj, delta_rel=8e-4, d_max=0.4):
