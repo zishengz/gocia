@@ -101,7 +101,7 @@ def splice_2d_GC(surf1, badPos, goodPos, center, direction):
     tmpSurf.set_allPos(childPos)
     return tmpSurf
 
-def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
+def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5, keepCluster=''):
     matPos, patPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms in substrate
     matAds, patAds = surf1.get_adsAtoms(), surf2.get_adsAtoms() # adsorbate atoms
     goodPos, badPos = [], []
@@ -165,7 +165,9 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
         newSurf.set_adsAtoms(Atoms(newAdsElem, newAdsPos))
         newSurf.wrap()
         isBADSTRUCTURE = newSurf.has_badContact(tolerance=tolerance)
-        if n_trial > 100:
+        if newSurf.get_chemical_symbols().count(keepCluster) != surf1.get_chemical_symbols().count(keepCluster) or newSurf.get_chemical_symbols().count(keepCluster) != surf2.get_chemical_symbols().count(keepCluster):
+            isBADSTRUCTURE = True
+        if n_trial > 1000:
             isBADSTRUCTURE = False
             newSurf = None
     if newSurf is not None:
@@ -173,7 +175,7 @@ def crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.5):
             (n_trial, tolerance))
     return newSurf    
 
-def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=None):
+def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, keepCluster='', bondRejList=None):
     # Get relevant positions from mother and father surfaces
     matFixBufPos, patFixBufPos = surf1.get_fixBufPos(), surf2.get_fixBufPos() # positions of fixed and buffer atoms, or equivalently, substrate atoms with get_subPos()
     matBridPos, patBridPos = surf1.get_bridPos(), surf2.get_bridPos() # positions of bridle atoms
@@ -281,6 +283,9 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=None):
 
         # Evaluate quality of kid structure
         isBADSTRUCTURE = childSurf.has_badContact(tolerance=tolerance)
+        if keepCluster != '':
+            if childSurf.get_chemical_symbols().count(keepCluster) != surf1.get_chemical_symbols().count(keepCluster) or childSurf.get_chemical_symbols().count(keepCluster) != surf2.get_chemical_symbols().count(keepCluster):
+                isBADSTRUCTURE = True
 
         # check bonds
         if not isBADSTRUCTURE:
@@ -308,3 +313,4 @@ def crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=None):
         print('\nOffspring is created at attempt #%i\t|Tolerance = %.3f'%\
             (n_trial, tolerance))
     return childSurf
+ 
