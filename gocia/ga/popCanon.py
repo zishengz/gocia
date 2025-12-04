@@ -227,3 +227,31 @@ class PopulationCanonical:
                         done=1,
                         alive=0
                     )
+
+
+    def add_aseResult(self, atoms, workdir='.'):
+        ene_eV = atoms.get_potential_energy()
+        print('\nA CHILD IS BORN with G = %.3f eV' % (ene_eV))
+        if self.is_uniqueInPop(atoms, ene_eV):
+            if ene_eV < self.get_GMrow()['eV']:
+                print(f' |- it is the new GM!')
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=0,
+                eV=ene_eV,
+                mated=0,
+                done=1,
+                alive=1,
+            )
+        else:
+            print(f' |- it is a duplicate!')
+            self.gadb.write(
+                atoms,
+                name=workdir,
+                mag=0,
+                eV=ene_eV,
+                mated=0,
+                done=1,
+                alive=0,
+            )
