@@ -8,7 +8,7 @@ from gocia.geom import get_fragments, del_freeMol, is_bonded, detect_bond_betwee
 from gocia.interface import Interface
 from gocia.geom.frag import *
 
-def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.05, label=None, fn_bkup=None):
+def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.05, label=None, fn_bkup=None, tmp_json='TMP.json'):
     atoms_opt = atoms.copy()
     atoms_opt.calc = my_calc
     write('ini.vasp', atoms)
@@ -46,6 +46,11 @@ def geomopt_simple(atoms, my_calc, optimizer='LBFGS', fmax=0.05, label=None, fn_
     if label is not None:
         os.chdir(cwd)
 
+    # to solve some calculator issues
+    if tmp_json:
+        write(tmp_json, atoms_opt)
+    atoms_opt = read(tmp_json)
+    os.remove(tmp_json)
 
     return atoms_opt
 

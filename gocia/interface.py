@@ -545,6 +545,34 @@ class Interface:
         if update:
             self.set_fragList(my_fragList)
         return my_fragList
+    
+    def swap_by_group(self, grp1, grp2, max_dist=None):
+        '''
+        grp1 and grp2 are lists of indices. max_dist is the maximum distance between the two atoms to be swapped.
+        '''
+        tmpAtoms = self.get_allAtoms()
+        pos = tmpAtoms.get_positions()
+
+        # Try to find a pair within the maximum distance
+        max_attempts = 1000  # Limit attempts to avoid infinite loops
+        attempts = 0
+        idx1 = None
+        idx2 = None
+        
+        while attempts < max_attempts:
+            idx1 = random.choice(grp1)
+            idx2 = random.choice(grp2)
+            my_dist = tmpAtoms.get_distance(idx1, idx2, mic=True)
+            if my_dist <= max_dist:
+                break
+            attempts += 1
+        else:
+            raise ValueError(f"Cannot perform swap: No suitable pairs found within {max_dist} Angstroms after {max_attempts} attempts.")
+    
+        print(f'Site swap: {tmpAtoms[idx1].symbol}{tmpAtoms[idx1].index} and {tmpAtoms[idx2].symbol}{tmpAtoms[idx2].index}; d={my_dist:.3f} A')
+        pos[idx1], pos[idx2] = pos[idx2].copy(), pos[idx1].copy()
+        tmpAtoms.set_positions(pos)
+        self.set_allPos(pos)
 
     def rattle(self, stdev = 0.1, zEnhance=False):
         '''
