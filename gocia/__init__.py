@@ -14,8 +14,9 @@ def initialize_module():
   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░  
    ░▒▓██████▓▒░ ░▒▓██████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░  """)
         print('   Global Optimizer for Clusters, Interfaces, and Adsorbates')
-        print('                Copyright © 2024 Zisheng Zhang.')
+        print('             Copyright © 2020-2025 Zisheng Zhang')
         print('     Cite: PCCP, 2025, 27, 696-706. DOI:10.1039/D4CP03801K')
+        print('   Contributors: Winston Gee, Robert Lavroff, Yonghyuk Lee')
 
         _initialized = True
 
