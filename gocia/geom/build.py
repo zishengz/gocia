@@ -132,6 +132,12 @@ def grow_frag(
                 frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
             elif fragName == 'H':
                 frags_to_add.append(Atoms('H',[(0,0,0)]))
+            elif fragName == 'O':
+                frags_to_add.append(Atoms('O',[(0,0,0)]))
+            elif fragName == 'Rh':
+                frags_to_add.append(Atoms('Rh',[(0,0,0)]))
+            elif fragName == 'Ti':
+                frags_to_add.append(Atoms('Ti',[(0,0,0)]))
             elif fragName =='H2O':
                 frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
             elif fragName == 'HO':
@@ -220,6 +226,9 @@ def grow_frag(
                 #print(i, tmpInterfc.get_pos()[i])
                 n_place += 1
                 #print(coord, xLim, yLim, zLim, geom.is_withinPosLim(coord, xLim, yLim, zLim))
+                if n_place == 10000:
+                    print('Dead Loop located line 223 in build.py -> change zLim!!')
+                    print(f'Your zLim={zLim} ... coord={coord}')
 
             # Might want to use other way to randomly rotate positiosn
             #fragAtms.rotate(random.random()*np.pi/2,geom.rand_direction(),center=(0,0,0))
@@ -396,6 +405,12 @@ def boxSample_frag(
                 frags_to_add.append(Atoms('CO',[(0, 0, 0),(0, 0, 1.15034)]))
             elif fragName == 'H':
                 frags_to_add.append(Atoms('H',[(0,0,0)]))
+            elif fragName == 'O':
+                frags_to_add.append(Atoms('O',[(0,0,0)]))
+            elif fragName == 'Rh':
+                frags_to_add.append(Atoms('Rh',[(0,0,0)]))
+            elif fragName == 'Ti':
+                frags_to_add.append(Atoms('Ti',[(0,0,0)]))
             elif fragName =='H2O':
                 frags_to_add.append(Atoms('OH2',[(0,0,0),(0.758602,0,0.504284),(-0.758602,0,0.504284)]))
             elif fragName == 'HO':
@@ -522,6 +537,8 @@ def boxSample_mol(interfc,
         random.shuffle(addMolList)
     n_added = 0
     n_attempts = 0
+    bad_contact_counter = 0
+    dist_counter = 0
     tmpInterfc = interfc.copy()
 
     trj = []
@@ -536,6 +553,10 @@ def boxSample_mol(interfc,
         surf_probe = testInterfc.get_allAtoms()
         surf_probe.extend(a_probe)
         if not (2.5 > min(surf_probe.get_distances(len(surf_probe)-1, range(len(surf_probe)-1), mic=True)) > 0.5):
+            dist_counter += 1
+            if dist_counter == 200:
+                print('hard time placing cluster - change bonding threshold boxSample_mol()')
+                return None
             continue
         
         tmpAds = addMolList[n_added].copy()
@@ -557,6 +578,10 @@ def boxSample_mol(interfc,
         testInterfc.merge_adsorbate(tmpAds_test)
 
         if testInterfc.has_badContact(2*(1-bondCutoff)):
+            bad_contact_counter += 1
+            if bad_contact_counter == 200:
+                print('Too much bad contact - try changing the testInterfc.has_badContact tolerance in build.boxSample_mol()')
+                return None
             continue
 
         bps_all = geom.get_bondpairs(testInterfc.get_allAtoms(), scale=bondCutoff)
@@ -602,7 +627,7 @@ def boxSample_mol(interfc,
                         goodStruc = False
                         #break
             if goodStruc:
-                print('Bonds:', myBPs)
+                #print('Bonds:', myBPs)
                 print(f'# Progress: {n_added+1}/{numAds}\t@attempt {n_attempts}')
                 tmpInterfc = testInterfc
                 n_added += 1
