@@ -27,7 +27,8 @@ class PopulationGrandCanonicalPoly:
         matingMethod=None,
         convergeCrit=None,
         simParam1=5e-4,
-        simParam2=0.25
+        simParam2=0.25,
+        func_bias=None
     ):
 
         if gadb is not None:
@@ -59,6 +60,11 @@ class PopulationGrandCanonicalPoly:
 
         self.simParam1 = simParam1
         self.simParam2 = simParam2
+        
+        if func_bias:
+            self.func_bias = func_bias
+        else:
+            self.func_bias = None
 
 
     def __len__(self):
@@ -91,6 +97,10 @@ class PopulationGrandCanonicalPoly:
             else:
                 print(f'{s} not in the chemPotDict!')
                 print('Oops, need to worry about order of atoms in fragment in calc_grandPot()')
+                
+        if self.func_bias:
+            myPot += self.func_bias(atoms)
+            
         return myPot
 
     def initializeDB(self, sc=False):
