@@ -294,7 +294,7 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], growProb = None):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, moveClusterOn=False, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], growProb = None, clusterAtoms=None):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -310,6 +310,7 @@ class PopulationGrandCanonicalPoly:
             kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=bondRejList)
             parent = random.choice([surf1, surf2]).copy()
             print('PARENTS: %i and %i' % (mater, pater))
+        kid.clusterAtoms = clusterAtoms
         print(matInfo['adsorbate_fragments'], [matAtms[l].get_chemical_formula() for l in matInfo['adsorbate_fragments']])
         print(patInfo['adsorbate_fragments'], [patAtms[l].get_chemical_formula() for l in patInfo['adsorbate_fragments']])
         mutType = ''
@@ -328,6 +329,7 @@ class PopulationGrandCanonicalPoly:
             if moveOn: mutList.append('move')
             if permuteOn: mutList.append('permute')
             if transOn: mutList.append('translate')
+            if moveClusterOn: mutList.append('move cluster')
             print('Mutation operator list: ', mutList)
 
             mutType = np.random.choice(mutList)
@@ -380,6 +382,12 @@ class PopulationGrandCanonicalPoly:
                     #             bondRejList=bondRejList, constrainTop=constrainTop)
                     tmpKid.growMut_frag([l for l in self.chemPotDict], bondRejList=bondRejList, growProb=growProb)
                 kid = tmpKid.copy()
+            if mutType == 'move cluster':
+                #print('move cluster mutation started')
+                #fragList = kid.get_fragList()
+                #print(kid.clusterAtoms, kid.get_chemical_symbols())
+                kid.moveMut_cluster()
+                #kid.set_fragList(fragList)
             if mutType == 'permute':
                 print('permut mutation started')
                 kid.permuteMut_frag()

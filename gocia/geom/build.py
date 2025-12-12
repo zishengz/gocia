@@ -516,6 +516,8 @@ def boxSample_mol(interfc,
         random.shuffle(addMolList)
     n_added = 0
     n_attempts = 0
+    bad_contact_counter = 0
+    dist_counter = 0
     tmpInterfc = interfc.copy()
 
     trj = []
@@ -530,6 +532,10 @@ def boxSample_mol(interfc,
         surf_probe = testInterfc.get_allAtoms()
         surf_probe.extend(a_probe)
         if not (2.5 > min(surf_probe.get_distances(len(surf_probe)-1, range(len(surf_probe)-1), mic=True)) > 0.5):
+            dist_counter += 1
+            if dist_counter == 200:
+                print('hard time placing cluster - change bonding threshold boxSample_mol()')
+                return None
             continue
         
         tmpAds = addMolList[n_added].copy()
@@ -551,6 +557,10 @@ def boxSample_mol(interfc,
         testInterfc.merge_adsorbate(tmpAds_test)
 
         if testInterfc.has_badContact(2*(1-bondCutoff)):
+            bad_contact_counter += 1
+            if bad_contact_counter == 200:
+                print('Too much bad contact - try changing the testInterfc.has_badContact tolerance in build.boxSample_mol()')
+                return None
             continue
 
         bps_all = geom.get_bondpairs(testInterfc.get_allAtoms(), scale=bondCutoff)
@@ -596,7 +606,7 @@ def boxSample_mol(interfc,
                         goodStruc = False
                         #break
             if goodStruc:
-                print('Bonds:', myBPs)
+                #print('Bonds:', myBPs)
                 print(f'# Progress: {n_added+1}/{numAds}\t@attempt {n_attempts}')
                 tmpInterfc = testInterfc
                 n_added += 1
