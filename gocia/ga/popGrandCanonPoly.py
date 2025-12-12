@@ -60,6 +60,7 @@ class PopulationGrandCanonicalPoly:
         self.simParam1 = simParam1
         self.simParam2 = simParam2
 
+
     def __len__(self):
         return len(self.gadb)
 
@@ -239,7 +240,7 @@ class PopulationGrandCanonicalPoly:
             info['adsorbate_fragments'] = []
         return info
 
-    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, moveOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -252,7 +253,7 @@ class PopulationGrandCanonicalPoly:
             patInfo = self.convertFragStrToInfo(patFragStr)
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
-            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.75, keepCore=keepCluster)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
@@ -294,7 +295,7 @@ class PopulationGrandCanonicalPoly:
         open('fragments', 'w').write('%s' % kid.get_fragList() )
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, moveClusterOn=False, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], growProb = None, clusterAtoms=None):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, moveOn=True, moveClusterOn=False, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], growProb = None, clusterAtoms=None, keepCluster=''):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -307,7 +308,7 @@ class PopulationGrandCanonicalPoly:
             patInfo = self.convertFragStrToInfo(patFragStr)
             surf1 = Interface(matAtms, self.substrate, zLim=self.zLim, info=matInfo) 
             surf2 = Interface(patAtms, self.substrate, zLim=self.zLim, info=patInfo)
-            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, bondRejList=bondRejList)
+            kid = crossover_snsSurf_2d_GC_poly(surf1, surf2, tolerance=0.5, keepCluster=keepCluster, bondRejList=bondRejList)
             parent = random.choice([surf1, surf2]).copy()
             print('PARENTS: %i and %i' % (mater, pater))
         kid.clusterAtoms = clusterAtoms

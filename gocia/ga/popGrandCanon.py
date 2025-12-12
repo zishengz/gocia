@@ -26,7 +26,8 @@ class PopulationGrandCanonical:
         matingMethod=None,
         convergeCrit=None,
         simParam1=5e-4,
-        simParam2=0.25
+        simParam2=0.25,
+        func_bias=None
     ):
 
         if gadb is not None:
@@ -58,6 +59,11 @@ class PopulationGrandCanonical:
 
         self.simParam1 = simParam1
         self.simParam2 = simParam2
+        
+        if func_bias:
+            self.func_bias = func_bias
+        else:
+            self.func_bias = None
 
     def __len__(self):
         return len(self.gadb)
@@ -87,6 +93,10 @@ class PopulationGrandCanonical:
         for s in adsSymbol:
             if s in self.chemPotDict:
                 myPot -= self.chemPotDict[s]
+                
+        if self.func_bias:
+            myPot += self.func_bias(atoms)
+            
         return myPot
 
     def initializeDB(self, sc=False):
@@ -101,6 +111,23 @@ class PopulationGrandCanonical:
                 self.gadb.update(i+1, mated=0, alive=1,
                                 grandPot=self.calc_grandPot(r.toatoms(), r.eV), label='0 0 init')
         self.natural_selection()
+        gm = self.get_GMrow()
+        with open('gmid', 'w') as f:
+            f.write(str(gm.id))
+            
+    def reinitializeDB(self, sc=False, selection=False):
+        if sc:
+            for i in range(len(self.gadb)):
+                r = self.gadb.get(id=i+1)
+                self.gadb.update(i+1, 
+                                grandPot=self.calc_grandPot(r.toatoms(), r.sc_eV/2))
+        else:
+            for i in range(len(self.gadb)):
+                r = self.gadb.get(id=i+1)
+                self.gadb.update(i+1, 
+                                grandPot=self.calc_grandPot(r.toatoms(), r.eV))
+        if selection:
+            self.natural_selection()
         gm = self.get_GMrow()
         with open('gmid', 'w') as f:
             f.write(str(gm.id))
@@ -151,6 +178,15 @@ class PopulationGrandCanonical:
             for d in deadList:
                 print('REST IN PEACE, %i!' % d)
                 self.gadb.update(d, alive=0)
+                
+    def extinction(self, prob_death=0.5):
+        aliveList = self.get_ID('alive=1')
+        
+        for a in aliveList:
+            if np.random.random() < prob_death:
+                print('REST IN PEACE, %i!' % a)
+                self.gadb.update(a, alive=0)
+                
 
     def is_uniqueInPop(self, atoms, grandPot, eneCut=0.05):
         '''
@@ -220,7 +256,7 @@ class PopulationGrandCanonical:
                     break
         return isUnique
 
-    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring(self, mutRate=0.3, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster=''):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -229,7 +265,7 @@ class PopulationGrandCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75, keepCluster=keepCluster)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         myMutate = ''
@@ -268,7 +304,7 @@ class PopulationGrandCanonical:
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
         return kid
 
-    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]]):
+    def gen_offspring_box(self, mutRate=0.3, xyzLims=[], bondRejList=None, constrainTop=False, rattleOn=True, growOn=True, leachOn=True, permuteOn=True, transOn=True, transVec=[[-2, 2], [-2, 2]], keepCluster='', excludeBare=True):
         kid, parent = None, None
         mater, pater = 0, 0
         while kid is None:
@@ -277,7 +313,7 @@ class PopulationGrandCanonical:
             a2 = self.gadb.get(id=pater).toatoms()
             surf1 = Interface(a1, self.substrate, zLim=self.zLim)
             surf2 = Interface(a2, self.substrate, zLim=self.zLim)
-            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75)
+            kid = crossover_snsSurf_2d_GC(surf1, surf2, tolerance=0.75,keepCluster=keepCluster)
             parent = surf1.copy()
         print('PARENTS: %i and %i' % (mater, pater))
         mutType = ''
@@ -287,39 +323,44 @@ class PopulationGrandCanonical:
             print(' |- TOO SIMILAR!')
             mutRate = 1
 
-        if len(kid.get_adsList()) > 1 and np.random.rand() < mutRate:
-            # collect the operatoins to use
-            mutList = []
-            if rattleOn: mutList.append('rattle')
-            if growOn: mutList.append('grow')
-            if leachOn: mutList.append('leach')
-            if permuteOn: mutList.append('permute')
-            if transOn: mutList.append('translate')
+        if np.random.rand() < mutRate:
+            if len(kid.get_adsList()) > 1:
+                # collect the operatoins to use
+                mutList = []
+                if rattleOn: mutList.append('rattle')
+                if growOn: mutList.append('grow')
+                if leachOn: mutList.append('leach')
+                if permuteOn: mutList.append('permute')
+                if transOn: mutList.append('translate')
 
-            mutType = np.random.choice(mutList)
-            if mutType == 'rattle':
+                mutType = np.random.choice(mutList)
+                if mutType == 'rattle':
+                    kid.rattleMut()
+                if mutType == 'grow':
+                    tmpKid = None
+                    while tmpKid is None:
+                        tmpKid = kid.copy()
+                        tmpKid.growMut_box([l for l in self.chemPotDict], #xyzLims=xyzLims,
+                                    bondRejList=bondRejList, constrainTop=constrainTop)
+                    kid = tmpKid.copy()
+                if mutType == 'leach':
+                    species_kid = kid.get_adsAtoms().get_chemical_symbols()
+                    kid.leachMut([l for l in self.chemPotDict if l in species_kid])
+                if mutType == 'permute':
+                    kid.permuteMut()
+                if mutType == 'translate':
+                    kid.transMut(transVec=transVec)
+            else:
+                mutType = 'init'
+                id = parent.copy()
                 kid.rattleMut()
-            if mutType == 'grow':
-                tmpKid = None
-                while tmpKid is None:
-                    tmpKid = kid.copy()
-                    tmpKid.growMut_box([l for l in self.chemPotDict], #xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
-                kid = tmpKid.copy()
-            if mutType == 'leach':
-                species_kid = kid.get_adsAtoms().get_chemical_symbols()
-                kid.leachMut([l for l in self.chemPotDict if l in species_kid])
-            if mutType == 'permute':
-                kid.permuteMut()
-            if mutType == 'translate':
-                kid.transMut(transVec=transVec)
-        if len(kid.get_adsList()) <= 1:
-            mutType = 'init'
-            print(' |- Bare substrate, BAD!')
-            kid = parent.copy()
-            kid.rattleMut()
-            kid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
-                                bondRejList=bondRejList, constrainTop=constrainTop)
+                kid.rattleMut()
+                
+                if excludeBare:
+                    print(' |- Bare substrate, BAD!')
+                    kid.growMut_box([l for l in self.chemPotDict], xyzLims=xyzLims,
+                                        bondRejList=bondRejList, constrainTop=constrainTop)
+                    
         open('label', 'w').write('%i %i %s' % (mater, pater, mutType))
         self.gadb.update(mater, mated=self.gadb.get(id=mater).mated+1)
         self.gadb.update(pater, mated=self.gadb.get(id=pater).mated+1)
@@ -483,7 +524,7 @@ class PopulationGrandCanonical:
         except:
             mag = 0
 
-        myLabel = open(f'label', 'r').read()
+        myLabel = open(f'{workdir}/label', 'r').read()
         print('\n%s IS BORN with G = %.3f eV\t[%s]' % (
             workdir, grndPot, myLabel))
         if self.is_uniqueInAll(atoms, grndPot):
